@@ -6,6 +6,7 @@ DECLARE_LOG_CATEGORY_EXTERN(Health, Log, All);
 DECLARE_LOG_CATEGORY_EXTERN(Menu, Log, All);
 DECLARE_LOG_CATEGORY_EXTERN(Movement, Log, All);
 DECLARE_LOG_CATEGORY_EXTERN(Weapon, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(GameMode, Log, All);
 
 // Put this line in all the "Upper most" C++ file where you need each category
 // Each of these lines can appear AT MOST ONCE across ALL C++ files
@@ -16,3 +17,4 @@ DECLARE_LOG_CATEGORY_EXTERN(Weapon, Log, All);
 // DEFINE_LOG_CATEGORY(Menu);
 // DEFINE_LOG_CATEGORY(Movement);
 // DEFINE_LOG_CATEGORY(Weapon);
+// DEFINE_LOG_CATEGORY(GameMode);
