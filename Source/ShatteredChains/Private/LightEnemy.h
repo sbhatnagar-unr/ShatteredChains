@@ -4,21 +4,23 @@
 
 #include "AIController.h"
 #include "CoreMinimal.h"
-
+#include "GameFramework/Character.h"
 #include "LightEnemy.generated.h"
 
-
 UCLASS()
-class ALightEnemy : public APawn
+class ALightEnemy : public ACharacter
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	// Sets default values for this actor's properties
 	ALightEnemy();
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	// Called to bind functionality to input
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 protected:
 	// Called when the game starts or when spawned
@@ -34,6 +36,8 @@ private:
 
 	// Player tracking
 	AAIController* ai_controller;
-	AActor* target_actor;
-	void go_to_location(const FVector &location);
+	APawn* target_actor;
+	bool has_target_actor;
+	bool has_ai_controller;
+	bool chase_player();
 };
