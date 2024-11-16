@@ -31,8 +31,8 @@ private:
 	USkeletalMeshComponent* skeletal_mesh_component;
 
 	// Asset paths
-	const FString skeletal_mesh_asset_path = FString(TEXT("/Game/Enemies/LightEnemy/motion-dummy_female.motion-dummy_female"));
-	const FString animation_blueprint_class_path = FString(TEXT("/Game/Enemies/LightEnemy/ABP_Walking.ABP_Walking_C"));
+	const FString skeletal_mesh_asset_path = FString(TEXT("/Game/Enemies/LightEnemy/Models/motion-dummy_female.motion-dummy_female"));
+	const FString animation_blueprint_class_path = FString(TEXT("/Game/Enemies/LightEnemy/Animations/ABP_Walking.ABP_Walking_C"));
 
 	// Player tracking
 	AAIController* ai_controller;
