@@ -4,6 +4,7 @@
 #include "LightEnemy.h"
 #include "ShatteredChains/Logging.h"
 #include "Kismet/GameplayStatics.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 DEFINE_LOG_CATEGORY(Enemy);
 
@@ -35,8 +36,13 @@ ALightEnemy::ALightEnemy()
 
 		// Set the AI Controller
 		AIControllerClass = ai_controller;
-		UE_LOG(Enemy, Log, TEXT("AI Controller succesfully applied."));
+		// Set when to have AI posses pawn
+		AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+		// Adjust settings for smoother rotation
+		bUseControllerRotationYaw = 0;
+		GetCharacterMovement()->bUseControllerDesiredRotation = 1;
 
+		UE_LOG(Enemy, Log, TEXT("AI Controller succesfully applied."));
 
 		// SUCCESS YAY!!!!
 		UE_LOG(Enemy, Log, TEXT("New light enemy created (not yet spawned)"));
@@ -64,6 +70,7 @@ void ALightEnemy::BeginPlay()
 void ALightEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	//UE_LOG(Enemy, Log, TEXT("%s"), *GetActorLocation().ToString());
 }
 
 
