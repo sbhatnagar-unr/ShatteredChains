@@ -239,6 +239,10 @@ protected:
 
     UPROPERTY(EditDefaultsOnly, Category = "Animation")
     UAnimMontage* SlideAnimMontage;
+
+    UPROPERTY(EditAnywhere, Category = "Animation")
+    UAnimMontage* SlideJumpAnimMontage;
+
     /*          currently leave commented until fixaround.
     UPROPERTY(EditDefaultsOnly, Category = "Animation")
     UAnimMontage* RollAnimMontage;
