@@ -3,6 +3,7 @@
 
 #include "LightEnemy.h"
 #include "ShatteredChains/Logging.h"
+#include "Kismet/GameplayStatics.h"
 
 
 DEFINE_LOG_CATEGORY(Enemy);
@@ -12,6 +13,21 @@ ALightEnemy::ALightEnemy()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
+	// Default attack range
+	attack_range = 100;
+}
+
+
+AActor* ALightEnemy::get_target()
+{
+	return target;
+}
+
+
+float ALightEnemy::get_attack_range()
+{
+	return attack_range;
 }
 
 
@@ -27,6 +43,14 @@ void ALightEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 void ALightEnemy::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// Get the target
+	target = (TObjectPtr<AActor>) UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+	if (target == nullptr)
+	{
+		UE_LOG(Enemy, Error, TEXT("Light enemy could not locate target (player)"));
+	}
+
 }
 
 

@@ -14,6 +14,9 @@ public:
 	// Sets default values for this actor's properties
 	ALightEnemy();
 
+	AActor* get_target();
+	float get_attack_range();
+
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -23,4 +26,12 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+private:
+	// This is the actor that the enemy whill chase and attack
+	TObjectPtr<AActor> target;
+
+	// Distance enemy can be from player to hit an attack
+	UPROPERTY(EditDefaultsOnly)
+	float attack_range;
 };
