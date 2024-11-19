@@ -7,8 +7,6 @@
 #include "AIController.h"
 #include "LightEnemy.h"
 
-#include "Kismet/GameplayStatics.h"
-
 UBTT_ChasePlayer::UBTT_ChasePlayer()
 {
 	NodeName = FString(TEXT("Chase Player"));
