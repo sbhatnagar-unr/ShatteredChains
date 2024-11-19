@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "InputActionValue.h"
 #include "EnhancedInputComponent.h"  // Include enhanced input system
 #include "MyCharacter.generated.h"   // Must be the last include
 
@@ -15,6 +16,10 @@ class SHATTEREDCHAINS_API AMyCharacter : public ACharacter
 {
     GENERATED_BODY()
 
+    // Camera
+    UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = "true"))
+    class UCameraComponent* Camera;
+
 public:
     // Constructor
     AMyCharacter();
@@ -23,6 +28,25 @@ public:
     virtual void Tick(float DeltaTime) override;
 
 protected:
+
+    // Input mapping for enhanced input
+    UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+    class UInputMappingContext* InputMapping;
+
+    // References for inputs
+    UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+    class UInputAction* MoveAction;
+
+    UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+    class UInputAction* JumpAction;
+
+    UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+    class UInputAction* LookAction;
+
+    void Move(const FInputActionValue& InputValue);
+    void Look(const FInputActionValue& InputValue);
+    void Jump();
+
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
 

@@ -1,7 +1,9 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "GameFramework/CharacterMovementComponent.h" 
+#include "InputMappingContext.h"
+#include "EnhancedInputSubsystems.h"
+#include "EnhancedInputComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Camera/CameraComponent.h"
 #include "MyCharacter.h"
 
 // Sets default values
@@ -18,6 +20,10 @@ AMyCharacter::AMyCharacter()
 	bCanRoll = true;
 	CurrentStamina = Stamina; // Set initial stamina
 
+    Camera = CreateDefaultSubobject<UCameraComponent>("Camera");
+    Camera->SetupAttachment(RootComponent);
+    Camera->bUsePawnControlRotation = true;
+
 }
 
 // Called when the game starts or when spawned
@@ -32,13 +38,35 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+    // Add input mapping Context
+    if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
+    {
+        // Get Local Player Subsystem
+        if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+            // Add input context
+            Subsystem->AddMappingContext(InputMapping, 0);
+    }
+
+    if (UEnhancedInputComponent* Input = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
+    {
+        Input->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMyCharacter::Move);
+
+        Input->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMyCharacter::Look);
+
+        Input->BindAction(JumpAction, ETriggerEvent::Triggered, this, &AMyCharacter::Jump);
+    }
+
     // Bind axis mappings for movement
+    /*
     PlayerInputComponent->BindAxis("MoveForward", this, &AMyCharacter::MoveForward);
     PlayerInputComponent->BindAxis("MoveRight", this, &AMyCharacter::MoveRight);
+    */ 
 
+    /*
     // Bind action mappings for jumping
     PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AMyCharacter::StartJump);
     PlayerInputComponent->BindAction("Jump", IE_Released, this, &AMyCharacter::StopJump);
+    */
 
     // Bind action mappings for sprinting and crouching
     PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &AMyCharacter::StartSprint);
@@ -54,6 +82,42 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
     // Slide Jump
     PlayerInputComponent->BindAction("SlideJump", IE_Pressed, this, &AMyCharacter::SlideJump);
+
+}
+
+void AMyCharacter::Move(const FInputActionValue& InputValue)
+{
+    FVector2D InputVector = InputValue.Get<FVector2D>();
+
+    if (IsValid(Controller)) 
+    {
+        // Get Forward Direction
+        const FRotator Rotation = Controller->GetControlRotation();
+        const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+        const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+        const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+        // Add Movement Input
+        AddMovementInput(ForwardDirection, InputVector.Y);
+        AddMovementInput(RightDirection, InputVector.X);
+    }
+}
+
+void AMyCharacter::Look(const FInputActionValue& InputValue)
+{
+    FVector2D InputVector = InputValue.Get<FVector2D>();
+
+    if (IsValid(Controller))
+    {
+        AddControllerYawInput(InputVector.X);
+        AddControllerPitchInput(InputVector.Y);
+    }
+}
+
+void AMyCharacter::Jump()
+{
+    ACharacter::Jump();
 }
 
 // Forward and Backwards functions
