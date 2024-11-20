@@ -69,13 +69,12 @@ EBTNodeResult::Type UBTT_ChasePlayer::ExecuteTask(UBehaviorTreeComponent& OwnerC
 
 	// If we are withing attacking range
 	float attack_range = enemy_actor->get_attack_range();
-	UE_LOG(Enemy, Log, TEXT("BTT_ChasePlayer enemy distance to target %f (attack range: %f)"), distance, attack_range);
+	UE_LOG(Enemy, VeryVerbose, TEXT("BTT_ChasePlayer enemy distance to target %f (attack range: %f)"), distance, attack_range);
 	if (distance <= attack_range)
 	{
 		UE_LOG(Enemy, Log, TEXT("BTT_ChasePlayer enemy is in attacking range"));
 		ai_controller->StopMovement();
 		blackboard->SetValueAsBool(in_attacking_range_field, true);
-		return EBTNodeResult::Type::Succeeded;
 	}
 	// Otherwise
 	else
