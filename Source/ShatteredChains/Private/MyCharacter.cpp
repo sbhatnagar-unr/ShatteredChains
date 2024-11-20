@@ -1,10 +1,10 @@
+#include "MyCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h" 
 #include "InputMappingContext.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Camera/CameraComponent.h"
-#include "MyCharacter.h"
 
 // Sets default values
 AMyCharacter::AMyCharacter()
