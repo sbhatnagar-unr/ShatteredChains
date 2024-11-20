@@ -36,11 +36,11 @@ EBTNodeResult::Type UBTT_AttackPlayer::ExecuteTask(UBehaviorTreeComponent& Owner
 	try
 	{
 		ai_controller = Validity::check_value<AAIController>(OwnerComp.GetAIOwner(), "Could not get AI Controller");
-		blackboard = Validity::check_value<UBlackboardComponent>(ai_controller->GetBlackboardComponent(), "Could not get Light Enemy AI blackboard");
+		blackboard = Validity::check_value<UBlackboardComponent>(ai_controller->GetBlackboardComponent(), "Could not get  AI blackboard");
 		enemy_actor = Validity::check_value<ALightEnemy>((ALightEnemy*)ai_controller->GetPawn(), "Could not get enemy actor belonging to this AI");
 		target_actor = Validity::check_value<AActor>(enemy_actor->get_target(), "Enemy AI could not get player actor");
-		anim_instance = Validity::check_value<UAnimInstance>(enemy_actor->GetMesh()->GetAnimInstance(), "No anim instance for Light Enemy");
-		attack_animation_montage = Validity::check_value<UAnimMontage>(enemy_actor->get_attack_animation_montage(), "No animation montage for Light Enemy attack");
+		anim_instance = Validity::check_value<UAnimInstance>(enemy_actor->GetMesh()->GetAnimInstance(), "No anim instance found");
+		attack_animation_montage = Validity::check_value<UAnimMontage>(enemy_actor->get_attack_animation_montage(), "No animation montage for attack");
 	}
 	catch (const Validity::NullPointerException& e)
 	{
@@ -90,7 +90,7 @@ EBTNodeResult::Type UBTT_AttackPlayer::ExecuteTask(UBehaviorTreeComponent& Owner
 	// Otherwise
 	else
 	{
-		UE_LOG(Enemy, Verbose, TEXT("Target is out of range"));
+		UE_LOG(Enemy, Verbose, LOG_TEXT("Target is out of attacking range"));
 
 		// Stop the montage
 		if (anim_instance->Montage_IsPlaying(attack_animation_montage))
