@@ -1,6 +1,6 @@
 #pragma once
 
-// https://dev.epicgames.com/documentation/en-us/unreal-engine/logging-in-unreal-engine
+// https://dev.epicgames.com/documentation/en-us/unreal-engine/logging-in-unreal-engine?application_version=5.4
 
 DECLARE_LOG_CATEGORY_EXTERN(Enemy, Log, All);
 DECLARE_LOG_CATEGORY_EXTERN(Environment, Log, All);
