@@ -20,7 +20,7 @@ EBTNodeResult::Type UBTT_ChasePlayer::ExecuteTask(UBehaviorTreeComponent& OwnerC
 	// Make sure AI Controller is valid
 	if (ai_controller == nullptr)
 	{
-		UE_LOG(Enemy, Warning, TEXT("Enemy AI could not get AI Controller"));
+		UE_LOG(Enemy, Warning, TEXT("BTT_ChasePlayer enemy AI could not get AI Controller"));
 		// In here, blackboard in_attacking_range is already false, or else this function wouldnt have ran to begin with
 		return EBTNodeResult::Type::Failed;
 	}
@@ -30,7 +30,7 @@ EBTNodeResult::Type UBTT_ChasePlayer::ExecuteTask(UBehaviorTreeComponent& OwnerC
 	// Make sure the blackboard is valid
 	if (blackboard == nullptr)
 	{
-		UE_LOG(Enemy, Error, TEXT("Could not get Light Enemy AI blackboard"));
+		UE_LOG(Enemy, Error, TEXT("BTT_ChasePlayer could not get Light Enemy AI blackboard"));
 		// In here, blackboard in_attacking_range is already false, or else this function wouldnt have ran to begin with
 		return EBTNodeResult::Type::Failed;
 	}
@@ -44,7 +44,7 @@ EBTNodeResult::Type UBTT_ChasePlayer::ExecuteTask(UBehaviorTreeComponent& OwnerC
 	// Make sure the enemy_actor is valid
 	if (enemy_actor == nullptr)
 	{
-		UE_LOG(Enemy, Error, TEXT("Could not get enemy actor belonging to this AI"));
+		UE_LOG(Enemy, Error, TEXT("BTT_ChasePlayer could not get enemy actor belonging to this AI"));
 		// In here, blackboard in_attacking_range is already false, or else this function wouldnt have ran to begin with
 		return EBTNodeResult::Type::Failed;
 	}
@@ -55,7 +55,7 @@ EBTNodeResult::Type UBTT_ChasePlayer::ExecuteTask(UBehaviorTreeComponent& OwnerC
 	// Check if there is a target
 	if (target_actor == nullptr)
 	{
-		UE_LOG(Enemy, Warning, TEXT("Enemy AI could not get player actor"));
+		UE_LOG(Enemy, Warning, TEXT("BTT_ChasePlayer enemy AI could not get player actor"));
 		// In here, blackboard in_attacking_range is already false, or else this function wouldnt have ran to begin with
 		return EBTNodeResult::Type::Failed;
 	}
@@ -69,19 +69,19 @@ EBTNodeResult::Type UBTT_ChasePlayer::ExecuteTask(UBehaviorTreeComponent& OwnerC
 
 	// If we are withing attacking range
 	float attack_range = enemy_actor->get_attack_range();
-	UE_LOG(Enemy, Log, TEXT("Enemy distance to target %f (attack range: %f)"), distance, attack_range);
+	UE_LOG(Enemy, Log, TEXT("BTT_ChasePlayer enemy distance to target %f (attack range: %f)"), distance, attack_range);
 	if (distance <= attack_range)
 	{
-		UE_LOG(Enemy, Log, TEXT("Enemy is in attacking range"));
+		UE_LOG(Enemy, Log, TEXT("BTT_ChasePlayer enemy is in attacking range"));
 		ai_controller->StopMovement();
 		blackboard->SetValueAsBool(in_attacking_range_field, true);
-		return EBTNodeResult::Type::Aborted;
+		return EBTNodeResult::Type::Succeeded;
 	}
 	// Otherwise
 	else
 	{
 		// Chase the player
-		UE_LOG(Enemy, Log, TEXT("Enemy AI chasing player"));
+		UE_LOG(Enemy, Log, TEXT("BTT_ChasePlayer enemy AI chasing player"));
 		ai_controller->MoveToActor(target_actor);
 	}
 
