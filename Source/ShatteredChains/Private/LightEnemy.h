@@ -3,10 +3,11 @@
 #pragma once
 
 #include "GameFramework/Character.h"
+#include "CharacterWithHealth.h"
 #include "LightEnemy.generated.h"
 
 UCLASS()
-class ALightEnemy : public ACharacter
+class ALightEnemy : public ACharacterWithHealth
 {
 	GENERATED_BODY()
 
@@ -34,4 +35,6 @@ private:
 	// Distance enemy can be from player to hit an attack
 	UPROPERTY(EditDefaultsOnly)
 	float attack_range;
+
+	void dead() override;
 };

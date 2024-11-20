@@ -59,3 +59,9 @@ void ALightEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
+
+
+void ALightEnemy::dead()
+{
+	UE_LOG(Enemy, Log, TEXT("I DIED!!!!"));
+}
