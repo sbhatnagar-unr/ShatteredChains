@@ -1,4 +1,10 @@
 #pragma once
+#include <string>
+
+#define LOG_TEXT(text) TEXT("[%hs] -> ") TEXT(text), basename(__FILE__).c_str()
+std::string basename(const char* file_path);
+
+
 
 // https://dev.epicgames.com/documentation/en-us/unreal-engine/logging-in-unreal-engine?application_version=5.4
 
