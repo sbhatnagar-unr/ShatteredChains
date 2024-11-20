@@ -4,6 +4,7 @@
 
 #include "GameFramework/Character.h"
 #include "CharacterWithHealth.h"
+#include "Animation/AnimMontage.h"
 #include "LightEnemy.generated.h"
 
 UCLASS()
@@ -17,6 +18,8 @@ public:
 
 	AActor* get_target();
 	float get_attack_range();
+	UAnimMontage* get_attack_animation_montage();
+	float get_attack_animation_exit_blend();
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -33,8 +36,15 @@ private:
 	TObjectPtr<AActor> target;
 
 	// Distance enemy can be from player to hit an attack
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category="Attacking")
 	float attack_range;
 
+	// Animation montage for attacking player
+	UPROPERTY(EditDefaultsOnly, Category="Attacking")
+	TObjectPtr<UAnimMontage> attack_animation_montage;
+	
+	UPROPERTY(EditDefaultsOnly, Category="Attacking")
+	float attack_animation_exit_blend;
+	
 	void dead() override;
 };

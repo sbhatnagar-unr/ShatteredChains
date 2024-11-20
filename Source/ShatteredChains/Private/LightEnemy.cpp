@@ -16,18 +16,9 @@ ALightEnemy::ALightEnemy()
 
 	// Default attack range
 	attack_range = 100;
-}
 
-
-AActor* ALightEnemy::get_target()
-{
-	return target;
-}
-
-
-float ALightEnemy::get_attack_range()
-{
-	return attack_range;
+	attack_animation_montage = nullptr;
+	attack_animation_exit_blend = 0.2f;
 }
 
 
@@ -51,6 +42,12 @@ void ALightEnemy::BeginPlay()
 		UE_LOG(Enemy, Error, TEXT("Light enemy could not locate target (player)"));
 	}
 
+
+	// Make sure we have an animation montage
+	if (attack_animation_montage == nullptr)
+	{
+		UE_LOG(Enemy, Warning, TEXT("Light enemy has no attack animation"));
+	}
 }
 
 
@@ -58,6 +55,29 @@ void ALightEnemy::BeginPlay()
 void ALightEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
+
+
+AActor* ALightEnemy::get_target()
+{
+	return target;
+}
+
+
+float ALightEnemy::get_attack_range()
+{
+	return attack_range;
+}
+
+
+UAnimMontage* ALightEnemy::get_attack_animation_montage()
+{
+	return attack_animation_montage;
+}
+
+float ALightEnemy::get_attack_animation_exit_blend()
+{
+	return attack_animation_exit_blend;
 }
 
 
