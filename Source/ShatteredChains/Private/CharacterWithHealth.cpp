@@ -27,7 +27,7 @@ void ACharacterWithHealth::heal(float health)
 	current_health += health;
 	if (current_health > max_health)
 	{
-		UE_LOG(Health, Log, TEXT("Overhealed, resetting health to max"));
+		UE_LOG(Health, Verbose, LOG_TEXT("Overhealed, resetting health to max"));
 		current_health = max_health;
 	}
 }

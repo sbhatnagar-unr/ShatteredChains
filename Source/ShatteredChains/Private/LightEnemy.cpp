@@ -39,14 +39,14 @@ void ALightEnemy::BeginPlay()
 	target = (TObjectPtr<AActor>) UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 	if (target == nullptr)
 	{
-		UE_LOG(Enemy, Error, TEXT("Light enemy could not locate target (player)"));
+		UE_LOG(Enemy, Error, LOG_TEXT("Culd not locate target (player)"));
 	}
 
 
 	// Make sure we have an animation montage
 	if (attack_animation_montage == nullptr)
 	{
-		UE_LOG(Enemy, Warning, TEXT("Light enemy has no attack animation"));
+		UE_LOG(Enemy, Error, LOG_TEXT("No attack animation montage"));
 	}
 }
 
@@ -83,5 +83,5 @@ float ALightEnemy::get_attack_animation_exit_blend()
 
 void ALightEnemy::dead()
 {
-	UE_LOG(Enemy, Log, TEXT("I DIED!!!!"));
+	UE_LOG(Enemy, Log, LOG_TEXT("I DIED!!!!"));
 }
