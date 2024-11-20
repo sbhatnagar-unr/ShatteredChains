@@ -5,7 +5,9 @@
 #include "ShatteredChains/Logging.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AIController.h"
+#include "ShatteredChains/Utility.h"
 #include "LightEnemy.h"
+
 
 UBTT_ChasePlayer::UBTT_ChasePlayer()
 {
@@ -15,48 +17,27 @@ UBTT_ChasePlayer::UBTT_ChasePlayer()
 
 EBTNodeResult::Type UBTT_ChasePlayer::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	// Get AI Controller
-	AAIController* ai_controller = OwnerComp.GetAIOwner();
-	// Make sure AI Controller is valid
-	if (ai_controller == nullptr)
-	{
-		UE_LOG(Enemy, Warning, TEXT("BTT_ChasePlayer enemy AI could not get AI Controller"));
-		// In here, blackboard in_attacking_range is already false, or else this function wouldnt have ran to begin with
-		return EBTNodeResult::Type::Failed;
-	}
-
-	// Get the blackboard
-	UBlackboardComponent* blackboard = ai_controller->GetBlackboardComponent();
-	// Make sure the blackboard is valid
-	if (blackboard == nullptr)
-	{
-		UE_LOG(Enemy, Error, TEXT("BTT_ChasePlayer could not get Light Enemy AI blackboard"));
-		// In here, blackboard in_attacking_range is already false, or else this function wouldnt have ran to begin with
-		return EBTNodeResult::Type::Failed;
-	}
-
-	// Field names that dont change
 	static const FName in_attacking_range_field(TEXT("in_attacking_range"));
 
-
-	// The enemy that this AI belongs to
-	ALightEnemy* enemy_actor = (ALightEnemy*) ai_controller->GetPawn();
-	// Make sure the enemy_actor is valid
-	if (enemy_actor == nullptr)
+	// Enemy AI Controller
+	AAIController* ai_controller;
+	// Enemy AI Blackboard
+	UBlackboardComponent* blackboard;
+	// Enemy Actor
+	ALightEnemy* enemy_actor;
+	// Enemy's target actor
+	AActor* target_actor;
+	// Enemy's animation instance
+	try
 	{
-		UE_LOG(Enemy, Error, TEXT("BTT_ChasePlayer could not get enemy actor belonging to this AI"));
-		// In here, blackboard in_attacking_range is already false, or else this function wouldnt have ran to begin with
-		return EBTNodeResult::Type::Failed;
+		ai_controller = Validity::check_value<AAIController>(OwnerComp.GetAIOwner(), "Could not get AI Controller");
+		blackboard = Validity::check_value<UBlackboardComponent>(ai_controller->GetBlackboardComponent(), "Could not get AI blackboard");
+		enemy_actor = Validity::check_value<ALightEnemy>((ALightEnemy*)ai_controller->GetPawn(), "Could not get enemy actor belonging to this AI");
+		target_actor = Validity::check_value<AActor>(enemy_actor->get_target(), "Enemy AI could not get player actor");
 	}
-
-	// The target to chase
-	AActor* target_actor = enemy_actor->get_target();
-
-	// Check if there is a target
-	if (target_actor == nullptr)
+	catch (const Validity::NullPointerException& e)
 	{
-		UE_LOG(Enemy, Warning, TEXT("BTT_ChasePlayer enemy AI could not get player actor"));
-		// In here, blackboard in_attacking_range is already false, or else this function wouldnt have ran to begin with
+		UE_LOG(Enemy, Error, LOG_TEXT("%hs"), e.what());
 		return EBTNodeResult::Type::Failed;
 	}
 
@@ -69,10 +50,10 @@ EBTNodeResult::Type UBTT_ChasePlayer::ExecuteTask(UBehaviorTreeComponent& OwnerC
 
 	// If we are withing attacking range
 	float attack_range = enemy_actor->get_attack_range();
-	UE_LOG(Enemy, VeryVerbose, TEXT("BTT_ChasePlayer enemy distance to target %f (attack range: %f)"), distance, attack_range);
+	UE_LOG(Enemy, VeryVerbose, LOG_TEXT("Enemy distance to target %f (attack range: %f)"), distance, attack_range);
 	if (distance <= attack_range)
 	{
-		UE_LOG(Enemy, Log, TEXT("BTT_ChasePlayer enemy is in attacking range"));
+		UE_LOG(Enemy, Verbose, LOG_TEXT("Target is in attacking range"));
 		ai_controller->StopMovement();
 		blackboard->SetValueAsBool(in_attacking_range_field, true);
 	}
@@ -80,7 +61,7 @@ EBTNodeResult::Type UBTT_ChasePlayer::ExecuteTask(UBehaviorTreeComponent& OwnerC
 	else
 	{
 		// Chase the player
-		UE_LOG(Enemy, Log, TEXT("BTT_ChasePlayer enemy AI chasing player"));
+		UE_LOG(Enemy, Verbose, LOG_TEXT("Enemy AI chasing player"));
 		ai_controller->MoveToActor(target_actor);
 	}
 
