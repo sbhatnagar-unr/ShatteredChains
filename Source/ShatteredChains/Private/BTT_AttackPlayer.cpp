@@ -5,6 +5,7 @@
 #include "LightEnemy.h"
 #include "ShatteredChains/Logging.h"
 #include "AIController.h"
+#include "MyCharacter.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "ShatteredChains/Utility.h"
@@ -18,6 +19,10 @@ UBTT_AttackPlayer::UBTT_AttackPlayer()
 
 EBTNodeResult::Type UBTT_AttackPlayer::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
+	/*
+	Plays attack montage
+	Actual "attacking", as in applying damage, is done in Animation Notifiers
+	*/
 	static const FName in_attacking_range_field(TEXT("in_attacking_range"));
 	static FDateTime last_animation_end_time = FDateTime::MinValue();
 
@@ -28,7 +33,7 @@ EBTNodeResult::Type UBTT_AttackPlayer::ExecuteTask(UBehaviorTreeComponent& Owner
 	// Enemy Actor
 	ALightEnemy* enemy_actor;
 	// Enemy's target actor
-	AActor* target_actor;
+	AMyCharacter* target_actor;
 	// Enemy's animation instance
 	UAnimInstance* anim_instance;
 	// Enemy's attack animation montage
@@ -38,7 +43,7 @@ EBTNodeResult::Type UBTT_AttackPlayer::ExecuteTask(UBehaviorTreeComponent& Owner
 		ai_controller = Validity::check_value<AAIController>(OwnerComp.GetAIOwner(), "Could not get AI Controller");
 		blackboard = Validity::check_value<UBlackboardComponent>(ai_controller->GetBlackboardComponent(), "Could not get  AI blackboard");
 		enemy_actor = Validity::check_value<ALightEnemy>((ALightEnemy*)ai_controller->GetPawn(), "Could not get enemy actor belonging to this AI");
-		target_actor = Validity::check_value<AActor>(enemy_actor->get_target(), "Enemy AI could not get player actor");
+		target_actor = (AMyCharacter*) Validity::check_value<AActor>(enemy_actor->get_target(), "Enemy AI could not get player actor");
 		anim_instance = Validity::check_value<UAnimInstance>(enemy_actor->GetMesh()->GetAnimInstance(), "No anim instance found");
 		attack_animation_montage = Validity::check_value<UAnimMontage>(enemy_actor->get_attack_animation_montage(), "No animation montage for attack");
 	}
