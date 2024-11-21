@@ -1,10 +1,13 @@
+#include "MyCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h" 
 #include "InputMappingContext.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
+#include "ShatteredChains/Logging.h"
 #include "Components/CapsuleComponent.h"
 #include "Camera/CameraComponent.h"
-#include "MyCharacter.h"
+
+DEFINE_LOG_CATEGORY(Player);
 
 // Sets default values
 AMyCharacter::AMyCharacter()
@@ -473,7 +476,7 @@ void AMyCharacter::Tick(float DeltaTime)
 
 void AMyCharacter::dead(AActor* killed_by)
 {
-
+    UE_LOG(Player, Log, LOG_TEXT("Player dead"));
 }
 
 
