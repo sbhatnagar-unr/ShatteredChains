@@ -18,6 +18,7 @@ public:
 
 	AActor* get_target();
 	float get_attack_range();
+	float get_attack_damage();
 	UAnimMontage* get_attack_animation_montage();
 	float get_attack_animation_exit_blend();
 
@@ -38,6 +39,10 @@ private:
 	// Distance enemy can be from player to hit an attack
 	UPROPERTY(EditDefaultsOnly, Category="Attacking")
 	float attack_range;
+
+	// Damage enemy does on each attack
+	UPROPERTY(EditDefaultsOnly, Category = "Attacking")
+	float attack_damage;
 
 	// Animation montage for attacking player
 	UPROPERTY(EditDefaultsOnly, Category="Attacking")

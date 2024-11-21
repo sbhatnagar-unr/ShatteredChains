@@ -19,6 +19,7 @@ ALightEnemy::ALightEnemy()
 
 	attack_animation_montage = nullptr;
 	attack_animation_exit_blend = 0.2f;
+	attack_damage = 5.f;
 }
 
 
@@ -67,6 +68,12 @@ AActor* ALightEnemy::get_target()
 float ALightEnemy::get_attack_range()
 {
 	return attack_range;
+}
+
+
+float ALightEnemy::get_attack_damage()
+{
+	return attack_damage;
 }
 
 
