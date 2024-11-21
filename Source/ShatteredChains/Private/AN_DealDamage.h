@@ -14,5 +14,5 @@ class UAN_DealDamage : public UAnimNotify
 {
 	GENERATED_BODY()
 	
-	bool Received_Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) const;
+	void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
 };
