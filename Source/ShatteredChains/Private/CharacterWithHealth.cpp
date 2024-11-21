@@ -42,7 +42,7 @@ void ACharacterWithHealth::set_health(float health)
 }
 
 
-void ACharacterWithHealth::deal_damage(float damage)
+void ACharacterWithHealth::deal_damage(AActor* dealt_by, float damage)
 {
 	/*
 	Applies damage, if health becomes negative, it gets set to 0
@@ -52,6 +52,7 @@ void ACharacterWithHealth::deal_damage(float damage)
 	if (current_health <= 0)
 	{
 		current_health = 0;
-		dead();
+		dead(dealt_by);
+		return;
 	}
 }

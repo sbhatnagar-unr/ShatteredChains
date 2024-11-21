@@ -471,6 +471,11 @@ void AMyCharacter::Tick(float DeltaTime)
 }
 
 
+void AMyCharacter::dead(AActor* killed_by)
+{
+
+}
+
 
 
 

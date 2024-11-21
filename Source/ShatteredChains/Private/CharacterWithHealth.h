@@ -16,8 +16,8 @@ public:
 	float get_max_health() const;
 	virtual void heal(float health);
 	virtual void set_health(float health);
-	virtual void deal_damage(float damage);
-	virtual void dead() PURE_VIRTUAL(ACharacterWithHealth::dead, return;);
+	virtual void deal_damage(AActor* dealt_by, float damage);
+	virtual void dead(AActor* killed_by) PURE_VIRTUAL(ACharacterWithHealth::dead, return;);
 
 
 private:
