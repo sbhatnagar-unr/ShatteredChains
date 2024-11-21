@@ -7,6 +7,15 @@
  DEFINE_LOG_CATEGORY(Health);
  
 
+ // Called when the game starts or when spawned
+ void ACharacterWithHealth::BeginPlay()
+ {
+	 Super::BeginPlay();
+
+	 current_health = max_health;
+ }
+
+
 float ACharacterWithHealth::get_health() const
 {
 	return current_health;

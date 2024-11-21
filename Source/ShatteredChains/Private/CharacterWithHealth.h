@@ -19,6 +19,8 @@ public:
 	virtual void deal_damage(AActor* dealt_by, float damage);
 	virtual void dead(AActor* killed_by) PURE_VIRTUAL(ACharacterWithHealth::dead, return;);
 
+protected:
+	virtual void BeginPlay() override;
 
 private:
 	UPROPERTY(EditDefaultsOnly)
