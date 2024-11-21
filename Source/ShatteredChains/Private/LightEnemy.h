@@ -51,5 +51,5 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category="Attacking")
 	float attack_animation_exit_blend;
 	
-	void dead() override;
+	void dead(AActor* killed_by) override;
 };
