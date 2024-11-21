@@ -53,5 +53,6 @@ void ACharacterWithHealth::deal_damage(float damage)
 	{
 		current_health = 0;
 		dead();
+		return;
 	}
 }
