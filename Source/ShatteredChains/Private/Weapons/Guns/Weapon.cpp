@@ -42,7 +42,6 @@ void AWeapon::BeginPlay()
 	}
 
 	// Set ammo
-	current_ammo_stock_pile_count = max_ammo_stock_pile_count;
 	refill_magazine();
 }
 
