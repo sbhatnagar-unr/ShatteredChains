@@ -2,10 +2,10 @@
 
 
 #include "BTT_AttackPlayer.h"
-#include "LightEnemy.h"
+#include "../../LightEnemy.h"
 #include "ShatteredChains/Logging.h"
 #include "AIController.h"
-#include "MyCharacter.h"
+#include "../../../../Player/MyCharacter.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "ShatteredChains/Utility.h"

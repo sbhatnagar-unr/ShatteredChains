@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CharacterWithHealth.h"
+#include "../CharacterWithHealth.h"
 #include "InputActionValue.h"
 #include "EnhancedInputComponent.h"  // Include enhanced input system
 #include "MyCharacter.generated.h"   // Must be the last include
@@ -23,7 +23,7 @@ class SHATTEREDCHAINS_API AMyCharacter : public ACharacterWithHealth
 public:
     // Constructor
     AMyCharacter();
-    
+
     // Called every frame
     virtual void Tick(float DeltaTime) override;
 
@@ -59,7 +59,7 @@ protected:
     /*--------------------- Core Movement Functions ---------------------*/
 
     /**
-    * 
+    *
     *
     * Main Character Class implementing various movement capabilities such as sprinting, crouching,
     * mantling, etc.
@@ -127,7 +127,7 @@ protected:
 
 
     /*--------------------- Input Actions ---------------------*/
-    
+
     // Input actions for sprinting, can be editable in editor
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input", meta = (AllowPrivateAccess = "true"))
     UInputAction* SprintAction;
@@ -139,7 +139,7 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Movement")
     float WalkSpeed = 600.0f;
 
-    // Sprinting speed 
+    // Sprinting speed
     UPROPERTY(EditAnywhere, Category = "Movement")
     float SprintSpeed = 1200.0f;
 
@@ -154,7 +154,7 @@ protected:
 
     /*--------------------- Jump Mechanics ---------------------*/
 
-    // Counts current jumps for double jump functionality 
+    // Counts current jumps for double jump functionality
     int32 JumpCount = 0;
 
     // Maximum number of jumps allowed (e.g., double jump)
@@ -164,25 +164,25 @@ protected:
 
     /*--------------------- Stamina Properties ---------------------*/
 
-    // Total stamina available for sprinting 
+    // Total stamina available for sprinting
     UPROPERTY(EditAnywhere, Category = "Stamina")
     float Stamina = 100.0f;
 
-    // Current stamina level 
+    // Current stamina level
     float CurrentStamina;
 
-    // Rate at which stamina drains while sprinting 
+    // Rate at which stamina drains while sprinting
     UPROPERTY(EditAnywhere, Category = "Stamina")
     float StaminaDrainRate = 10.0f;
 
-    // Rate at which stamina recovers when not sprinting 
+    // Rate at which stamina recovers when not sprinting
     UPROPERTY(EditAnywhere, Category = "Stamina")
     float StaminaRecoveryRate = 5.0f;
 
 
     /*--------------------- Animation Properties ---------------------*/
 
-    // Animation montage for rolling action 
+    // Animation montage for rolling action
     UPROPERTY(EditDefaultsOnly, Category = "Animation")
     UAnimMontage* RollAnimMontage;
 
@@ -193,10 +193,10 @@ protected:
 
     /*--------------------- Timer Handles ---------------------*/
 
-    // Timer handle for stopping the slide after a duration 
+    // Timer handle for stopping the slide after a duration
     FTimerHandle SlideStopTimer;
 
-    // Timer for managing roll cooldown 
+    // Timer for managing roll cooldown
     FTimerHandle RollCooldownTimer;
 
 
@@ -216,7 +216,7 @@ protected:
 
 
     // Additional variables and methods for prone and ledge grab
-    // 
+    //
     // Character prone state
     bool bIsProne;  // Tracks if the character is in a prone position
 
