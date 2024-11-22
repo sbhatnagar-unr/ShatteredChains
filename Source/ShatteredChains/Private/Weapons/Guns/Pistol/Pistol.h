@@ -13,5 +13,8 @@ UCLASS()
 class APistol : public AWeapon
 {
 	GENERATED_BODY()
-	
+
+protected:
+	virtual void BeginPlay() override;
+
 };
