@@ -3,7 +3,7 @@
 #pragma once
 
 #include "GameFramework/Character.h"
-#include "CharacterWithHealth.h"
+#include "../../CharacterWithHealth.h"
 #include "Animation/AnimMontage.h"
 #include "LightEnemy.generated.h"
 
@@ -47,9 +47,9 @@ private:
 	// Animation montage for attacking player
 	UPROPERTY(EditDefaultsOnly, Category="Attacking")
 	TObjectPtr<UAnimMontage> attack_animation_montage;
-	
+
 	UPROPERTY(EditDefaultsOnly, Category="Attacking")
 	float attack_animation_exit_blend;
-	
+
 	void dead(AActor* killed_by) override;
 };

@@ -6,7 +6,7 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AIController.h"
 #include "ShatteredChains/Utility.h"
-#include "LightEnemy.h"
+#include "../../LightEnemy.h"
 
 
 UBTT_ChasePlayer::UBTT_ChasePlayer()
@@ -44,7 +44,7 @@ EBTNodeResult::Type UBTT_ChasePlayer::ExecuteTask(UBehaviorTreeComponent& OwnerC
 	// Get locations of enemy and target
 	FVector enemy_location = enemy_actor->GetActorLocation();
 	FVector target_location = target_actor->GetActorLocation();
-	
+
 	// Calculate the distance
 	float distance = FVector::Dist(enemy_location, target_location);
 
