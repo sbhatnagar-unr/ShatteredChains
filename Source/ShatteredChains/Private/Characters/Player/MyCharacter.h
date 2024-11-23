@@ -16,13 +16,14 @@ class SHATTEREDCHAINS_API AMyCharacter : public ACharacterWithHealth
 {
     GENERATED_BODY()
 
-    // Camera
-    UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = "true"))
-    class UCameraComponent* Camera;
 
 public:
     // Constructor
     AMyCharacter();
+
+    // Camera
+    UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = "true"))
+    class UCameraComponent* Camera;
 
     // Called every frame
     virtual void Tick(float DeltaTime) override;
