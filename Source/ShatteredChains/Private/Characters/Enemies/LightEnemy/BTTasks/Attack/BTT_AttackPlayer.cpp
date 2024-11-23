@@ -24,7 +24,6 @@ EBTNodeResult::Type UBTT_AttackPlayer::ExecuteTask(UBehaviorTreeComponent& Owner
 	Actual "attacking", as in applying damage, is done in Animation Notifiers
 	*/
 	static const FName in_attacking_range_field(TEXT("in_attacking_range"));
-	static FDateTime last_animation_end_time = FDateTime::MinValue();
 
 	// Enemy AI Controller
 	AAIController* ai_controller;
@@ -73,16 +72,13 @@ EBTNodeResult::Type UBTT_AttackPlayer::ExecuteTask(UBehaviorTreeComponent& Owner
 		enemy_actor->SetActorRotation(rotation_to_player);
 		UE_LOG(Enemy, Verbose, LOG_TEXT("Rotating to look at player"));
 
-		// Check if current time is after the last animtion stop time
-		if (FDateTime::Now() > last_animation_end_time)
+		// If the animatino is not active, start a new one
+		if (!anim_instance->Montage_IsActive(attack_animation_montage))
 		{
-			// If the last animation has ended, we can start a new one and put a new end time
 			// Play the animation and get its duration in seconds
 			UE_LOG(Enemy, Verbose, LOG_TEXT("Starting new attack animation montage"));
 			float duration = anim_instance->Montage_Play(attack_animation_montage, 1.0f, EMontagePlayReturnType::MontageLength, 0.0f, true);
 
-			// Update the end time
-			last_animation_end_time = FDateTime::Now() + FTimespan::FromSeconds(duration);
 			// If duration == 0.f that means an error
 			if (duration == 0.f)
 			{
@@ -98,12 +94,11 @@ EBTNodeResult::Type UBTT_AttackPlayer::ExecuteTask(UBehaviorTreeComponent& Owner
 		UE_LOG(Enemy, Verbose, LOG_TEXT("Target is out of attacking range"));
 
 		// Stop the montage
-		if (anim_instance->Montage_IsPlaying(attack_animation_montage))
+		if (anim_instance->Montage_IsActive(attack_animation_montage))
 		{
 			anim_instance->Montage_Stop(enemy_actor->get_attack_animation_exit_blend(), attack_animation_montage);
 			UE_LOG(Enemy, VeryVerbose, LOG_TEXT("Stopping montage"));
 			// Set the end time so next time this gets called it can start instantly
-			last_animation_end_time = FDateTime::Now();
 		}
 
 		// Go back to chase player
