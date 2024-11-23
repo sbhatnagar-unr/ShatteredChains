@@ -19,10 +19,12 @@ public:
 	void reload() const;
 
 	unsigned int get_magazine_size() const;
-	unsigned int get_current_mag_ammo_count() const;
+	unsigned int get_current_magazine_ammo_count() const;
 
 	unsigned int get_max_ammo_stock_pile_count() const;
 	unsigned int get_current_ammo_stock_pile_count() const;
+
+	uint32 get_scan_distance() const;
 
 	virtual void refill_magazine();
 
@@ -34,13 +36,16 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<USkeletalMeshComponent> weapon_skeletal_mesh_component;
 
+	UPROPERTY(EditDefaultsOnly, Category="Hit-Scan")
+	uint32 scan_distance;
+
 	UPROPERTY(EditDefaultsOnly, Category="Ammo")
 	unsigned int magazine_size;
 
 	UPROPERTY(EditDefaultsOnly, Category="Ammo")
 	unsigned int max_ammo_stock_pile_count;
 
-	unsigned int current_mag_ammo_count;
+	unsigned int current_magazine_ammo_count;
 	unsigned int current_ammo_stock_pile_count;
 
 	// Animation montages
