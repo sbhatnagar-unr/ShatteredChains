@@ -14,4 +14,6 @@ class UAN_WeaponReload : public UAnimNotify
 {
 	GENERATED_BODY()
 	
+	void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
+
 };
