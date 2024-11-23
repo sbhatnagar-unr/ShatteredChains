@@ -37,6 +37,9 @@ void AWeapon::BeginPlay()
 		
 		Validity::check_value<UAnimMontage>(reload_animation_montage, "No reload animation montage for weapon");
 		UE_LOG(Weapons, Verbose, LOG_TEXT("Reload animation montage: %s"), *reload_animation_montage.GetFullName());
+
+		anim_instance = Validity::check_value<UAnimInstance>(weapon_skeletal_mesh_component->GetAnimInstance(), "No anim instance found");
+
 	}
 	catch (const Validity::NullPointerException& e)
 	{
@@ -60,6 +63,8 @@ void AWeapon::fire() const
 	Also, some weapons dont fire right at the start, some may have a small charge up animation.
 	Basically, handling the firing through notifiers in the montage makes this function flexible enough to be used with ANY weapon, regardless of how it functions.
 	*/
+	// Dont fire if we are still doing another animation
+
 	// Dont fire if we are out of ammo
 	if (current_magazine_ammo_count <= 0)
 	{
@@ -69,12 +74,11 @@ void AWeapon::fire() const
 
 
 	UE_LOG(Weapons, Verbose, LOG_TEXT("Fire weapon initiated"));
-	// Weapons Animation instance
-	UAnimInstance* anim_instance;
+
 	try
 	{
 		Validity::check_value<UAnimMontage>(fire_animation_montage, "No fire animation montage for weapon");
-		anim_instance = Validity::check_value<UAnimInstance>(weapon_skeletal_mesh_component->GetAnimInstance(), "No anim instance found");
+		Validity::check_value<UAnimInstance>(anim_instance, "No anim instance found");
 	}
 	catch (const Validity::NullPointerException& e)
 	{
@@ -82,6 +86,15 @@ void AWeapon::fire() const
 		return;
 	}
 
+	// Check if either of the animations are currently playing
+	// If one of them is nullptr, this is fine as this if statement will still work as intended, it will just be slightly less effienct
+	// This is because it will check all montages to see if any of them are active if nullptr is passed in.  This is fine becuase in the final game
+	// there SHOULD NEVER be nullptr.
+	if (anim_instance->Montage_IsActive(fire_animation_montage) || anim_instance->Montage_IsActive(reload_animation_montage))
+	{
+		UE_LOG(Weapons, Verbose, LOG_TEXT("Can't fire now, another process is taking place"));
+		return;
+	}
 	UE_LOG(Weapons, Verbose, LOG_TEXT("Playing weapon fire animation montage"));
 	float duration = anim_instance->Montage_Play(fire_animation_montage, 1.0f, EMontagePlayReturnType::MontageLength, 0.0f, true);
 
@@ -109,16 +122,24 @@ void AWeapon::reload() const
 	}
 
 	UE_LOG(Weapons, Verbose, LOG_TEXT("Reload weapon initiated"));
-	// Weapons Animation instance
-	UAnimInstance* anim_instance;
 	try
 	{
 		Validity::check_value<UAnimMontage>(reload_animation_montage, "No reload animation montage for weapon");
-		anim_instance = Validity::check_value<UAnimInstance>(weapon_skeletal_mesh_component->GetAnimInstance(), "No anim instance found");
+		Validity::check_value<UAnimInstance>(anim_instance, "No anim instance found");
 	}
 	catch (const Validity::NullPointerException& e)
 	{
 		UE_LOG(Weapons, Error, LOG_TEXT("%hs (aborting reload)"), e.what());
+		return;
+	}
+
+	// Check if either of the animations are currently playing
+	// If one of them is nullptr, this is fine as this if statement will still work as intended, it will just be slightly less effienct
+	// This is because it will check all montages to see if any of them are active if nullptr is passed in.  This is fine becuase in the final game
+	// there SHOULD NEVER be nullptr.
+	if (anim_instance->Montage_IsActive(fire_animation_montage) || anim_instance->Montage_IsActive(reload_animation_montage))
+	{
+		UE_LOG(Weapons, Verbose, LOG_TEXT("Can't reload now, another process is taking place"));
 		return;
 	}
 

@@ -36,6 +36,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<USkeletalMeshComponent> weapon_skeletal_mesh_component;
 
+	TObjectPtr<UAnimInstance> anim_instance;
+
 	UPROPERTY(EditDefaultsOnly, Category="Hit-Scan")
 	uint32 scan_distance;
 
