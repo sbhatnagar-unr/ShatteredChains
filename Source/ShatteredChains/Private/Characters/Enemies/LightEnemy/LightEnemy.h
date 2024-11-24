@@ -21,9 +21,6 @@ public:
 	UAnimMontage* get_attack_animation_montage() const;
 	float get_attack_animation_exit_blend() const;
 
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 

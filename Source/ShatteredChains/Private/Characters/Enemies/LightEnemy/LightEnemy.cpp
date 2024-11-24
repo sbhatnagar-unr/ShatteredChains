@@ -12,7 +12,7 @@ DEFINE_LOG_CATEGORY(Enemy);
 ALightEnemy::ALightEnemy()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	// Default attack range
 	attack_range = 100;
@@ -51,12 +51,6 @@ void ALightEnemy::BeginPlay()
 	}
 }
 
-
-// Called every frame
-void ALightEnemy::Tick(const float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-}
 
 
 AActor* ALightEnemy::get_target() const
