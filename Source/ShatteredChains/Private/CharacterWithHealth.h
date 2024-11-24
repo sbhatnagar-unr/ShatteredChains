@@ -22,9 +22,10 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-private:
 	UPROPERTY(EditDefaultsOnly)
 	float max_health;
 
 	float current_health;
+
+	bool is_dead;
 };

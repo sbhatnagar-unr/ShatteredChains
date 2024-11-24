@@ -13,6 +13,7 @@
 	 Super::BeginPlay();
 
 	 current_health = max_health;
+	 is_dead = false;
  }
 
 
@@ -58,10 +59,11 @@ void ACharacterWithHealth::deal_damage(AActor* dealt_by, float damage)
 	*/
 	current_health -= damage;
 
-	if (current_health <= 0)
+	if (current_health <= 0 && !is_dead)
 	{
 		current_health = 0;
 		dead(dealt_by);
+		is_dead = true;
 		return;
 	}
 }
