@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "GameFramework/Character.h"
 #include "../../CharacterWithHealth.h"
 #include "Animation/AnimMontage.h"
 #include "LightEnemy.generated.h"
@@ -16,11 +15,11 @@ public:
 	// Sets default values for this actor's properties
 	ALightEnemy();
 
-	AActor* get_target();
-	float get_attack_range();
-	float get_attack_damage();
-	UAnimMontage* get_attack_animation_montage();
-	float get_attack_animation_exit_blend();
+	AActor* get_target() const;
+	float get_attack_range() const;
+	float get_attack_damage() const;
+	UAnimMontage* get_attack_animation_montage() const;
+	float get_attack_animation_exit_blend() const;
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -33,7 +32,8 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
-	// This is the actor that the enemy whill chase and attack
+	// This is the actor that the enemy will chase and attack
+	UPROPERTY()
 	TObjectPtr<AActor> target;
 
 	// Distance enemy can be from player to hit an attack
@@ -51,5 +51,5 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category="Attacking")
 	float attack_animation_exit_blend;
 
-	void dead(AActor* killed_by) override;
+	virtual void dead(AActor* killed_by) override;
 };

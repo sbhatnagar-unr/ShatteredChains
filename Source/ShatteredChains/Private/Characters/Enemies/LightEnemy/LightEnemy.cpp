@@ -37,10 +37,10 @@ void ALightEnemy::BeginPlay()
 	Super::BeginPlay();
 
 	// Get the target
-	target = (TObjectPtr<AActor>) UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+	target = Cast<AActor>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
 	if (target == nullptr)
 	{
-		UE_LOG(Enemy, Error, LOG_TEXT("Culd not locate target (player)"));
+		UE_LOG(Enemy, Error, LOG_TEXT("Could not locate target (player)"));
 	}
 
 
@@ -53,36 +53,36 @@ void ALightEnemy::BeginPlay()
 
 
 // Called every frame
-void ALightEnemy::Tick(float DeltaTime)
+void ALightEnemy::Tick(const float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
 
 
-AActor* ALightEnemy::get_target()
+AActor* ALightEnemy::get_target() const
 {
 	return target;
 }
 
 
-float ALightEnemy::get_attack_range()
+float ALightEnemy::get_attack_range() const
 {
 	return attack_range;
 }
 
 
-float ALightEnemy::get_attack_damage()
+float ALightEnemy::get_attack_damage() const
 {
 	return attack_damage;
 }
 
 
-UAnimMontage* ALightEnemy::get_attack_animation_montage()
+UAnimMontage* ALightEnemy::get_attack_animation_montage() const
 {
 	return attack_animation_montage;
 }
 
-float ALightEnemy::get_attack_animation_exit_blend()
+float ALightEnemy::get_attack_animation_exit_blend() const
 {
 	return attack_animation_exit_blend;
 }

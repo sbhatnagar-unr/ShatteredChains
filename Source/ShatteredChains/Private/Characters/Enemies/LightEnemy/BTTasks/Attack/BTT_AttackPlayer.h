@@ -16,5 +16,5 @@ class UBTT_AttackPlayer : public UBTTaskNode
 
 public:
 	UBTT_AttackPlayer();
-	EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory);
+	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 };

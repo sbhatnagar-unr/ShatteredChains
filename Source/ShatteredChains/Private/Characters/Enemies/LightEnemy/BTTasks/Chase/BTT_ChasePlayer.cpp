@@ -32,7 +32,7 @@ EBTNodeResult::Type UBTT_ChasePlayer::ExecuteTask(UBehaviorTreeComponent& OwnerC
 	{
 		ai_controller = Validity::check_value<AAIController>(OwnerComp.GetAIOwner(), "Could not get AI Controller");
 		blackboard = Validity::check_value<UBlackboardComponent>(ai_controller->GetBlackboardComponent(), "Could not get AI blackboard");
-		enemy_actor = Validity::check_value<ALightEnemy>((ALightEnemy*)ai_controller->GetPawn(), "Could not get enemy actor belonging to this AI");
+		enemy_actor = Validity::check_value<ALightEnemy>(Cast<ALightEnemy>(ai_controller->GetPawn()), "Could not get enemy actor belonging to this AI");
 		target_actor = Validity::check_value<AActor>(enemy_actor->get_target(), "Enemy AI could not get player actor");
 	}
 	catch (const Validity::NullPointerException& e)
@@ -42,14 +42,14 @@ EBTNodeResult::Type UBTT_ChasePlayer::ExecuteTask(UBehaviorTreeComponent& OwnerC
 	}
 
 	// Get locations of enemy and target
-	FVector enemy_location = enemy_actor->GetActorLocation();
-	FVector target_location = target_actor->GetActorLocation();
+	const FVector enemy_location = enemy_actor->GetActorLocation();
+	const FVector target_location = target_actor->GetActorLocation();
 
 	// Calculate the distance
-	float distance = FVector::Dist(enemy_location, target_location);
+	const float distance = FVector::Dist(enemy_location, target_location);
 
 	// If we are withing attacking range
-	float attack_range = enemy_actor->get_attack_range();
+	const float attack_range = enemy_actor->get_attack_range();
 	UE_LOG(Enemy, VeryVerbose, LOG_TEXT("Enemy distance to target %f (attack range: %f)"), distance, attack_range);
 	if (distance <= attack_range)
 	{

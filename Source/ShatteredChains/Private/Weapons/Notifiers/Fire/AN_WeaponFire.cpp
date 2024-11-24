@@ -17,7 +17,7 @@ void UAN_WeaponFire::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase*
 	//	MeshComp = Validity::check_value<USkeletalMeshComponent>(MeshComp, "No mesh for animation notify");
 	//	weapon = Validity::check_value<AWeapon>(Cast<AWeapon>(MeshComp->GetOwner()), "Could not get weapon actor from MeshComp");
 	//	AMyCharacter* weapon_holder = Validity::check_value<AMyCharacter>(Cast<AMyCharacter>(weapon->GetAttachParentActor()), "Could not get weapon holder from weapon");
-	//	camera = Validity::check_value<UCameraComponent>(weapon_holder->Camera, "Coul not get camera component from character");
+	//	camera = Validity::check_value<UCameraComponent>(weapon_holder->Camera, "Could not get camera component from character");
 	//}
 	//catch (const Validity::NullPointerException& e)
 	//{
