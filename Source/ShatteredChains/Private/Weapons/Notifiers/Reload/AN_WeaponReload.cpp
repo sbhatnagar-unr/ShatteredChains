@@ -8,7 +8,7 @@
 #include "Engine/HitResult.h"
 #include "CollisionQueryParams.h"
 #include "../../../Characters/Player/MyCharacter.h"
-#include "../../Guns/Weapon.h"
+#include "../../Weapon.h"
 
 
 void UAN_WeaponReload::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
