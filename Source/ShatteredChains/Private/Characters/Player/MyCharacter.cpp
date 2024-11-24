@@ -480,6 +480,12 @@ void AMyCharacter::dead(AActor* killed_by)
 }
 
 
+void AMyCharacter::deal_damage(AActor* dealt_by, float damage)
+{
+    ACharacterWithHealth::deal_damage(dealt_by, damage);
+    UE_LOG(Player, Log, LOG_TEXT("Player has taken %f damage, %f remaining."), damage, get_health());
+}
+
 
 
 

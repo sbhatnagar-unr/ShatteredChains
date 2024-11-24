@@ -28,6 +28,9 @@ public:
     // Called every frame
     virtual void Tick(float DeltaTime) override;
 
+
+    void deal_damage(AActor* dealt_by, float damage) override final;
+
 protected:
 
     // Input mapping for enhanced input
