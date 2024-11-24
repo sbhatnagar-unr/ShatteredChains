@@ -24,7 +24,9 @@ public:
 	unsigned int get_max_ammo_stock_pile_count() const;
 	unsigned int get_current_ammo_stock_pile_count() const;
 
-	uint32 get_scan_distance() const;
+	unsigned int get_scan_distance() const;
+
+	float get_weapon_damage() const;
 
 	virtual void refill_magazine();
 
@@ -34,17 +36,23 @@ protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<USceneComponent> root_scene_component;
+
+	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<USkeletalMeshComponent> weapon_skeletal_mesh_component;
 
 	TObjectPtr<UAnimInstance> anim_instance;
 
-	UPROPERTY(EditDefaultsOnly, Category="Hit-Scan")
-	uint32 scan_distance;
+	UPROPERTY(EditDefaultsOnly, Category="Gun Stats", meta=(ToolTip="How far to check for hitscan"))
+	unsigned int scan_distance;
 
-	UPROPERTY(EditDefaultsOnly, Category="Ammo")
+	UPROPERTY(EditDefaultsOnly, Category = "Gun Stats", meta = (ToolTip = "How much damage is done per hit"))
+	float weapon_damage;
+
+	UPROPERTY(EditDefaultsOnly, Category="Gun Stats", meta = (ToolTip = "How much ammunition fits in one magazine"))
 	unsigned int magazine_size;
 
-	UPROPERTY(EditDefaultsOnly, Category="Ammo")
+	UPROPERTY(EditDefaultsOnly, Category = "Gun Stats", meta = (ToolTip = "How much ammunition is in the stockpile for this weapon (before first magazine is loaded)"))
 	unsigned int max_ammo_stock_pile_count;
 
 	unsigned int current_magazine_ammo_count;

@@ -16,8 +16,12 @@ AWeapon::AWeapon()
 	current_magazine_ammo_count = 0;
 	max_ammo_stock_pile_count = 0;
 	current_ammo_stock_pile_count = 0;
+	
+	root_scene_component = CreateDefaultSubobject<USceneComponent>(TEXT("Root Scene Component"));
 	weapon_skeletal_mesh_component = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Weapon Skeletal Mesh"));
-	RootComponent = weapon_skeletal_mesh_component;
+	
+	RootComponent = root_scene_component;
+	weapon_skeletal_mesh_component->SetupAttachment(RootComponent);
 }
 
 // Called when the game starts or when spawned
@@ -179,9 +183,15 @@ unsigned int AWeapon::get_current_ammo_stock_pile_count() const
 }
 
 
-uint32 AWeapon::get_scan_distance() const
+unsigned int AWeapon::get_scan_distance() const
 {
 	return scan_distance;
+}
+
+
+float AWeapon::get_weapon_damage() const
+{
+	return weapon_damage;
 }
 
 
