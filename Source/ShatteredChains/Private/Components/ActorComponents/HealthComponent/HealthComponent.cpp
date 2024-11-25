@@ -42,7 +42,7 @@ void UHealthComponent::BeginPlay()
 	{
 		// Here we already know that owner implements the IHasHealth interface
 		on_death_delegate.AddDynamic(owner, &IHasHealth::on_death);
-		UE_LOG(Health, Log, LOG_TEXT("Added %s on_death delegate"), *owner_name);
+		UE_LOG(Health, Verbose, LOG_TEXT("Added %s on_death delegate"), *owner_name);
 	}
 
 	
@@ -95,6 +95,7 @@ void UHealthComponent::deal_damage(AActor* dealt_by, const float damage)
 	{
 		current_health = 0;
 		is_dead = true;
+		UE_LOG(Health, VeryVerbose, LOG_TEXT("Broadcasting death delegate for %s"), *GetOwner()->GetName());
 		on_death_delegate.Broadcast(dealt_by);
 		return;
 	}
