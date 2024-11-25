@@ -33,8 +33,11 @@ private:
     UPROPERTY()
     FOnDeathDelegate on_death_delegate;
     
-    UPROPERTY(EditDefaultsOnly, Category="Health")
+    UPROPERTY(EditDefaultsOnly, Category="Health", meta=(ToolTip="Max health the actor can have"))
     float max_health;
+
+    UPROPERTY(EditDefaultsOnly, Category="Health", meta=(ToolTip="Damage received will be multiplied by this value before its applied"))
+    float damage_multiplier;
     
     float current_health;
     bool is_dead;
