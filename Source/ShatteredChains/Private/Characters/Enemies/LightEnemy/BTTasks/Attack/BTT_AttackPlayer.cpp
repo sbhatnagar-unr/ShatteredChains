@@ -81,30 +81,30 @@ EBTNodeResult::Type UBTT_AttackPlayer::ExecuteTask(UBehaviorTreeComponent& Owner
 
             // If duration == 0.f that means an error
             if (duration == 0.f)
-			{
-				UE_LOG(Enemy, Error, LOG_TEXT("Could not play attack animation montage"));
-				// return early
-				return EBTNodeResult::Type::Failed;
-			}
-		}
-	}
-	// Otherwise
-	else
-	{
-		UE_LOG(Enemy, Verbose, LOG_TEXT("Target is out of attacking range"));
+            {
+                UE_LOG(Enemy, Error, LOG_TEXT("Could not play attack animation montage"));
+                // return early
+                return EBTNodeResult::Type::Failed;
+            }
+        }
+    }
+    // Otherwise
+    else
+    {
+        UE_LOG(Enemy, Verbose, LOG_TEXT("Target is out of attacking range"));
 
-		// Stop the montage
-		if (anim_instance->Montage_IsActive(attack_animation_montage))
-		{
-			anim_instance->Montage_Stop(enemy_actor->get_attack_animation_exit_blend(), attack_animation_montage);
-			UE_LOG(Enemy, VeryVerbose, LOG_TEXT("Stopping montage"));
-			// Set the end time so next time this gets called it can start instantly
-		}
+        // Stop the montage
+        if (anim_instance->Montage_IsActive(attack_animation_montage))
+        {
+            anim_instance->Montage_Stop(enemy_actor->get_attack_animation_exit_blend(), attack_animation_montage);
+            UE_LOG(Enemy, VeryVerbose, LOG_TEXT("Stopping montage"));
+            // Set the end time so next time this gets called it can start instantly
+        }
 
-		// Go back to chase player
-		blackboard->SetValueAsBool(in_attacking_range_field, false);
-	}
+        // Go back to chase player
+        blackboard->SetValueAsBool(in_attacking_range_field, false);
+    }
 
-	// Succsess
-	return EBTNodeResult::Type::Succeeded;
+    // Succsess
+    return EBTNodeResult::Type::Succeeded;
 }
