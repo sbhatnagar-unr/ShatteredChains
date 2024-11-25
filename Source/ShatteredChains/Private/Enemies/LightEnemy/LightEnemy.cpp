@@ -7,7 +7,7 @@
 
 
 // Sets default values
-ALightEnemy::ALightEnemy()
+ALightEnemy::ALightEnemy() : AEnemy()
 {
     attack_damage = 0;
 }
