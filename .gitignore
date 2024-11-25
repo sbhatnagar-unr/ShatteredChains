@@ -75,3 +75,6 @@ DerivedDataCache/*
 
 # My notes
 notes.txt
+
+# Rider IDE
+.idea/
