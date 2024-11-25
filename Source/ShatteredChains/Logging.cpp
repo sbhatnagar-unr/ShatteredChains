@@ -4,7 +4,7 @@
 std::string basename(const char* file_path)
 {
     std::string path(file_path);
-    size_t pos = path.rfind('\\');
+    const size_t pos = path.rfind('\\');
     if (pos == std::string::npos)
     {
         return path;

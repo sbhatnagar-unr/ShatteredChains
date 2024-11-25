@@ -9,22 +9,22 @@
 UCLASS(Abstract)
 class ACharacterWithHealth : public ACharacter
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	float get_health() const;
-	float get_max_health() const;
-	virtual void heal(float health);
-	virtual void set_health(float health);
-	virtual void deal_damage(AActor* dealt_by, float damage);
-	virtual void dead(AActor* killed_by) PURE_VIRTUAL(ACharacterWithHealth::dead, return;);
+    float get_health() const;
+    float get_max_health() const;
+    virtual void heal(float health);
+    virtual void set_health(float health);
+    virtual void deal_damage(AActor* dealt_by, float damage);
+    virtual void dead(AActor* killed_by) PURE_VIRTUAL(ACharacterWithHealth::dead, return;);
 
 protected:
-	virtual void BeginPlay() override;
+    virtual void BeginPlay() override;
 
 private:
-	UPROPERTY(EditDefaultsOnly)
-	float max_health;
+    UPROPERTY(EditDefaultsOnly)
+    float max_health;
 
-	float current_health;
+    float current_health;
 };

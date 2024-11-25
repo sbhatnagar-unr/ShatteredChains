@@ -12,8 +12,8 @@
 UCLASS()
 class UAN_WeaponFire : public UAnimNotify
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
-	void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
+    virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
 
 };

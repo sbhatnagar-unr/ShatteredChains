@@ -12,9 +12,9 @@
 UCLASS()
 class UBTT_AttackPlayer : public UBTTaskNode
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	UBTT_AttackPlayer();
-	EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory);
+    UBTT_AttackPlayer();
+    EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory);
 };

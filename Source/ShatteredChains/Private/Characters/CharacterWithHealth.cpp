@@ -10,58 +10,58 @@
  // Called when the game starts or when spawned
  void ACharacterWithHealth::BeginPlay()
  {
-	 Super::BeginPlay();
+     Super::BeginPlay();
 
-	 current_health = max_health;
+     current_health = max_health;
  }
 
 
 float ACharacterWithHealth::get_health() const
 {
-	return current_health;
+    return current_health;
 }
 
 
 float ACharacterWithHealth::get_max_health() const
 {
-	return max_health;
+    return max_health;
 }
 
 
 void ACharacterWithHealth::heal(float health)
 {
-	/*
-	Heals charachter up to a maxiumim of max_health
-	*/
-	current_health += health;
-	if (current_health > max_health)
-	{
-		UE_LOG(Health, Verbose, LOG_TEXT("Overhealed, resetting health to max"));
-		current_health = max_health;
-	}
+    /*
+    Heals charachter up to a maxiumim of max_health
+    */
+    current_health += health;
+    if (current_health > max_health)
+    {
+        UE_LOG(Health, Verbose, LOG_TEXT("Overhealed, resetting health to max"));
+        current_health = max_health;
+    }
 }
 
 
 void ACharacterWithHealth::set_health(float health)
 {
-	/*
-	Sets health up to a maximum of max_health
-	*/
-	current_health = (health > max_health) ? max_health : health;
+    /*
+    Sets health up to a maximum of max_health
+    */
+    current_health = (health > max_health) ? max_health : health;
 }
 
 
 void ACharacterWithHealth::deal_damage(AActor* dealt_by, float damage)
 {
-	/*
-	Applies damage, if health becomes negative, it gets set to 0
-	*/
-	current_health -= damage;
+    /*
+    Applies damage, if health becomes negative, it gets set to 0
+    */
+    current_health -= damage;
 
-	if (current_health <= 0)
-	{
-		current_health = 0;
-		dead(dealt_by);
-		return;
-	}
+    if (current_health <= 0)
+    {
+        current_health = 0;
+        dead(dealt_by);
+        return;
+    }
 }

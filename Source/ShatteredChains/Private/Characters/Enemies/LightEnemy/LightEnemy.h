@@ -10,46 +10,46 @@
 UCLASS()
 class ALightEnemy : public ACharacterWithHealth
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	// Sets default values for this actor's properties
-	ALightEnemy();
+    // Sets default values for this actor's properties
+    ALightEnemy();
 
-	AActor* get_target();
-	float get_attack_range();
-	float get_attack_damage();
-	UAnimMontage* get_attack_animation_montage();
-	float get_attack_animation_exit_blend();
+    AActor* get_target();
+    float get_attack_range();
+    float get_attack_damage();
+    UAnimMontage* get_attack_animation_montage();
+    float get_attack_animation_exit_blend();
 
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+    // Called every frame
+    virtual void Tick(float DeltaTime) override;
 
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+    // Called to bind functionality to input
+    virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+    // Called when the game starts or when spawned
+    virtual void BeginPlay() override;
 
 private:
-	// This is the actor that the enemy whill chase and attack
-	TObjectPtr<AActor> target;
+    // This is the actor that the enemy whill chase and attack
+    TObjectPtr<AActor> target;
 
-	// Distance enemy can be from player to hit an attack
-	UPROPERTY(EditDefaultsOnly, Category="Attacking")
-	float attack_range;
+    // Distance enemy can be from player to hit an attack
+    UPROPERTY(EditDefaultsOnly, Category="Attacking")
+    float attack_range;
 
-	// Damage enemy does on each attack
-	UPROPERTY(EditDefaultsOnly, Category = "Attacking")
-	float attack_damage;
+    // Damage enemy does on each attack
+    UPROPERTY(EditDefaultsOnly, Category = "Attacking")
+    float attack_damage;
 
-	// Animation montage for attacking player
-	UPROPERTY(EditDefaultsOnly, Category="Attacking")
-	TObjectPtr<UAnimMontage> attack_animation_montage;
+    // Animation montage for attacking player
+    UPROPERTY(EditDefaultsOnly, Category="Attacking")
+    TObjectPtr<UAnimMontage> attack_animation_montage;
 
-	UPROPERTY(EditDefaultsOnly, Category="Attacking")
-	float attack_animation_exit_blend;
+    UPROPERTY(EditDefaultsOnly, Category="Attacking")
+    float attack_animation_exit_blend;
 
-	void dead(AActor* killed_by) override;
+    void dead(AActor* killed_by) override;
 };
