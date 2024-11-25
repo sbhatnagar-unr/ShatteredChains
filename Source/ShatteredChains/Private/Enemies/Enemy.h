@@ -9,21 +9,37 @@
 UCLASS()
 class AEnemy : public ACharacter
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
-	AEnemy();
+    // Sets default values for this character's properties
+    AEnemy();
+    
+    // Called to bind functionality to input
+    virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+    AActor* get_target() const;
+    float get_attack_range() const;
+    UAnimMontage* get_attack_animation_montage() const;
+    float get_attack_animation_exit_blend() const;
+
+    
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+    // This is the actor that the enemy will chase and attack
+    UPROPERTY()
+    TObjectPtr<AActor> target;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+    // Distance enemy can be from player to hit an attack
+    UPROPERTY(EditDefaultsOnly, Category="Attacking", meta=(ToolTip="Distance enemy can attack player from"))
+    float attack_range;
 
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+    // Animation montage for attacking player
+    UPROPERTY(EditDefaultsOnly, Category="Attacking", meta=(ToolTip="Animation montage to play when enemy is attacking"))
+    TObjectPtr<UAnimMontage> attack_animation_montage;
+    
+private:
 
+    UPROPERTY(EditDefaultsOnly, Category="Attacking", meta=(ToolTip="How long it takes to transition out of the attack montage"))
+    float attack_animation_exit_blend;
+    
 };
