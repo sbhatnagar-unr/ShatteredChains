@@ -17,6 +17,7 @@ public:
 
     float get_attack_damage() const;
 
+    virtual void on_death(AActor* killed_by) override final;
     
 protected:
     // Called when the game starts or when spawned
