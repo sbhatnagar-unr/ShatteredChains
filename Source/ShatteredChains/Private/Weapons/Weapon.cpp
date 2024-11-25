@@ -16,8 +16,12 @@ AWeapon::AWeapon()
     current_magazine_ammo_count = 0;
     max_ammo_stock_pile_count = 0;
     current_ammo_stock_pile_count = 0;
+    
+    root_scene_component = CreateDefaultSubobject<USceneComponent>(TEXT("Root Scene Component"));
     weapon_skeletal_mesh_component = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Weapon Skeletal Mesh"));
-    RootComponent = weapon_skeletal_mesh_component;
+    
+    RootComponent = root_scene_component;
+    weapon_skeletal_mesh_component->SetupAttachment(RootComponent);
 }
 
 // Called when the game starts or when spawned
@@ -58,23 +62,20 @@ void AWeapon::fire() const
     Starts firing animation montage
     Actual weapon firing is done through notifiers set up in the montage
     This is so that firing happens at the correct part of the animation
-    For most guns this is probably at the start so you can put a notifier at the begining
-    But in the case of say a burst weapons, we would want 3 notifiers in our animation, and that allows this fucntion to be used for all firing type, since the firing is handled by notifiers.
-    Also, some weapons dont fire right at the start, some may have a small charge up animation.
+    For most guns this is probably at the start so you can put a notifier at the beginning
+    But in the case of say a burst weapons, we would want 3 notifiers in our animation, and that allows this function to be used for all firing type, since the firing is handled by notifiers.
+    Also, some weapons don't fire right at the start, some may have a small charge up animation.
     Basically, handling the firing through notifiers in the montage makes this function flexible enough to be used with ANY weapon, regardless of how it functions.
     */
-    // Dont fire if we are still doing another animation
 
-    // Dont fire if we are out of ammo
+    // Don't fire if we are out of ammo
     if (current_magazine_ammo_count <= 0)
     {
         UE_LOG(Weapons, Verbose, LOG_TEXT("No ammo, skipping fire"));
         return;
     }
 
-
-    UE_LOG(Weapons, Verbose, LOG_TEXT("Fire weapon initiated"));
-
+    
     try
     {
         Validity::check_value<UAnimMontage>(fire_animation_montage, "No fire animation montage for weapon");
@@ -87,22 +88,24 @@ void AWeapon::fire() const
     }
 
     // Check if either of the animations are currently playing
-    // If one of them is nullptr, this is fine as this if statement will still work as intended, it will just be slightly less effienct
-    // This is because it will check all montages to see if any of them are active if nullptr is passed in.  This is fine becuase in the final game
+    // If one of them is nullptr, this is fine as this if statement will still work as intended, it will just be slightly less efficient
+    // This is because it will check all montages to see if any of them are active if nullptr is passed in.  This is fine because in the final game
     // there SHOULD NEVER be nullptr.
     if (anim_instance->Montage_IsActive(fire_animation_montage) || anim_instance->Montage_IsActive(reload_animation_montage))
     {
         UE_LOG(Weapons, Verbose, LOG_TEXT("Can't fire now, another process is taking place"));
         return;
     }
+    
+    UE_LOG(Weapons, Verbose, LOG_TEXT("Fire weapon initiated"));
     UE_LOG(Weapons, Verbose, LOG_TEXT("Playing weapon fire animation montage"));
-    float duration = anim_instance->Montage_Play(fire_animation_montage, 1.0f, EMontagePlayReturnType::MontageLength, 0.0f, true);
+    
+    const float duration = anim_instance->Montage_Play(fire_animation_montage, 1.0f, EMontagePlayReturnType::MontageLength, 0.0f, true);
 
     // If duration == 0.f that means an error
     if (duration == 0.f)
     {
         UE_LOG(Weapons, Error, LOG_TEXT("Could not play weapon fire animation montage"));
-        return;
     }
 }
 
@@ -134,8 +137,8 @@ void AWeapon::reload() const
     }
 
     // Check if either of the animations are currently playing
-    // If one of them is nullptr, this is fine as this if statement will still work as intended, it will just be slightly less effienct
-    // This is because it will check all montages to see if any of them are active if nullptr is passed in.  This is fine becuase in the final game
+    // If one of them is nullptr, this is fine as this if statement will still work as intended, it will just be slightly less efficient
+    // This is because it will check all montages to see if any of them are active if nullptr is passed in.  This is fine because in the final game
     // there SHOULD NEVER be nullptr.
     if (anim_instance->Montage_IsActive(fire_animation_montage) || anim_instance->Montage_IsActive(reload_animation_montage))
     {
@@ -144,13 +147,12 @@ void AWeapon::reload() const
     }
 
     UE_LOG(Weapons, Verbose, LOG_TEXT("Playing weapon reload animation montage"));
-    float duration = anim_instance->Montage_Play(reload_animation_montage, 1.0f, EMontagePlayReturnType::MontageLength, 0.0f, true);
+    const float duration = anim_instance->Montage_Play(reload_animation_montage, 1.0f, EMontagePlayReturnType::MontageLength, 0.0f, true);
 
     // If duration == 0.f that means an error
     if (duration == 0.f)
     {
         UE_LOG(Weapons, Error, LOG_TEXT("Could not play weapon reload animation montage"));
-        return;
     }
 }
 
@@ -179,9 +181,15 @@ unsigned int AWeapon::get_current_ammo_stock_pile_count() const
 }
 
 
-uint32 AWeapon::get_scan_distance() const
+unsigned int AWeapon::get_scan_distance() const
 {
     return scan_distance;
+}
+
+
+float AWeapon::get_weapon_damage() const
+{
+    return weapon_damage;
 }
 
 
@@ -189,7 +197,7 @@ void AWeapon::refill_magazine()
 {
     UE_LOG(Weapons, Log, LOG_TEXT("Refilling weapon magazine"));
 
-    unsigned int remaining_mag_space = magazine_size - current_magazine_ammo_count;
+    const unsigned int remaining_mag_space = magazine_size - current_magazine_ammo_count;
 
     // If we have enough ammo to top it off
     if (current_ammo_stock_pile_count >= remaining_mag_space)

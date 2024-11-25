@@ -12,16 +12,16 @@ DEFINE_LOG_CATEGORY(Player);
 // Sets default values
 AMyCharacter::AMyCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+     // Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+    PrimaryActorTick.bCanEverTick = true;
 
 
-	// Initialize movement states and stamina
-	bIsCrouched = false;
-	bIsSprinting = false;
-	bIsSliding = false;
-	bCanRoll = true;
-	CurrentStamina = Stamina; // Set initial stamina
+    // Initialize movement states and stamina
+    bIsCrouched = false;
+    bIsSprinting = false;
+    bIsSliding = false;
+    bCanRoll = true;
+    CurrentStamina = Stamina; // Set initial stamina
 
     Camera = CreateDefaultSubobject<UCameraComponent>("Camera");
     Camera->SetupAttachment(RootComponent);
@@ -32,8 +32,8 @@ AMyCharacter::AMyCharacter()
 // Called when the game starts or when spawned
 void AMyCharacter::BeginPlay()
 {
-	Super::BeginPlay();
-	
+    Super::BeginPlay();
+    
 }
 
 // Player Input bindings
@@ -469,7 +469,7 @@ void AMyCharacter::WallJump()
 // Called every frame
 void AMyCharacter::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
+    Super::Tick(DeltaTime);
 
 }
 

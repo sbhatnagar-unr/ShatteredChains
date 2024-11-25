@@ -4,7 +4,6 @@
 #include "AN_WeaponReload.h"
 #include "ShatteredChains/Utility.h"
 #include "ShatteredChains/Logging.h"
-#include "Camera/CameraComponent.h"
 #include "Engine/HitResult.h"
 #include "CollisionQueryParams.h"
 #include "Weapons/Weapon.h"
