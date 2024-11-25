@@ -16,6 +16,8 @@ AEnemy::AEnemy()
 
     attack_animation_montage = nullptr;
     attack_animation_exit_blend = 0.2f;
+
+    health_component = CreateDefaultSubobject<UHealthComponent>(TEXT("Health Component"));
 }
 
 // Called to bind functionality to input
@@ -45,4 +47,16 @@ UAnimMontage* AEnemy::get_attack_animation_montage() const
 float AEnemy::get_attack_animation_exit_blend() const
 {
     return attack_animation_exit_blend;
+}
+
+
+UHealthComponent* AEnemy::get_health_component()
+{
+    return health_component;
+}
+
+
+void AEnemy::on_death(AActor* killed_by)
+{
+    UE_LOG(Enemy, Log, LOG_TEXT("%s was just killed by %s"), *GetActorLabel(), (killed_by == nullptr) ? *FString("UNKNOWN") : *killed_by->GetName())
 }
