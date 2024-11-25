@@ -7,7 +7,7 @@
 #include "LightEnemy.generated.h"
 
 UCLASS()
-class SHATTEREDCHAINS_API ALightEnemy : public AEnemy
+class ALightEnemy : public AEnemy
 {
     GENERATED_BODY()
 
@@ -24,5 +24,6 @@ protected:
 
 
 private:
+    UPROPERTY(EditDefaultsOnly, Category="Attacking")
     float attack_damage;
 };
