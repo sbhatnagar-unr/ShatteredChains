@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/ActorComponents/HealthComponent/HealthComponent.h"
 #include "UObject/Interface.h"
 #include "HasHealth.generated.h"
 
@@ -24,5 +25,5 @@ class IHasHealth
 public:
 	UFUNCTION()
 	virtual void on_death(AActor* killed_by) PURE_VIRTUAL(IHasHealth::on_death, return;);
-	virtual UActorComponent* get_health_component() PURE_VIRTUAL(IHasHealth::on_death, return nullptr;);
+	virtual UHealthComponent* get_health_component() PURE_VIRTUAL(IHasHealth::on_death, return nullptr;);
 };
