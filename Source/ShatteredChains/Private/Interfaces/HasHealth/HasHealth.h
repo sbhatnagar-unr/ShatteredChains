@@ -24,4 +24,5 @@ class IHasHealth
 public:
 	UFUNCTION()
 	virtual void on_death(AActor* killed_by) PURE_VIRTUAL(IHasHealth::on_death, return;);
+	virtual UActorComponent* get_health_component() PURE_VIRTUAL(IHasHealth::on_death, return nullptr;);
 };
