@@ -1,8 +1,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "../CharacterWithHealth.h"
 #include "InputActionValue.h"
+#include "GameFramework/Character.h"
 #include "EnhancedInputComponent.h"  // Include enhanced input system
 #include "MyCharacter.generated.h"   // Must be the last include
 
@@ -12,7 +12,7 @@
  * don't delete this, breaks the code for some reason at generated_body()
  */
 UCLASS()
-class SHATTEREDCHAINS_API AMyCharacter : public ACharacterWithHealth
+class SHATTEREDCHAINS_API AMyCharacter : public ACharacter
 {
     GENERATED_BODY()
 
@@ -274,9 +274,4 @@ protected:
     */
     UPROPERTY(EditDefaultsOnly, Category = "Animation")
     UAnimMontage* JumpAnimMontage;
-
-
-private:
-    void dead(AActor* killed_by) override;
-
 };

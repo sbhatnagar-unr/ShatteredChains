@@ -80,9 +80,3 @@ float ALightEnemy::get_attack_animation_exit_blend() const
 {
 	return attack_animation_exit_blend;
 }
-
-
-void ALightEnemy::dead(AActor* killed_by)
-{
-	UE_LOG(Enemy, Log, LOG_TEXT("I DIED!!!!"));
-}

@@ -2,12 +2,12 @@
 
 #pragma once
 
-#include "../../CharacterWithHealth.h"
+#include "GameFramework/Character.h"
 #include "Animation/AnimMontage.h"
 #include "LightEnemy.generated.h"
 
 UCLASS()
-class ALightEnemy : public ACharacterWithHealth
+class ALightEnemy : public ACharacter
 {
 	GENERATED_BODY()
 
@@ -47,6 +47,4 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category="Attacking")
 	float attack_animation_exit_blend;
-
-	virtual void dead(AActor* killed_by) override;
 };

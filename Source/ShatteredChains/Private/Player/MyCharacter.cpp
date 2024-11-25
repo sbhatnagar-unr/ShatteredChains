@@ -434,7 +434,7 @@ void AMyCharacter::PullUpFromLedge()
 }
 
 
-// Function identifies whether there’s a ledge above the character that can be climbed.
+// Function identifies whether thereï¿½s a ledge above the character that can be climbed.
 bool AMyCharacter::DetectLedge()
 {
     FVector Start = GetActorLocation();
@@ -472,14 +472,6 @@ void AMyCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 }
-
-
-void AMyCharacter::dead(AActor* killed_by)
-{
-    UE_LOG(Player, Log, LOG_TEXT("Player dead"));
-}
-
-
 
 
 
