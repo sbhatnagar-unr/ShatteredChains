@@ -11,7 +11,7 @@
 UINTERFACE(MinimalAPI)
 class UHasHealth : public UInterface
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 };
 
 /**
@@ -19,11 +19,12 @@ class UHasHealth : public UInterface
  */
 class IHasHealth
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
+    // Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	UFUNCTION()
-	virtual void on_death(AActor* killed_by) PURE_VIRTUAL(IHasHealth::on_death, return;);
-	virtual UHealthComponent* get_health_component() PURE_VIRTUAL(IHasHealth::on_death, return nullptr;);
+    UFUNCTION()
+    virtual void on_death(AActor* killed_by) PURE_VIRTUAL(IHasHealth::on_death, return;);
+    
+    virtual UHealthComponent* get_health_component() PURE_VIRTUAL(IHasHealth::on_death, return nullptr;);
 };
