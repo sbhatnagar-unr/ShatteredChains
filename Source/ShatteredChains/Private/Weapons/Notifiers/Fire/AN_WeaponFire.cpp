@@ -4,6 +4,7 @@
 #include "AN_WeaponFire.h"
 #include "Camera/CameraComponent.h"
 #include "ShatteredChains/Private/Weapons/Weapon.h"
+#include "ShatteredChains/Private/Characters/Player/MyCharacter.h"
 #include "ShatteredChains/Logging.h"
 #include "ShatteredChains/Utility.h"
 
@@ -83,18 +84,18 @@ void UAN_WeaponFire::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase*
         catch (const Validity::NullPointerException&)
         {
             // Log the thing we hits name
-    		UE_LOG(Weapons, Verbose, LOG_TEXT("Trace hit undamageable target (%s)"), *(trace_result.GetActor()->GetName()));
-			return;
-		}
-	
-		// If the hit actor has health
-		float weapon_damage = weapon->get_weapon_damage();
-		UE_LOG(Weapons, Log, LOG_TEXT("Trace hit target (%s), %f damage dealt"), *(trace_result.GetActor()->GetName()), weapon_damage);
-		hit_actor->deal_damage(weapon_holder, weapon_damage);
-	}
-	else
-	{
-		UE_LOG(Weapons, Verbose, LOG_TEXT("Trace hit no target"));
-	}
+            UE_LOG(Weapons, Verbose, LOG_TEXT("Trace hit undamageable target (%s)"), *(trace_result.GetActor()->GetActorLabel()));
+            return;
+        }
+    
+        // If the hit actor has health
+        float weapon_damage = weapon->get_weapon_damage();
+        UE_LOG(Weapons, Log, LOG_TEXT("Trace hit target (%s), %f damage dealt"), *(trace_result.GetActor()->GetActorLabel()), weapon_damage);
+        hit_actor->deal_damage(weapon_holder, weapon_damage);
+    }
+    else
+    {
+        UE_LOG(Weapons, Verbose, LOG_TEXT("Trace hit no target"));
+    }
 
 }
