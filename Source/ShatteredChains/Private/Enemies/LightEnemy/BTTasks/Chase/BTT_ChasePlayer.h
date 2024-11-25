@@ -12,9 +12,9 @@
 UCLASS()
 class UBTT_ChasePlayer : public UBTTaskNode
 {
-	GENERATED_BODY()
-	
+    GENERATED_BODY()
+    
 public:
-	UBTT_ChasePlayer();
-	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
+    UBTT_ChasePlayer();
+    virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 };
