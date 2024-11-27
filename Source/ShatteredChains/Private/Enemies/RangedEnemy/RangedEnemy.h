@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Enemies/Enemy.h"
+#include "Weapons/Weapon.h"
 #include "RangedEnemy.generated.h"
 
 UCLASS()
@@ -19,4 +20,7 @@ protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
 
+private:
+    UPROPERTY(EditDefaultsOnly, Category="Weapon", DisplayName="Weapon")
+    TSubclassOf<AWeapon> weapon_class;
 };
