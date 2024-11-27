@@ -58,5 +58,5 @@ UHealthComponent* AEnemy::get_health_component() const
 
 void AEnemy::on_death(AActor* killed_by)
 {
-    UE_LOG(Enemy, Log, LOG_TEXT("%s was just killed by %s"), *GetActorLabel(), (killed_by == nullptr) ? *FString("UNKNOWN") : *killed_by->GetName())
+    UE_LOG(Enemy, Log, LOG_TEXT("%s was just killed by %s"), *GetActorLabel(), (killed_by == nullptr) ? *FString("UNKNOWN") : *killed_by->GetActorLabel())
 }
