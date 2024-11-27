@@ -50,7 +50,7 @@ float AEnemy::get_attack_animation_exit_blend() const
 }
 
 
-UHealthComponent* AEnemy::get_health_component()
+UHealthComponent* AEnemy::get_health_component() const
 {
     return health_component;
 }

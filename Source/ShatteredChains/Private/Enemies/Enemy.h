@@ -25,7 +25,7 @@ public:
     UAnimMontage* get_attack_animation_montage() const;
     float get_attack_animation_exit_blend() const;
 
-    virtual UHealthComponent* get_health_component() override final;
+    virtual UHealthComponent* get_health_component() const override final;
 
     virtual void on_death(AActor* killed_by) override;
     
