@@ -78,7 +78,7 @@ void UAN_WeaponFire::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase*
         // Check if the actor was a character with health
         AActor* a = trace_result.GetActor();
         const FString hit_actor_label = a->GetActorLabel();
-        IHasHealth* hit_actor = Cast<IHasHealth>(a);
+        const IHasHealth* hit_actor = Cast<IHasHealth>(a);
 
         if (hit_actor == nullptr)
         {
