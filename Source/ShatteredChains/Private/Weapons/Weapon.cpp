@@ -157,6 +157,19 @@ void AWeapon::reload() const
 }
 
 
+void AWeapon::decrement_mag_ammo_count()
+{
+    if (current_magazine_ammo_count > 0)
+    {
+        current_magazine_ammo_count--;
+    }
+    else
+    {
+        UE_LOG(Weapons, Error, LOG_TEXT("Weapon mag ammo decrement triggered but mag ammo count was 0"));
+    }
+}
+
+
 unsigned int AWeapon::get_magazine_size() const
 {
     return magazine_size;

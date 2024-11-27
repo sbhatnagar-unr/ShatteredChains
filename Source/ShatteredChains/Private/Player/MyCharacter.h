@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "InputActionValue.h"
 #include "GameFramework/Character.h"
+#include "Interfaces/HasHealth/HasHealth.h"
 #include "EnhancedInputComponent.h"  // Include enhanced input system
 #include "MyCharacter.generated.h"   // Must be the last include
 
@@ -12,7 +13,7 @@
  * don't delete this, breaks the code for some reason at generated_body()
  */
 UCLASS()
-class SHATTEREDCHAINS_API AMyCharacter : public ACharacter
+class SHATTEREDCHAINS_API AMyCharacter : public ACharacter, public IHasHealth
 {
     GENERATED_BODY()
 
@@ -27,6 +28,10 @@ public:
 
     // Called every frame
     virtual void Tick(float DeltaTime) override;
+
+    virtual void on_death(AActor* killed_by) override final;
+    
+    virtual UHealthComponent* get_health_component() const override final;
 
 protected:
 
@@ -274,4 +279,7 @@ protected:
     */
     UPROPERTY(EditDefaultsOnly, Category = "Animation")
     UAnimMontage* JumpAnimMontage;
+
+    UPROPERTY(VisibleAnywhere)
+    UHealthComponent* HealthComponent;
 };

@@ -18,6 +18,8 @@ public:
     void fire() const;
     void reload() const;
 
+    void decrement_mag_ammo_count();
+    
     unsigned int get_magazine_size() const;
     unsigned int get_current_magazine_ammo_count() const;
 
@@ -29,8 +31,7 @@ public:
     float get_weapon_damage() const;
 
     virtual void refill_magazine();
-
-
+    
 protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;

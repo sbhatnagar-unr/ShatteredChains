@@ -27,6 +27,8 @@ AMyCharacter::AMyCharacter()
     Camera->SetupAttachment(RootComponent);
     Camera->bUsePawnControlRotation = true;
 
+    HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("Health Component"));
+
 }
 
 // Called when the game starts or when spawned
@@ -471,6 +473,17 @@ void AMyCharacter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
+}
+
+
+void AMyCharacter::on_death(AActor* killed_by)
+{
+    UE_LOG(Player, Log, LOG_TEXT("Player dead"));
+}
+    
+UHealthComponent* AMyCharacter::get_health_component() const
+{
+    return HealthComponent;
 }
 
 
