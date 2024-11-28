@@ -4,7 +4,7 @@
 #include "RangedEnemy.h"
 #include "ShatteredChains/Logging.h"
 #include "ShatteredChains/Utility.h"
-
+#include "NavigationSystem.h"
 
 // Sets default values
 ARangedEnemy::ARangedEnemy() : AEnemy()
@@ -12,6 +12,9 @@ ARangedEnemy::ARangedEnemy() : AEnemy()
     weapon_class = nullptr;
     weapon = nullptr;
     anchor_point = nullptr;
+
+    location_to_go_to = FVector::ZeroVector;
+    anchor_tolerance = 0;
 }
 
 // Called when the game starts or when spawned
@@ -21,7 +24,8 @@ void ARangedEnemy::BeginPlay()
 
     UWorld* world;
     USkeletalMeshComponent* skeletal_mesh_component;
-    
+    UNavigationSystemV1* navigation_system;
+
     try
     {
         // Get the world
@@ -34,6 +38,11 @@ void ARangedEnemy::BeginPlay()
         Validity::check_value<UClass>(weapon_class, "No weapon class");
         UE_LOG(Enemy, Verbose, LOG_TEXT("Weapon class for %s is %s"), *GetActorLabel(), *weapon_class->GetName());
         skeletal_mesh_component = Validity::check_value<USkeletalMeshComponent>(GetMesh(), "No skeletal Mesh");
+        // Get navigation system
+        navigation_system = Validity::check_value<UNavigationSystemV1>(UNavigationSystemV1::GetCurrent(world), "Could not get navigation system");
+        // Check the anchor tolerance
+        Validity::check_value<float>(anchor_tolerance, 0, "Anchor tolerance is unset");
+        UE_LOG(Enemy, VeryVerbose, LOG_TEXT("Anchor tolerance for %s is %f"), *GetActorLabel(), anchor_tolerance);
     }
     catch (const Validity::NullPointerException &e)
     {
@@ -62,6 +71,18 @@ void ARangedEnemy::BeginPlay()
         return;
     }
     UE_LOG(Enemy, Verbose, LOG_TEXT("Successfully attached %s to %s"), *GetActorLabel(), *weapon_class->GetName());
+
+    // Get random point in anchor radius, this will be the point it runs to and shoots from
+    FNavLocation nav_location;
+    if (navigation_system->GetRandomReachablePointInRadius(anchor_point->GetActorLocation(), anchor_point->get_anchor_radius(), nav_location))
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("Could not find reachable point near anchor %s"), *anchor_point->GetActorLabel());
+    }
+    else
+    {
+        location_to_go_to = nav_location.Location;
+        UE_LOG(Enemy, Log, LOG_TEXT("Location to go to in anchor for %s is %s"), *GetActorLabel(), *location_to_go_to.ToString());
+    }
     
 }
 
@@ -75,4 +96,16 @@ AWeapon* ARangedEnemy::get_weapon() const
 AAnchorPoint* ARangedEnemy::get_anchor_point() const
 {
     return anchor_point;
+}
+
+
+FVector ARangedEnemy::get_location_to_go_to() const
+{
+    return location_to_go_to;    
+}
+
+
+float ARangedEnemy::get_anchor_tolerance() const
+{
+    return anchor_tolerance;
 }

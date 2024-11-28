@@ -20,6 +20,10 @@ public:
     AWeapon* get_weapon() const;
 
     AAnchorPoint* get_anchor_point() const;
+
+    FVector get_location_to_go_to() const;
+
+    float get_anchor_tolerance() const;
     
 protected:
     // Called when the game starts or when spawned
@@ -34,4 +38,9 @@ private:
     
     UPROPERTY(EditInstanceOnly, Category="Anchor")
     TObjectPtr<AAnchorPoint> anchor_point;
+
+    UPROPERTY(EditDefaultsOnly, Category="Anchor")
+    float anchor_tolerance;
+    
+    FVector location_to_go_to;
 };
