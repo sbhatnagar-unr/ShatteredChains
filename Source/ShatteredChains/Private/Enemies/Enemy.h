@@ -30,7 +30,7 @@ public:
     virtual void on_death(AActor* killed_by) override;
     
 protected:
-    // This is the actor that the enemy will chase and attack
+    // This is the actor that the enemy will attack
     UPROPERTY()
     TObjectPtr<AActor> target;
 
