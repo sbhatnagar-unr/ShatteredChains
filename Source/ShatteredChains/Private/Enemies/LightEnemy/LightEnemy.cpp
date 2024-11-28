@@ -23,13 +23,17 @@ void ALightEnemy::BeginPlay()
     if (target == nullptr)
     {
         UE_LOG(Enemy, Error, LOG_TEXT("Could not locate target (player)"));
+        return;
     }
+    UE_LOG(Enemy, Log, LOG_TEXT("Found target (player)"));
 
     // Make sure we have an animation montage
     if (attack_animation_montage == nullptr)
     {
         UE_LOG(Enemy, Error, LOG_TEXT("No attack animation montage"));
+        return;
     }
+
 }
 
 
