@@ -27,7 +27,6 @@ EBTNodeResult::Type UBTT_ChasePlayer::ExecuteTask(UBehaviorTreeComponent& OwnerC
     ALightEnemy* enemy_actor;
     // Enemy's target actor
     AActor* target_actor;
-    // Enemy's animation instance
     try
     {
         ai_controller = Validity::check_value<AAIController>(OwnerComp.GetAIOwner(), "Could not get AI Controller");
