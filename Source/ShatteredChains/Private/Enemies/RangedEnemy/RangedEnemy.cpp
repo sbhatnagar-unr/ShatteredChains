@@ -17,7 +17,7 @@ ARangedEnemy::ARangedEnemy() : AEnemy()
 void ARangedEnemy::BeginPlay()
 {
     Super::BeginPlay();
-
+    
     // Make sure we have everything we need to set up the ranged enemy
     USkeletalMeshComponent* skeletal_mesh_component;
     
@@ -56,6 +56,15 @@ void ARangedEnemy::BeginPlay()
         return;
     }
     UE_LOG(Enemy, Verbose, LOG_TEXT("Successfully attached %s to %s"), *GetActorLabel(), *weapon_class->GetName());
+
+    // Get the target
+    target = Cast<AActor>(world->GetFirstPlayerController()->GetPawn());
+    if (target == nullptr)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("Could not locate target (player)"));
+        return;
+    }
+    UE_LOG(Enemy, Log, LOG_TEXT("Found target (player)"));
 }
 
 
