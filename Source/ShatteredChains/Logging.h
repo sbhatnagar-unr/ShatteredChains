@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-#define LOG_TEXT(text) TEXT("[%hs:%d] -> ") TEXT(text), basename(__FILE__).c_str(), __LINE__
+#define LOG_TEXT(text) TEXT("[%hs:%hs:%d] -> ") TEXT(text), basename(__FILE__).c_str(), __func__, __LINE__
 std::string basename(const char* file_path);
 
 
