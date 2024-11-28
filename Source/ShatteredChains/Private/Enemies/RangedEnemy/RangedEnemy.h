@@ -16,11 +16,16 @@ public:
     // Sets default values for this character's properties
     ARangedEnemy();
 
+    AWeapon* get_weapon() const;
+    
 protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
 
 private:
-    UPROPERTY(EditDefaultsOnly, Category="Weapon", DisplayName="Weapon")
+    UPROPERTY(EditDefaultsOnly, Category="Weapon")
     TSubclassOf<AWeapon> weapon_class;
+
+    UPROPERTY()
+    AWeapon* weapon;
 };
