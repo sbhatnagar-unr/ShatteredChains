@@ -32,7 +32,7 @@ void UAN_WeaponFire::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase*
     }
     catch (const Validity::NullPointerException& e)
     {
-        UE_LOG(Weapons, Error, LOG_TEXT("%hs"), e.what());
+        UE_LOG(Weapon, Error, LOG_TEXT("%hs"), e.what());
         anim_instance->Montage_Stop(0);
         return;
     }
@@ -42,7 +42,7 @@ void UAN_WeaponFire::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase*
     FVector scan_direction = weapon_holder->get_hitscan_direction();
     if (!scan_direction.Normalize()) // Normalize in place, returns true if successful
     {
-        UE_LOG(Weapons, Error, LOG_TEXT("Could not normalize %s scan direction, aborting weapon fire"), *weapon_holder_name);
+        UE_LOG(Weapon, Error, LOG_TEXT("Could not normalize %s scan direction, aborting weapon fire"), *weapon_holder_name);
         anim_instance->Montage_Stop(0);
         return;
     }
@@ -60,8 +60,8 @@ void UAN_WeaponFire::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase*
 
 
     // Perform the trace
-    UE_LOG(Weapons, Log, LOG_TEXT("Firing weapon"));
-    UE_LOG(Weapons, VeryVerbose, LOG_TEXT("[Line Trace] %s -> %s"), *trace_start.ToString(), *trace_end.ToString());
+    UE_LOG(Weapon, Log, LOG_TEXT("Firing weapon"));
+    UE_LOG(Weapon, VeryVerbose, LOG_TEXT("[Line Trace] %s -> %s"), *trace_start.ToString(), *trace_end.ToString());
     const bool hit_something = world->LineTraceSingleByChannel(trace_result, trace_start, trace_end, ECollisionChannel::ECC_Visibility, trace_params);
 
     // Remove one ammunition
@@ -83,17 +83,17 @@ void UAN_WeaponFire::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase*
         if (hit_actor == nullptr)
         {
             // Log the thing we hits name
-            UE_LOG(Weapons, Verbose, LOG_TEXT("Trace hit un-damageable target (%s)"), *hit_actor_label);
+            UE_LOG(Weapon, Verbose, LOG_TEXT("Trace hit un-damageable target (%s)"), *hit_actor_label);
             return;
         }
     
         // If the hit actor has health
         const float weapon_damage = weapon->get_weapon_damage();
         hit_actor->get_health_component()->deal_damage(Cast<AActor>(weapon_holder), weapon_damage);
-        UE_LOG(Weapons, Log, LOG_TEXT("Trace hit target (%s), %f damage dealt"), *hit_actor_label, weapon_damage);
+        UE_LOG(Weapon, Log, LOG_TEXT("Trace hit target (%s), %f damage dealt"), *hit_actor_label, weapon_damage);
     }
     else
     {
-        UE_LOG(Weapons, Verbose, LOG_TEXT("Trace hit no target"));
+        UE_LOG(Weapon, Verbose, LOG_TEXT("Trace hit no target"));
     }
 }

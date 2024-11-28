@@ -8,5 +8,5 @@
 void APistol::BeginPlay()
 {
     Super::BeginPlay();
-    UE_LOG(Weapons, Log, LOG_TEXT("Pistol stock pile size: %d\tPistol mag size: %d"), max_ammo_stock_pile_count, magazine_size);
+    UE_LOG(Weapon, Log, LOG_TEXT("Pistol stock pile size: %d\tPistol mag size: %d"), max_ammo_stock_pile_count, magazine_size);
 }

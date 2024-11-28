@@ -19,13 +19,13 @@ void UAN_WeaponReload::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBas
     }
     catch (const Validity::NullPointerException& e)
     {
-        UE_LOG(Weapons, Error, LOG_TEXT("%hs"), e.what());
+        UE_LOG(Weapon, Error, LOG_TEXT("%hs"), e.what());
         return;
     }
 
     // Reload the weapon
     weapon->refill_magazine();
-    UE_LOG(Weapons, Log, LOG_TEXT("Weapon reloaded"));
+    UE_LOG(Weapon, Log, LOG_TEXT("Weapon reloaded"));
 
 }
 

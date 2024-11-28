@@ -5,7 +5,7 @@
 #include "ShatteredChains/Logging.h"
 #include "ShatteredChains/Utility.h"
 
-DEFINE_LOG_CATEGORY(Weapons);
+DEFINE_LOG_CATEGORY(Weapon);
 
 // Sets default values
 AWeapon::AWeapon()
@@ -33,21 +33,21 @@ void AWeapon::BeginPlay()
     {
         // Check for mesh
         Validity::check_value<USkeletalMesh>(weapon_skeletal_mesh_component->GetSkeletalMeshAsset(), "No skeletal mesh for weapon");
-        UE_LOG(Weapons, Verbose, LOG_TEXT("Weapon has skeletal mesh"));
+        UE_LOG(Weapon, Verbose, LOG_TEXT("Weapon has skeletal mesh"));
 
         // Check for animations
         Validity::check_value<UAnimMontage>(fire_animation_montage, "No fire animation montage for weapon");
-        UE_LOG(Weapons, Verbose, LOG_TEXT("Fire animation montage: %s"), *fire_animation_montage.GetFullName());
+        UE_LOG(Weapon, Verbose, LOG_TEXT("Fire animation montage: %s"), *fire_animation_montage.GetFullName());
         
         Validity::check_value<UAnimMontage>(reload_animation_montage, "No reload animation montage for weapon");
-        UE_LOG(Weapons, Verbose, LOG_TEXT("Reload animation montage: %s"), *reload_animation_montage.GetFullName());
+        UE_LOG(Weapon, Verbose, LOG_TEXT("Reload animation montage: %s"), *reload_animation_montage.GetFullName());
 
         anim_instance = Validity::check_value<UAnimInstance>(weapon_skeletal_mesh_component->GetAnimInstance(), "No anim instance found");
 
     }
     catch (const Validity::NullPointerException& e)
     {
-        UE_LOG(Weapons, Error, LOG_TEXT("%hs"), e.what());
+        UE_LOG(Weapon, Error, LOG_TEXT("%hs"), e.what());
     }
 
     // Set ammo
@@ -71,7 +71,7 @@ void AWeapon::fire() const
     // Don't fire if we are out of ammo
     if (current_magazine_ammo_count <= 0)
     {
-        UE_LOG(Weapons, Verbose, LOG_TEXT("No ammo, skipping fire"));
+        UE_LOG(Weapon, Verbose, LOG_TEXT("No ammo, skipping fire"));
         return;
     }
 
@@ -83,7 +83,7 @@ void AWeapon::fire() const
     }
     catch (const Validity::NullPointerException& e)
     {
-        UE_LOG(Weapons, Error, LOG_TEXT("%hs (aborting fire)"), e.what());
+        UE_LOG(Weapon, Error, LOG_TEXT("%hs (aborting fire)"), e.what());
         return;
     }
 
@@ -93,19 +93,19 @@ void AWeapon::fire() const
     // there SHOULD NEVER be nullptr.
     if (anim_instance->Montage_IsActive(fire_animation_montage) || anim_instance->Montage_IsActive(reload_animation_montage))
     {
-        UE_LOG(Weapons, Verbose, LOG_TEXT("Can't fire now, another process is taking place"));
+        UE_LOG(Weapon, Verbose, LOG_TEXT("Can't fire now, another process is taking place"));
         return;
     }
     
-    UE_LOG(Weapons, Verbose, LOG_TEXT("Fire weapon initiated"));
-    UE_LOG(Weapons, Verbose, LOG_TEXT("Playing weapon fire animation montage"));
+    UE_LOG(Weapon, Verbose, LOG_TEXT("Fire weapon initiated"));
+    UE_LOG(Weapon, Verbose, LOG_TEXT("Playing weapon fire animation montage"));
     
     const float duration = anim_instance->Montage_Play(fire_animation_montage, 1.0f, EMontagePlayReturnType::MontageLength, 0.0f, true);
 
     // If duration == 0.f that means an error
     if (duration == 0.f)
     {
-        UE_LOG(Weapons, Error, LOG_TEXT("Could not play weapon fire animation montage"));
+        UE_LOG(Weapon, Error, LOG_TEXT("Could not play weapon fire animation montage"));
     }
 }
 
@@ -120,11 +120,11 @@ void AWeapon::reload() const
     // Dont reload if ammo is full
     if (current_magazine_ammo_count >= magazine_size)
     {
-        UE_LOG(Weapons, Verbose, LOG_TEXT("Weapon magazine is full, skipping reload"));
+        UE_LOG(Weapon, Verbose, LOG_TEXT("Weapon magazine is full, skipping reload"));
         return;
     }
 
-    UE_LOG(Weapons, Verbose, LOG_TEXT("Reload weapon initiated"));
+    UE_LOG(Weapon, Verbose, LOG_TEXT("Reload weapon initiated"));
     try
     {
         Validity::check_value<UAnimMontage>(reload_animation_montage, "No reload animation montage for weapon");
@@ -132,7 +132,7 @@ void AWeapon::reload() const
     }
     catch (const Validity::NullPointerException& e)
     {
-        UE_LOG(Weapons, Error, LOG_TEXT("%hs (aborting reload)"), e.what());
+        UE_LOG(Weapon, Error, LOG_TEXT("%hs (aborting reload)"), e.what());
         return;
     }
 
@@ -142,17 +142,17 @@ void AWeapon::reload() const
     // there SHOULD NEVER be nullptr.
     if (anim_instance->Montage_IsActive(fire_animation_montage) || anim_instance->Montage_IsActive(reload_animation_montage))
     {
-        UE_LOG(Weapons, Verbose, LOG_TEXT("Can't reload now, another process is taking place"));
+        UE_LOG(Weapon, Verbose, LOG_TEXT("Can't reload now, another process is taking place"));
         return;
     }
 
-    UE_LOG(Weapons, Verbose, LOG_TEXT("Playing weapon reload animation montage"));
+    UE_LOG(Weapon, Verbose, LOG_TEXT("Playing weapon reload animation montage"));
     const float duration = anim_instance->Montage_Play(reload_animation_montage, 1.0f, EMontagePlayReturnType::MontageLength, 0.0f, true);
 
     // If duration == 0.f that means an error
     if (duration == 0.f)
     {
-        UE_LOG(Weapons, Error, LOG_TEXT("Could not play weapon reload animation montage"));
+        UE_LOG(Weapon, Error, LOG_TEXT("Could not play weapon reload animation montage"));
     }
 }
 
@@ -165,7 +165,7 @@ void AWeapon::decrement_mag_ammo_count()
     }
     else
     {
-        UE_LOG(Weapons, Error, LOG_TEXT("Weapon mag ammo decrement triggered but mag ammo count was 0"));
+        UE_LOG(Weapon, Error, LOG_TEXT("Weapon mag ammo decrement triggered but mag ammo count was 0"));
     }
 }
 
@@ -208,27 +208,27 @@ float AWeapon::get_weapon_damage() const
 
 void AWeapon::refill_magazine()
 {
-    UE_LOG(Weapons, Log, LOG_TEXT("Refilling weapon magazine"));
+    UE_LOG(Weapon, Log, LOG_TEXT("Refilling weapon magazine"));
 
     const unsigned int remaining_mag_space = magazine_size - current_magazine_ammo_count;
 
     // If we have enough ammo to top it off
     if (current_ammo_stock_pile_count >= remaining_mag_space)
     {
-        UE_LOG(Weapons, Verbose, LOG_TEXT("Topping off weapon magazine"));
+        UE_LOG(Weapon, Verbose, LOG_TEXT("Topping off weapon magazine"));
         current_ammo_stock_pile_count -= remaining_mag_space;
         current_magazine_ammo_count = magazine_size;
     }
     // If we have some ammo, but not enough to top it of
     else if (current_ammo_stock_pile_count > 0)
     {
-        UE_LOG(Weapons, Verbose, LOG_TEXT("Putting last ammo in weapon magazine"));
+        UE_LOG(Weapon, Verbose, LOG_TEXT("Putting last ammo in weapon magazine"));
         current_magazine_ammo_count += current_ammo_stock_pile_count;
         current_ammo_stock_pile_count = 0;
     }
     // If we have none :(
     else
     {
-        UE_LOG(Weapons, Verbose, LOG_TEXT("No ammo to refill"));
+        UE_LOG(Weapon, Verbose, LOG_TEXT("No ammo to refill"));
     }
 }
