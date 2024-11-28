@@ -6,10 +6,11 @@
 #include "Enemies/Enemy.h"
 #include "Weapons/Weapon.h"
 #include "UtilityActors/AnchorPoint/AnchorPoint.h"
+#include "Interfaces/WeaponUser/WeaponUser.h"
 #include "RangedEnemy.generated.h"
 
 UCLASS()
-class SHATTEREDCHAINS_API ARangedEnemy : public AEnemy
+class SHATTEREDCHAINS_API ARangedEnemy : public AEnemy, public IWeaponUser
 {
     GENERATED_BODY()
 
@@ -24,22 +25,29 @@ public:
     FVector get_location_to_go_to() const;
 
     float get_anchor_tolerance() const;
+
+    // Weapon user functions
+    virtual FVector get_hitscan_start_location() const override final;
+    virtual FVector get_hitscan_direction() const override final;
     
 protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
 
 private:
-    UPROPERTY(EditDefaultsOnly, Category="Weapon")
+    UPROPERTY(EditDefaultsOnly, Category="Weapon", meta=(ToolTip="What weapon the enemy is using"))
     TSubclassOf<AWeapon> weapon_class;
+
+    UPROPERTY(EditDefaultsOnly, Category="Weapon", meta=(ToolTip="How accurate the enemy can shoot (0-1)"))
+    float accuracy;
 
     UPROPERTY()
     TObjectPtr<AWeapon> weapon;
     
-    UPROPERTY(EditInstanceOnly, Category="Anchor")
+    UPROPERTY(EditInstanceOnly, Category="Anchor", meta=(ToolTip="Reference to an achor point instance"))
     TObjectPtr<AAnchorPoint> anchor_point;
 
-    UPROPERTY(EditDefaultsOnly, Category="Anchor")
+    UPROPERTY(EditDefaultsOnly, Category="Anchor", meta=(ToolTip="Tolerance for enemy to be considred \"in place\" when it reaches its location inside the anchor point"))
     float anchor_tolerance;
     
     FVector location_to_go_to;

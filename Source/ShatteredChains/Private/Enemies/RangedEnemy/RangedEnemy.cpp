@@ -15,6 +15,7 @@ ARangedEnemy::ARangedEnemy() : AEnemy()
 
     location_to_go_to = FVector::ZeroVector;
     anchor_tolerance = 0;
+    accuracy = 0;
 }
 
 // Called when the game starts or when spawned
@@ -43,14 +44,23 @@ void ARangedEnemy::BeginPlay()
         // Check the anchor tolerance
         Validity::check_value<float>(anchor_tolerance, 0, "Anchor tolerance is unset");
         UE_LOG(Enemy, VeryVerbose, LOG_TEXT("Anchor tolerance for %s is %f"), *GetActorLabel(), anchor_tolerance);
+        // Check the accuracy
+        Validity::check_value<float>(accuracy, 0, "Accuracy is unset");
     }
     catch (const Validity::NullPointerException &e)
     {
         UE_LOG(Enemy, Error, LOG_TEXT("%hs for %s"), e.what(), *GetActorLabel());
         return;
     }
+
+    // Validate the value of accuracy
+    if (accuracy < 0 || accuracy > 1)
+    {
+        UE_LOG(Enemy, Warning, LOG_TEXT("Accuracy for %s is out of range 0-1 (inclusive).  accuracy=%f will be replaced by 0 if <0 or 1 if >1"), *GetActorLabel(), accuracy);
+        FMath::Clamp(accuracy, 0, 1);
+    }
     
-    // Spawn the weapon for the enemy
+    // Spawn the weapon for the Enemy
     FActorSpawnParameters spawn_parameters;
     spawn_parameters.Owner = this;
     // Spawn it with the same transform as the enemy, it will be moved anyway
@@ -109,3 +119,16 @@ float ARangedEnemy::get_anchor_tolerance() const
 {
     return anchor_tolerance;
 }
+
+
+FVector ARangedEnemy::get_hitscan_start_location() const
+{
+    return GetActorLocation();
+}
+
+
+FVector ARangedEnemy::get_hitscan_direction() const
+{
+    return GetActorForwardVector();
+}
+
