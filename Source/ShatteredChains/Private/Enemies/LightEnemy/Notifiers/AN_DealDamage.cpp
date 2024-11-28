@@ -18,7 +18,7 @@ void UAN_DealDamage::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase*
     {
         MeshComp = Validity::check_value<USkeletalMeshComponent>(MeshComp, "No mesh for animation notify");
         enemy_actor = Validity::check_value<ALightEnemy>(Cast<ALightEnemy>(MeshComp->GetOwner()), "Could not get enemy actor from MeshComp");
-        IHasHealth* player = Validity::check_value<IHasHealth>(Cast<IHasHealth>(enemy_actor->get_target()), "Could not get target actor (as IHasHealth) from enemy");
+        const IHasHealth* player = Validity::check_value<IHasHealth>(Cast<IHasHealth>(enemy_actor->get_target()), "Could not get target actor (as IHasHealth) from enemy");
         target_health_component = Validity::check_value<UHealthComponent>(player->get_health_component(), "Could not get health component from target");
         
     }
