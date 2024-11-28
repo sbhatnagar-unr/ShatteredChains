@@ -13,4 +13,8 @@ UCLASS()
 class SHATTEREDCHAINS_API UShootPlayer : public UBTTaskNode
 {
     GENERATED_BODY()
+
+public:
+    UShootPlayer();
+    virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override final;
 };
