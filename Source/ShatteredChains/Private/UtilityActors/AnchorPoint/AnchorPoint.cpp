@@ -21,9 +21,10 @@ void AAnchorPoint::BeginPlay()
     Super::BeginPlay();
     SetActorHiddenInGame(true);
 
+    UE_LOG(UtilityActor, Verbose, LOG_TEXT("Anchor location (%s) is %s"), *GetActorLabel(), *GetActorLocation().ToString());
     if (anchor_radius == 0)
     {
-        UE_LOG(UtilityActor, Error, LOG_TEXT("Anchor radius was never set for %s"), *GetActorLabel());
+        UE_LOG(UtilityActor, Error, LOG_TEXT("Anchor radius (%s) was never set"), *GetActorLabel());
     }
     else
     {
