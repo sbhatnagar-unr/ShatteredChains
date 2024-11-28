@@ -13,4 +13,9 @@ UCLASS()
 class SHATTEREDCHAINS_API UMoveToAnchor : public UBTTaskNode
 {
     GENERATED_BODY()
+
+public:
+    UMoveToAnchor();
+
+    virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override final;
 };
