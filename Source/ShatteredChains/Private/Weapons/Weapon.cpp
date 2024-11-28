@@ -75,7 +75,7 @@ void AWeapon::fire() const
         return;
     }
 
-    
+
     try
     {
         Validity::check_value<UAnimMontage>(fire_animation_montage, "No fire animation montage for weapon");
@@ -88,17 +88,19 @@ void AWeapon::fire() const
     }
 
     // Check if either of the animations are currently playing
-    // If one of them is nullptr, this is fine as this if statement will still work as intended, it will just be slightly less efficient
-    // This is because it will check all montages to see if any of them are active if nullptr is passed in.  This is fine because in the final game
-    // there SHOULD NEVER be nullptr.
-    if (anim_instance->Montage_IsActive(fire_animation_montage) || anim_instance->Montage_IsActive(reload_animation_montage))
+    if (anim_instance->Montage_IsPlaying(fire_animation_montage))
     {
-        UE_LOG(Weapon, Verbose, LOG_TEXT("Can't fire now, another process is taking place"));
+        UE_LOG(Weapon, VeryVerbose, LOG_TEXT("Can't fire now, already firing"));
+        return;
+    }
+
+    if (anim_instance->Montage_IsPlaying(reload_animation_montage))
+    {
+        UE_LOG(Weapon, VeryVerbose, LOG_TEXT("Can't fire now, already reloading"));
         return;
     }
     
-    UE_LOG(Weapon, Verbose, LOG_TEXT("Fire weapon initiated"));
-    UE_LOG(Weapon, Verbose, LOG_TEXT("Playing weapon fire animation montage"));
+    UE_LOG(Weapon, VeryVerbose, LOG_TEXT("Playing weapon fire animation montage"));
     
     const float duration = anim_instance->Montage_Play(fire_animation_montage, 1.0f, EMontagePlayReturnType::MontageLength, 0.0f, true);
 
@@ -124,7 +126,12 @@ void AWeapon::reload() const
         return;
     }
 
-    UE_LOG(Weapon, Verbose, LOG_TEXT("Reload weapon initiated"));
+    if (current_ammo_stock_pile_count <= 0)
+    {
+        UE_LOG(Weapon, Verbose, LOG_TEXT("No ammo to reload with"));
+        return;
+    }
+
     try
     {
         Validity::check_value<UAnimMontage>(reload_animation_montage, "No reload animation montage for weapon");
@@ -137,16 +144,20 @@ void AWeapon::reload() const
     }
 
     // Check if either of the animations are currently playing
-    // If one of them is nullptr, this is fine as this if statement will still work as intended, it will just be slightly less efficient
-    // This is because it will check all montages to see if any of them are active if nullptr is passed in.  This is fine because in the final game
-    // there SHOULD NEVER be nullptr.
-    if (anim_instance->Montage_IsActive(fire_animation_montage) || anim_instance->Montage_IsActive(reload_animation_montage))
+    if (anim_instance->Montage_IsPlaying(fire_animation_montage))
     {
-        UE_LOG(Weapon, Verbose, LOG_TEXT("Can't reload now, another process is taking place"));
+        UE_LOG(Weapon, VeryVerbose, LOG_TEXT("Can't reload now, already firing"));
         return;
     }
 
-    UE_LOG(Weapon, Verbose, LOG_TEXT("Playing weapon reload animation montage"));
+    if (anim_instance->Montage_IsPlaying(reload_animation_montage))
+    {
+        UE_LOG(Weapon, VeryVerbose, LOG_TEXT("Can't reload now, already reloading"));
+        return;
+    }
+    
+
+    UE_LOG(Weapon, VeryVerbose, LOG_TEXT("Playing weapon reload animation montage"));
     const float duration = anim_instance->Montage_Play(reload_animation_montage, 1.0f, EMontagePlayReturnType::MontageLength, 0.0f, true);
 
     // If duration == 0.f that means an error
@@ -165,7 +176,7 @@ void AWeapon::decrement_mag_ammo_count()
     }
     else
     {
-        UE_LOG(Weapon, Error, LOG_TEXT("Weapon mag ammo decrement triggered but mag ammo count was 0"));
+        UE_LOG(Weapon, Warning, LOG_TEXT("Weapon mag ammo decrement triggered but mag ammo count was 0"));
     }
 }
 
