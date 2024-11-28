@@ -11,18 +11,26 @@ ARangedEnemy::ARangedEnemy() : AEnemy()
 {
     weapon_class = nullptr;
     weapon = nullptr;
+    anchor_point = nullptr;
 }
 
 // Called when the game starts or when spawned
 void ARangedEnemy::BeginPlay()
 {
     Super::BeginPlay();
-    
-    // Make sure we have everything we need to set up the ranged enemy
+
+    UWorld* world;
     USkeletalMeshComponent* skeletal_mesh_component;
     
     try
     {
+        // Get the world
+        world = Validity::check_value<UWorld>(GetWorld(), "Could not get world");
+        // Get the target
+        target = Validity::check_value<AActor>(Cast<AActor>(world->GetFirstPlayerController()->GetPawn()), "Could not locate target (player)");
+        // Check that we have an Anchor
+        Validity::check_value<AAnchorPoint>(anchor_point, "No anchor point");
+        // Check that we have stuff to attach the weapon
         Validity::check_value<UClass>(weapon_class, "No weapon class");
         UE_LOG(Enemy, Verbose, LOG_TEXT("Weapon class for %s is %s"), *GetActorLabel(), *weapon_class->GetName());
         skeletal_mesh_component = Validity::check_value<USkeletalMeshComponent>(GetMesh(), "No skeletal Mesh");
@@ -34,8 +42,6 @@ void ARangedEnemy::BeginPlay()
     }
     
     // Spawn the weapon for the enemy
-    // This won't be nullptr because if begin play is called that means it's in the world
-    UWorld* world = GetWorld();
     FActorSpawnParameters spawn_parameters;
     spawn_parameters.Owner = this;
     // Spawn it with the same transform as the enemy, it will be moved anyway
@@ -56,15 +62,7 @@ void ARangedEnemy::BeginPlay()
         return;
     }
     UE_LOG(Enemy, Verbose, LOG_TEXT("Successfully attached %s to %s"), *GetActorLabel(), *weapon_class->GetName());
-
-    // Get the target
-    target = Cast<AActor>(world->GetFirstPlayerController()->GetPawn());
-    if (target == nullptr)
-    {
-        UE_LOG(Enemy, Error, LOG_TEXT("Could not locate target (player)"));
-        return;
-    }
-    UE_LOG(Enemy, Log, LOG_TEXT("Found target (player)"));
+    
 }
 
 

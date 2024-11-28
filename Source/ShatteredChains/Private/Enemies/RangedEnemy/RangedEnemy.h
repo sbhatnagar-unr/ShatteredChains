@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Enemies/Enemy.h"
 #include "Weapons/Weapon.h"
+#include "UtilityActors/AnchorPoint/AnchorPoint.h"
 #include "RangedEnemy.generated.h"
 
 UCLASS()
@@ -27,8 +28,8 @@ private:
     TSubclassOf<AWeapon> weapon_class;
 
     UPROPERTY()
-    AWeapon* weapon;
+    TObjectPtr<AWeapon> weapon;
     
-    // UPROPERTY()
-    // AAnchorPoint anchor_point;
+    UPROPERTY(EditInstanceOnly, Category="Anchor")
+    TObjectPtr<AAnchorPoint> anchor_point;
 };
