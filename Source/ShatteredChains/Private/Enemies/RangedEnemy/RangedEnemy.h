@@ -28,4 +28,7 @@ private:
 
     UPROPERTY()
     AWeapon* weapon;
+    
+    // UPROPERTY()
+    // AAnchorPoint anchor_point;
 };
