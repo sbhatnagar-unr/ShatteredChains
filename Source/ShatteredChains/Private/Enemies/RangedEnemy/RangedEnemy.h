@@ -18,6 +18,8 @@ public:
     ARangedEnemy();
 
     AWeapon* get_weapon() const;
+
+    AAnchorPoint* get_anchor_point() const;
     
 protected:
     // Called when the game starts or when spawned

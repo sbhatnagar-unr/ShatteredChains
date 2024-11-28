@@ -70,3 +70,9 @@ AWeapon* ARangedEnemy::get_weapon() const
 {
     return weapon;
 }
+
+
+AAnchorPoint* ARangedEnemy::get_anchor_point() const
+{
+    return anchor_point;
+}
