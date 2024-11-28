@@ -2,6 +2,9 @@
 
 
 #include "AnchorPoint.h"
+#include "ShatteredChains/Logging.h"
+
+DEFINE_LOG_CATEGORY(UtilityActor);
 
 
 // Sets default values
@@ -9,6 +12,7 @@ AAnchorPoint::AAnchorPoint()
 {
     // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
     PrimaryActorTick.bCanEverTick = false;
+    anchor_radius = 0;
 }
 
 // Called when the game starts or when spawned
@@ -16,4 +20,19 @@ void AAnchorPoint::BeginPlay()
 {
     Super::BeginPlay();
     SetActorHiddenInGame(true);
+
+    if (anchor_radius == 0)
+    {
+        UE_LOG(UtilityActor, Error, LOG_TEXT("Anchor radius was never set for %s"), *GetActorLabel());
+    }
+    else
+    {
+        UE_LOG(UtilityActor, VeryVerbose, LOG_TEXT("Anchor point (%s) radius %f"), *GetActorLabel(), anchor_radius);
+    }
 }
+
+float AAnchorPoint::get_anchor_radius() const
+{
+    return anchor_radius;    
+}
+
