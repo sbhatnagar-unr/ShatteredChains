@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/SphereComponent.h"
 #include "GameFramework/Actor.h"
 #include "AnchorPoint.generated.h"
 
@@ -16,7 +17,17 @@ public:
     AAnchorPoint();
 
     float get_anchor_radius() const;
-    
+
+    UPROPERTY(EditDefaultsOnly)
+    TObjectPtr<USphereComponent> sphere_component;
+
+    UPROPERTY(EditDefaultsOnly)
+    TObjectPtr<UStaticMeshComponent> mesh_component;
+
+#if WITH_EDITOR
+    virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override final;
+#endif
+
 protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
