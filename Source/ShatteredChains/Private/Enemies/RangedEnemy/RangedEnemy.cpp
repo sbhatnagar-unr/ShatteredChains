@@ -13,6 +13,7 @@ ARangedEnemy::ARangedEnemy() : AEnemy()
     weapon = nullptr;
     anchor_point = nullptr;
 
+    location_to_go_to_set = false;
     location_to_go_to = FVector::ZeroVector;
     anchor_tolerance = 0;
     accuracy = 0;
@@ -31,19 +32,26 @@ void ARangedEnemy::BeginPlay()
     {
         // Get the world
         world = Validity::check_value<UWorld>(GetWorld(), "Could not get world");
+        
         // Get the target
         target = Validity::check_value<AActor>(Cast<AActor>(world->GetFirstPlayerController()->GetPawn()), "Could not locate target (player)");
+        
         // Check that we have an Anchor
         Validity::check_value<AAnchorPoint>(anchor_point, "No anchor point");
+        
         // Check that we have stuff to attach the weapon
         Validity::check_value<UClass>(weapon_class, "No weapon class");
         UE_LOG(Enemy, Verbose, LOG_TEXT("Weapon class for %s is %s"), *GetActorLabel(), *weapon_class->GetName());
+        
         skeletal_mesh_component = Validity::check_value<USkeletalMeshComponent>(GetMesh(), "No skeletal Mesh");
+        
         // Get navigation system
         navigation_system = Validity::check_value<UNavigationSystemV1>(UNavigationSystemV1::GetCurrent(world), "Could not get navigation system");
+        
         // Check the anchor tolerance
         Validity::check_value<float>(anchor_tolerance, 0, "Anchor tolerance is unset");
         UE_LOG(Enemy, VeryVerbose, LOG_TEXT("Anchor tolerance for %s is %f"), *GetActorLabel(), anchor_tolerance);
+        
         // Check the accuracy
         Validity::check_value<float>(accuracy, 0, "Accuracy is unset");
     }
@@ -54,11 +62,14 @@ void ARangedEnemy::BeginPlay()
     }
 
     // Validate the value of accuracy
-    if (accuracy < 0 || accuracy > 1)
+    if (accuracy <= 0 || accuracy > 100)
     {
-        UE_LOG(Enemy, Warning, LOG_TEXT("Accuracy for %s is out of range 0-1 (inclusive).  accuracy=%f will be replaced by 0 if <0 or 1 if >1"), *GetActorLabel(), accuracy);
-        FMath::Clamp(accuracy, 0, 1);
+        UE_LOG(Enemy, Warning, LOG_TEXT("Accuracy for %s is out of range (0-100].  accuracy=%f will be replaced by 1 if <=0 or 100 if >100"), *GetActorLabel(), accuracy);
+        FMath::Clamp(accuracy, 1, 100);
     }
+    UE_LOG(Enemy, Verbose, LOG_TEXT("Accuracy for %s is %f%%"), *GetActorLabel(), accuracy);
+    accuracy /= 100;
+
     
     // Spawn the weapon for the Enemy
     FActorSpawnParameters spawn_parameters;
@@ -86,11 +97,12 @@ void ARangedEnemy::BeginPlay()
     FNavLocation nav_location;
     if (navigation_system->GetRandomReachablePointInRadius(anchor_point->GetActorLocation(), anchor_point->get_anchor_radius(), nav_location))
     {
-        UE_LOG(Enemy, Error, LOG_TEXT("Could not find reachable point near anchor %s"), *anchor_point->GetActorLabel());
+        UE_LOG(Enemy, Error, LOG_TEXT("Could not find reachable point near anchor \"%s\" (radius=%f)"), *anchor_point->GetActorLabel(), anchor_point->get_anchor_radius());
     }
     else
     {
         location_to_go_to = nav_location.Location;
+        location_to_go_to_set = true;
         UE_LOG(Enemy, Log, LOG_TEXT("Location to go to in anchor for %s is %s"), *GetActorLabel(), *location_to_go_to.ToString());
     }
     
@@ -132,3 +144,7 @@ FVector ARangedEnemy::get_hitscan_direction() const
     return GetActorForwardVector();
 }
 
+bool ARangedEnemy::is_location_to_go_to_set() const
+{
+    return location_to_go_to_set;
+}

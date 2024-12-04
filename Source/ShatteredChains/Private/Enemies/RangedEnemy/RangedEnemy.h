@@ -26,6 +26,8 @@ public:
 
     float get_anchor_tolerance() const;
 
+    bool is_location_to_go_to_set() const;
+    
     // Weapon user functions
     virtual FVector get_hitscan_start_location() const override final;
     virtual FVector get_hitscan_direction() const override final;
@@ -35,10 +37,10 @@ protected:
     virtual void BeginPlay() override;
 
 private:
-    UPROPERTY(EditDefaultsOnly, Category="Weapon", meta=(ToolTip="What weapon the enemy is using"))
+    UPROPERTY(EditAnywhere, Category="Weapon", meta=(ToolTip="What weapon the enemy is using"))
     TSubclassOf<AWeapon> weapon_class;
 
-    UPROPERTY(EditDefaultsOnly, Category="Weapon", meta=(ToolTip="How accurate the enemy can shoot (0-1)"))
+    UPROPERTY(EditAnywhere, Category="Weapon", meta=(ToolTip="How accurate the enemy can shoot (0-100]"))
     float accuracy;
 
     UPROPERTY()
@@ -47,8 +49,9 @@ private:
     UPROPERTY(EditInstanceOnly, Category="Anchor", meta=(ToolTip="Reference to an achor point instance"))
     TObjectPtr<AAnchorPoint> anchor_point;
 
-    UPROPERTY(EditDefaultsOnly, Category="Anchor", meta=(ToolTip="Tolerance for enemy to be considred \"in place\" when it reaches its location inside the anchor point"))
+    UPROPERTY(EditAnywhere, Category="Anchor", meta=(ToolTip="Tolerance for enemy to be considred \"in place\" when it reaches its location inside the anchor point"))
     float anchor_tolerance;
     
+    bool location_to_go_to_set;
     FVector location_to_go_to;
 };
