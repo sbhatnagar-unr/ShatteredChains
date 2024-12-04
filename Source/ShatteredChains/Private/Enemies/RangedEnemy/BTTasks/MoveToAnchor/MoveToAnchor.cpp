@@ -4,6 +4,7 @@
 #include "MoveToAnchor.h"
 #include "ShatteredChains/Logging.h"
 #include "AIController.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "UtilityActors/AnchorPoint/AnchorPoint.h"
 #include "Enemies/RangedEnemy/RangedEnemy.h"
 #include "ShatteredChains/Utility.h"
@@ -39,7 +40,8 @@ EBTNodeResult::Type UMoveToAnchor::ExecuteTask(UBehaviorTreeComponent& OwnerComp
         blackboard = Validity::check_value<UBlackboardComponent>(ai_controller->GetBlackboardComponent(), "Could not get AI blackboard");
         enemy_actor = Validity::check_value<ARangedEnemy>(Cast<ARangedEnemy>(ai_controller->GetPawn()), "Could not get enemy actor belonging to this AI");
         anchor_point = Validity::check_value<AAnchorPoint>(enemy_actor->get_anchor_point(), "Could not get anchor point");
-        location = Validity::check_value<FVector>(enemy_actor->get_location_to_go_to(), FVector::ZeroVector, "Enemy has no location to go to in anchor");
+        Validity::check_value<bool>(enemy_actor->is_location_to_go_to_set(), false, "Enemy has no location to go to in anchor");
+        location = enemy_actor->get_location_to_go_to();
     }
     catch (const Validity::NullPointerException& e)
     {
@@ -56,7 +58,12 @@ EBTNodeResult::Type UMoveToAnchor::ExecuteTask(UBehaviorTreeComponent& OwnerComp
     if (distance <= enemy_actor->get_anchor_tolerance())
     {
         UE_LOG(Enemy, Log, LOG_TEXT("%s has reached anchor point %s"), *enemy_actor->GetActorLabel(), *anchor_point->GetActorLabel());
-        
+        blackboard->SetValueAsBool(near_anchor_field, true);
+    }
+    else
+    {
+        // Acceptance radius is 0 because that will be handled by the logic in this function
+        ai_controller->MoveToLocation(location, 0, true, true, false, true);
     }
     
     return EBTNodeResult::Succeeded;
