@@ -19,7 +19,7 @@ UHealthComponent::UHealthComponent()
     damage_multiplier = 1.f;
     is_dead = false;
 
-    owner_name = FString("");
+    owner_name = FString("UNKNOWN");
 }
 
 
@@ -103,16 +103,16 @@ void UHealthComponent::deal_damage(AActor* dealt_by, const float damage)
     Applies damage, if health becomes negative, it gets set to 0
     */
 
-    current_health -= damage;
+    current_health -= damage * damage_multiplier;
 
     if (dealt_by == nullptr)
     {
-        UE_LOG(Health, Verbose, LOG_TEXT("%s received %f damage from UNKNOWN (%f remaining)"), *owner_name, damage, current_health);
+        UE_LOG(Health, Log, LOG_TEXT("%s received %f damage from UNKNOWN (%f remaining)"), *owner_name, damage, current_health);
         UE_LOG(Health, Warning, LOG_TEXT("No dealt_by AActor for damage applied to %s (%f remaining)"), *owner_name, current_health);
     }
     else
     {
-        UE_LOG(Health, Verbose, LOG_TEXT("%s received %f damage from %s (%f remaining)"), *owner_name, damage, *dealt_by->GetActorLabel(), current_health);
+        UE_LOG(Health, Log, LOG_TEXT("%s received %f damage from %s (%f remaining)"), *owner_name, damage, *dealt_by->GetActorLabel(), current_health);
     }
 
     
