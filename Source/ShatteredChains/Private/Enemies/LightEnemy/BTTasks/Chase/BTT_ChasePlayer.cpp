@@ -60,7 +60,7 @@ EBTNodeResult::Type UBTT_ChasePlayer::ExecuteTask(UBehaviorTreeComponent& OwnerC
     else
     {
         // Chase the player
-        UE_LOG(Enemy, Verbose, LOG_TEXT("Enemy AI chasing player"));
+        UE_LOG(Enemy, VeryVerbose, LOG_TEXT("Enemy AI chasing player"));
         ai_controller->MoveToActor(target_actor);
     }
 
