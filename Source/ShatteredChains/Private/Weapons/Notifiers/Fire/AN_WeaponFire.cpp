@@ -16,7 +16,9 @@ void UAN_WeaponFire::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase*
     UAnimInstance* anim_instance = MeshComp->GetAnimInstance();
     // The weapon
     AWeapon* weapon;
-    // The actor (should be actor anyway) holding the weapon
+    // The weapon holder as an actor
+    AActor* weapon_holder_actor;
+    // The weapon holder as a weapon user
     IWeaponUser* weapon_holder;
     // The holders name
     FString weapon_holder_name;
@@ -26,7 +28,7 @@ void UAN_WeaponFire::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase*
     {
         MeshComp = Validity::check_value<USkeletalMeshComponent>(MeshComp, "No mesh for animation notify");
         weapon = Validity::check_value<AWeapon>(Cast<AWeapon>(MeshComp->GetOwner()), "Could not get weapon actor from MeshComp");
-        AActor* weapon_holder_actor = Validity::check_value<AActor>(Cast<AActor>(weapon->GetAttachParentActor()), "Could not get weapon holder from weapon (as AActor)");
+        weapon_holder_actor = Validity::check_value<AActor>(Cast<AActor>(weapon->GetAttachParentActor()), "Could not get weapon holder from weapon (as AActor)");
         weapon_holder_name = weapon_holder_actor->GetActorLabel();
         weapon_holder = Validity::check_value<IWeaponUser>(Cast<IWeaponUser>(weapon_holder_actor), "Weapon holder (" + std::string(TCHAR_TO_UTF8(*weapon_holder_name)) + ") does not implement IWeaponUser");
         world = Validity::check_value<UWorld>(MeshComp->GetWorld(), "Could not get world");
@@ -58,6 +60,8 @@ void UAN_WeaponFire::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase*
     struct FCollisionQueryParams trace_params;
     // Actually check if it hits the mesh, rather than some collision boundary or something
     trace_params.bTraceComplex = true;
+    // Ignore the weapon holder from the line-trace
+    trace_params.AddIgnoredActor(weapon_holder_actor);
     
     // Perform the trace
     UE_LOG(Weapon, Log, LOG_TEXT("Firing weapon"));
