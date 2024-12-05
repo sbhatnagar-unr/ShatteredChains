@@ -13,7 +13,6 @@ ARangedEnemy::ARangedEnemy() : AEnemy()
     weapon = nullptr;
     anchor_point = nullptr;
 
-    location_to_go_to_set = false;
     location_to_go_to = FVector::ZeroVector;
     anchor_tolerance = 0;
     accuracy = 0;
@@ -93,19 +92,30 @@ void ARangedEnemy::BeginPlay()
     }
     UE_LOG(Enemy, Verbose, LOG_TEXT("Successfully attached %s to %s"), *GetActorLabel(), *weapon_class->GetName());
 
+    // https://forums.unrealengine.com/t/getrandomreachablepointinradius/380662
+    // So this function is apparently bugged for who knows what reason.  To combat this, we will just run it a bunch of times
+    // Until a valid result is gotten before we decide if it's an error
+    
     // Get random point in anchor radius, this will be the point it runs to and shoots from
     FNavLocation nav_location;
-    if (navigation_system->GetRandomReachablePointInRadius(anchor_point->GetActorLocation(), anchor_point->get_anchor_radius(), nav_location))
+    // Try 50 times to get a location
+    bool found_location = false;
+    for (unsigned int i = 0; i < 50; i++)
     {
-        UE_LOG(Enemy, Error, LOG_TEXT("Could not find reachable point near anchor \"%s\" (radius=%f)"), *anchor_point->GetActorLabel(), anchor_point->get_anchor_radius());
+        // If we find one break out
+        if (navigation_system->GetRandomReachablePointInRadius(anchor_point->GetActorLocation(), anchor_point->get_anchor_radius(), nav_location))
+        {
+            location_to_go_to = nav_location.Location;
+            found_location = true;
+            UE_LOG(Enemy, Log, LOG_TEXT("Location to go to in anchor for %s is %s"), *GetActorLabel(), *location_to_go_to.ToString());
+            break;
+        }
     }
-    else
+    if (!found_location)
     {
-        location_to_go_to = nav_location.Location;
-        location_to_go_to_set = true;
-        UE_LOG(Enemy, Log, LOG_TEXT("Location to go to in anchor for %s is %s"), *GetActorLabel(), *location_to_go_to.ToString());
+        UE_LOG(Enemy, Warning, LOG_TEXT("Could not find reachable point near anchor \"%s\" (radius=%f).  Defaulting to anchor location (%s)"), *anchor_point->GetActorLabel(), anchor_point->get_anchor_radius(), *anchor_point->GetActorLocation().ToString());
+        location_to_go_to = anchor_point->GetActorLocation();
     }
-    
 }
 
 
@@ -142,9 +152,4 @@ FVector ARangedEnemy::get_hitscan_start_location() const
 FVector ARangedEnemy::get_hitscan_direction() const
 {
     return GetActorForwardVector();
-}
-
-bool ARangedEnemy::is_location_to_go_to_set() const
-{
-    return location_to_go_to_set;
 }

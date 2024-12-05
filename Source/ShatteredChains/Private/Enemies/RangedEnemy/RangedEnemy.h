@@ -26,8 +26,6 @@ public:
 
     float get_anchor_tolerance() const;
 
-    bool is_location_to_go_to_set() const;
-    
     // Weapon user functions
     virtual FVector get_hitscan_start_location() const override final;
     virtual FVector get_hitscan_direction() const override final;
@@ -52,6 +50,5 @@ private:
     UPROPERTY(EditAnywhere, Category="Anchor", meta=(ToolTip="Tolerance for enemy to be considred \"in place\" when it reaches its location inside the anchor point"))
     float anchor_tolerance;
     
-    bool location_to_go_to_set;
     FVector location_to_go_to;
 };
