@@ -28,10 +28,7 @@ void UHealthComponent::BeginPlay()
 {
     Super::BeginPlay();
 
-    current_health = max_health;
-    is_dead = false;
-
-    // Attach dead delegate to owner dead function
+    // Get owner
     IHasHealth* owner = GetOwner<IHasHealth>();
     
     // Set owner name instance variable
@@ -42,6 +39,7 @@ void UHealthComponent::BeginPlay()
     if (owner == nullptr)
     {
         UE_LOG(Health, Warning, LOG_TEXT("Health component was added to Actor that does not implement IHasHealth interface (%s)"), *owner_name);
+        return;
     }
     // Otherwise attach the delegate
     else
@@ -50,6 +48,16 @@ void UHealthComponent::BeginPlay()
         on_death_delegate.AddDynamic(owner, &IHasHealth::on_death);
         UE_LOG(Health, Verbose, LOG_TEXT("Added %s on_death delegate"), *owner_name);
     }
+
+    // If the max_health is 0 (unset)
+    if (max_health <= 0.f)
+    {
+        UE_LOG(Health, Warning, TEXT("Max health for %s was never set"), *owner_name);
+    }
+    
+    current_health = max_health;
+    is_dead = false;
+    
     
 }
 
@@ -99,12 +107,12 @@ void UHealthComponent::deal_damage(AActor* dealt_by, const float damage)
 
     if (dealt_by == nullptr)
     {
-        UE_LOG(Health, Verbose, LOG_TEXT("%s received %f damage from UNKNOWN"), *owner_name, damage);
-        UE_LOG(Health, Warning, LOG_TEXT("No dealt_by AActor for damage applied to %s"), *owner_name);
+        UE_LOG(Health, Verbose, LOG_TEXT("%s received %f damage from UNKNOWN (%f remaining)"), *owner_name, damage, current_health);
+        UE_LOG(Health, Warning, LOG_TEXT("No dealt_by AActor for damage applied to %s (%f remaining)"), *owner_name, current_health);
     }
     else
     {
-        UE_LOG(Health, Verbose, LOG_TEXT("%s received %f damage from %s"), *owner_name, damage, *dealt_by->GetActorLabel());
+        UE_LOG(Health, Verbose, LOG_TEXT("%s received %f damage from %s (%f remaining)"), *owner_name, damage, *dealt_by->GetActorLabel(), current_health);
     }
 
     
