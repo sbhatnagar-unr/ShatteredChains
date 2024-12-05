@@ -37,6 +37,7 @@ private:
     
     UPROPERTY(EditDefaultsOnly, Category="Attacking", meta=(ToolTip="How long it takes to transition out of the attack montage"))
     float attack_animation_exit_blend;
-    UPROPERTY(EditDefaultsOnly, Category="Attacking")
+
+    UPROPERTY(EditAnywhere, Category="Attacking")
     float attack_damage;
 };
