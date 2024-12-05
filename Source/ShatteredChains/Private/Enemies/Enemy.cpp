@@ -2,7 +2,9 @@
 
 
 #include "Enemies/Enemy.h"
+#include "AIController.h"
 #include "ShatteredChains/Logging.h"
+#include "ShatteredChains/CustomTraceChannels.h"
 
 DEFINE_LOG_CATEGORY(Enemy);
 
@@ -56,5 +58,56 @@ UHealthComponent* AEnemy::get_health_component() const
 
 void AEnemy::on_death(AActor* killed_by)
 {
-    UE_LOG(Enemy, Log, LOG_TEXT("%s was just killed by %s"), *GetActorLabel(), (killed_by == nullptr) ? *FString("UNKNOWN") : *killed_by->GetActorLabel())
+    UE_LOG(Enemy, Log, LOG_TEXT("%s was just killed by %s"), *GetActorLabel(), (killed_by == nullptr) ? *FString("UNKNOWN") : *killed_by->GetActorLabel());
+
+    USkeletalMeshComponent* mesh = GetMesh();
+
+    if (mesh == nullptr)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("Enemy %s has no USkeletalMeshComponent"), *GetActorLabel());
+    }
+    else
+    {
+        // Make it un-shootable
+        GetMesh()->SetCollisionResponseToChannel(ShootableChannel, ECollisionResponse::ECR_Ignore);
+        UE_LOG(Enemy, Verbose, LOG_TEXT("Enemy %s is no longer shootable"), *GetActorLabel());
+
+        // Stop all animations
+        UAnimInstance *anim_instance = GetMesh()->GetAnimInstance();
+        if (anim_instance == nullptr)
+        {
+            UE_LOG(Enemy, Warning, LOG_TEXT("Enemy %s has no animation instance"), *GetActorLabel());
+        }
+        else
+        {
+            anim_instance->StopAllMontages(0);
+        }
+        
+        UE_LOG(Enemy, Verbose, LOG_TEXT("Stopped all animation montages for %s"), *GetActorLabel());
+    }
+    
+
+    
+    // Get the AI Controller to destroy it
+    AAIController *ai_controller = Cast<AAIController>(GetController());
+    if (ai_controller == nullptr)
+    {
+        UE_LOG(Enemy, Warning, LOG_TEXT("Enemy %s has no AI Controller"), *GetActorLabel());
+    }
+    else
+    {
+        ai_controller->StopMovement();
+        ai_controller->UnPossess();
+        if (ai_controller->Destroy())
+        {
+            UE_LOG(Enemy, Log, LOG_TEXT("AIController for %s destroyed"), *GetActorLabel());
+        } else
+        {
+            UE_LOG(Enemy, Error, LOG_TEXT("Can't destroy AIController for %s"), *GetActorLabel());
+            return;
+        }
+    }
+
+    mesh->SetCollisionProfileName(FName(TEXT("Ragdoll")));
+    mesh->SetSimulatePhysics(true);
 }
