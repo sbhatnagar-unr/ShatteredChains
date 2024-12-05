@@ -34,6 +34,6 @@ protected:
     TObjectPtr<AActor> target;
 
 private:
-    UPROPERTY(VisibleAnywhere)
+    UPROPERTY(EditAnywhere)
     UHealthComponent* health_component;
 };
