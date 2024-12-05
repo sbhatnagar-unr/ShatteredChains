@@ -93,7 +93,7 @@ void ARangedEnemy::BeginPlay()
         {
             location_to_go_to = nav_location.Location;
             found_location = true;
-            UE_LOG(Enemy, Log, LOG_TEXT("Location to go to in anchor for %s is %s"), *GetActorLabel(), *location_to_go_to.ToString());
+            UE_LOG(Enemy, Verbose, LOG_TEXT("Location to go to in anchor for %s is %s"), *GetActorLabel(), *location_to_go_to.ToString());
             break;
         }
     }
