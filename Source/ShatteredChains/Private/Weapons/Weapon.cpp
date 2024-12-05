@@ -122,13 +122,13 @@ void AWeapon::reload() const
     // Dont reload if ammo is full
     if (current_magazine_ammo_count >= magazine_size)
     {
-        UE_LOG(Weapon, Verbose, LOG_TEXT("Weapon magazine is full, skipping reload"));
+        UE_LOG(Weapon, Verbose, LOG_TEXT("Weapon magazine is full, skipping reload (current_magazine_ammo_count=%d, magazine_size=%d)"), current_magazine_ammo_count, magazine_size);
         return;
     }
 
     if (current_ammo_stock_pile_count <= 0)
     {
-        UE_LOG(Weapon, Verbose, LOG_TEXT("No ammo to reload with"));
+        UE_LOG(Weapon, Verbose, LOG_TEXT("No ammo to reload with (current_ammo_stock_pile_count=%d)"), current_ammo_stock_pile_count);
         return;
     }
 
@@ -172,6 +172,7 @@ void AWeapon::decrement_mag_ammo_count()
 {
     if (current_magazine_ammo_count > 0)
     {
+        UE_LOG(Weapon, Verbose, LOG_TEXT("Removed ammo from magazine on %s (%d->%d)"), *GetActorLabel(), current_magazine_ammo_count, current_magazine_ammo_count-1);
         current_magazine_ammo_count--;
     }
     else
@@ -226,14 +227,14 @@ void AWeapon::refill_magazine()
     // If we have enough ammo to top it off
     if (current_ammo_stock_pile_count >= remaining_mag_space)
     {
-        UE_LOG(Weapon, Verbose, LOG_TEXT("Topping off weapon magazine"));
+        UE_LOG(Weapon, Verbose, LOG_TEXT("Topping off weapon magazine (%d ammo)"), remaining_mag_space);
         current_ammo_stock_pile_count -= remaining_mag_space;
         current_magazine_ammo_count = magazine_size;
     }
     // If we have some ammo, but not enough to top it of
     else if (current_ammo_stock_pile_count > 0)
     {
-        UE_LOG(Weapon, Verbose, LOG_TEXT("Putting last ammo in weapon magazine"));
+        UE_LOG(Weapon, Verbose, LOG_TEXT("Putting last ammo in weapon magazine (%d ammo)"), current_ammo_stock_pile_count);
         current_magazine_ammo_count += current_ammo_stock_pile_count;
         current_ammo_stock_pile_count = 0;
     }
