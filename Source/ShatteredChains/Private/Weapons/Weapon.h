@@ -63,7 +63,9 @@ protected:
     // Animation montages
     UPROPERTY(EditDefaultsOnly, Category = "Animations")
     TObjectPtr<UAnimMontage> fire_animation_montage;
+    bool has_fire_animation_montage;
 
     UPROPERTY(EditDefaultsOnly, Category = "Animations")
     TObjectPtr<UAnimMontage> reload_animation_montage;
+    bool has_reload_animation_montage;
 };

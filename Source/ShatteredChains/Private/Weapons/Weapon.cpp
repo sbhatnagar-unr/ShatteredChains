@@ -16,6 +16,9 @@ AWeapon::AWeapon()
     current_magazine_ammo_count = 0;
     max_ammo_stock_pile_count = 0;
     current_ammo_stock_pile_count = 0;
+
+    has_fire_animation_montage = false;
+    has_reload_animation_montage = false;
     
     root_scene_component = CreateDefaultSubobject<USceneComponent>(TEXT("Root Scene Component"));
     weapon_skeletal_mesh_component = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Weapon Skeletal Mesh"));
@@ -38,10 +41,12 @@ void AWeapon::BeginPlay()
         // Check for animations
         Validity::check_value<UAnimMontage>(fire_animation_montage, "No fire animation montage for weapon");
         UE_LOG(Weapon, Verbose, LOG_TEXT("Fire animation montage: %s"), *fire_animation_montage.GetFullName());
+        has_fire_animation_montage = true;
         
         Validity::check_value<UAnimMontage>(reload_animation_montage, "No reload animation montage for weapon");
         UE_LOG(Weapon, Verbose, LOG_TEXT("Reload animation montage: %s"), *reload_animation_montage.GetFullName());
-
+        has_reload_animation_montage = true;
+        
         anim_instance = Validity::check_value<UAnimInstance>(weapon_skeletal_mesh_component->GetAnimInstance(), "No anim instance found");
 
     }
@@ -75,18 +80,22 @@ void AWeapon::fire() const
         return;
     }
 
-
-    try
+    // Don't fire if we don't have a montage
+    // We can't anyway since firing happens in notifiers
+    if (!has_fire_animation_montage)
     {
-        Validity::check_value<UAnimMontage>(fire_animation_montage, "No fire animation montage for weapon");
-        Validity::check_value<UAnimInstance>(anim_instance, "No anim instance found");
-    }
-    catch (const Validity::NullPointerException& e)
-    {
-        UE_LOG(Weapon, Error, LOG_TEXT("%hs (aborting fire)"), e.what());
+        UE_LOG(Enemy, Error, LOG_TEXT("No fire weapon animation montage, aborting fire"));
         return;
     }
 
+    // Don't fire if we don't have a animation instance
+    // We can't anyway since firing happens in notifiers
+    if (anim_instance == nullptr)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("No animation instance, aborting fire"));
+        return;
+    }
+    
     // Check if either of the animations are currently playing
     if (anim_instance->Montage_IsPlaying(fire_animation_montage))
     {
@@ -132,14 +141,19 @@ void AWeapon::reload() const
         return;
     }
 
-    try
+    // Don't reload if we don't have a montage
+    // We can't anyway since firing happens in notifiers
+    if (!has_reload_animation_montage)
     {
-        Validity::check_value<UAnimMontage>(reload_animation_montage, "No reload animation montage for weapon");
-        Validity::check_value<UAnimInstance>(anim_instance, "No anim instance found");
+        UE_LOG(Enemy, Error, LOG_TEXT("No reload weapon animation montage, aborting fire"));
+        return;
     }
-    catch (const Validity::NullPointerException& e)
+
+    // Don't reload if we don't have a animation instance
+    // We can't anyway since firing happens in notifiers
+    if (anim_instance == nullptr)
     {
-        UE_LOG(Weapon, Error, LOG_TEXT("%hs (aborting reload)"), e.what());
+        UE_LOG(Enemy, Error, LOG_TEXT("No animation instance, aborting reload"));
         return;
     }
 
