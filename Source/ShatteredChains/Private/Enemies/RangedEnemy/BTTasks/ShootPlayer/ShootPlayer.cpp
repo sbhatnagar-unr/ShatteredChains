@@ -7,6 +7,7 @@
 #include "ShatteredChains/Logging.h"
 #include "ShatteredChains/Utility.h"
 #include "Weapons/Weapon.h"
+#include "Kismet/KismetMathLibrary.h"
 
 
 UShootPlayer::UShootPlayer()
@@ -41,8 +42,12 @@ EBTNodeResult::Type UShootPlayer::ExecuteTask(UBehaviorTreeComponent& OwnerComp,
         UE_LOG(Enemy, Error, LOG_TEXT("%hs"), e.what());
         return EBTNodeResult::Type::Failed;
     }
+    
+    // Rotate to face the player
+    const FRotator rotation_to_player = UKismetMathLibrary::FindLookAtRotation(enemy_actor->GetActorLocation(), target_actor->GetTargetLocation());
+    enemy_actor->SetActorRotation(rotation_to_player);
 
-
+    
     if (weapon->get_current_magazine_ammo_count() > 0)
     {
         weapon->fire();
