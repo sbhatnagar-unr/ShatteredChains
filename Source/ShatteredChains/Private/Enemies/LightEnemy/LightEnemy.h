@@ -17,14 +17,26 @@ public:
 
     float get_attack_damage() const;
 
+    float get_attack_range() const;
+    UAnimMontage* get_attack_animation_montage() const;
+    float get_attack_animation_exit_blend() const;
+    
     virtual void on_death(AActor* killed_by) override final;
     
-protected:
+private:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
 
+    // Distance enemy can be from player to hit an attack
+    UPROPERTY(EditDefaultsOnly, Category="Attacking", meta=(ToolTip="Distance enemy can attack player from"))
+    float attack_range;
 
-private:
+    // Animation montage for attacking player
+    UPROPERTY(EditDefaultsOnly, Category="Attacking", meta=(ToolTip="Animation montage to play when enemy is attacking"))
+    TObjectPtr<UAnimMontage> attack_animation_montage;
+    
+    UPROPERTY(EditDefaultsOnly, Category="Attacking", meta=(ToolTip="How long it takes to transition out of the attack montage"))
+    float attack_animation_exit_blend;
     UPROPERTY(EditDefaultsOnly, Category="Attacking")
     float attack_damage;
 };

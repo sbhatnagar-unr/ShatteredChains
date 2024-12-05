@@ -10,6 +10,11 @@
 ALightEnemy::ALightEnemy() : AEnemy()
 {
     attack_damage = 0;
+    // Default attack range
+    attack_range = 100;
+
+    attack_animation_montage = nullptr;
+    attack_animation_exit_blend = 0.2f;
 }
 
 // Called when the game starts or when spawned
@@ -40,6 +45,23 @@ void ALightEnemy::BeginPlay()
 float ALightEnemy::get_attack_damage() const
 {
     return attack_damage;
+}
+
+
+float ALightEnemy::get_attack_range() const
+{
+    return attack_range;
+}
+
+
+UAnimMontage* ALightEnemy::get_attack_animation_montage() const
+{
+    return attack_animation_montage;
+}
+
+float ALightEnemy::get_attack_animation_exit_blend() const
+{
+    return attack_animation_exit_blend;
 }
 
 
