@@ -15,7 +15,8 @@ ARangedEnemy::ARangedEnemy() : AEnemy()
 
     location_to_go_to = FVector::ZeroVector;
     anchor_tolerance = 0;
-    accuracy = 0;
+    max_pitch_offset = 0;
+    max_yaw_offset = 0;
 }
 
 // Called when the game starts or when spawned
@@ -50,9 +51,6 @@ void ARangedEnemy::BeginPlay()
         // Check the anchor tolerance
         Validity::check_value<float>(anchor_tolerance, 0, "Anchor tolerance is unset");
         UE_LOG(Enemy, VeryVerbose, LOG_TEXT("Anchor tolerance for %s is %f"), *GetActorLabel(), anchor_tolerance);
-        
-        // Check the accuracy
-        Validity::check_value<float>(accuracy, 0, "Accuracy is unset");
     }
     catch (const Validity::NullPointerException &e)
     {
@@ -60,16 +58,6 @@ void ARangedEnemy::BeginPlay()
         return;
     }
 
-    // Validate the value of accuracy
-    if (accuracy <= 0 || accuracy > 100)
-    {
-        UE_LOG(Enemy, Warning, LOG_TEXT("Accuracy for %s is out of range (0-100].  accuracy=%f will be replaced by 1 if <=0 or 100 if >100"), *GetActorLabel(), accuracy);
-        FMath::Clamp(accuracy, 1, 100);
-    }
-    UE_LOG(Enemy, Verbose, LOG_TEXT("Accuracy for %s is %f%%"), *GetActorLabel(), accuracy);
-    accuracy /= 100;
-
-    
     // Spawn the weapon for the Enemy
     FActorSpawnParameters spawn_parameters;
     spawn_parameters.Owner = this;
@@ -152,5 +140,22 @@ FVector ARangedEnemy::get_hitscan_start_location() const
 
 FVector ARangedEnemy::get_hitscan_direction() const
 {
-    return GetActorForwardVector();
+    // Calculate a forward vector based off of offsets
+    // Basically pick a random vector in the cone provided by the offsets
+
+    // 50/50 chance for moving in either direction
+    float pitch_change = (FMath::FRand() < 0.5f) ? -1 : 1;
+    float yaw_change = (FMath::FRand() < 0.5f) ? -1 : 1;
+
+    // Apply a random angle in between 0 and the offset
+    pitch_change *= FMath::FRand() * max_pitch_offset;
+    yaw_change   *= FMath::FRand() * max_yaw_offset;
+
+    // Make the rotator
+    const FRotator accuracy_change = FRotator(pitch_change, yaw_change, 0);
+
+    // Get the forward vector and rotate it
+    const FVector direction = accuracy_change.RotateVector(GetActorForwardVector());
+    
+    return direction;
 }

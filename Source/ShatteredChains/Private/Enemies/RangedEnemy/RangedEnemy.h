@@ -38,9 +38,13 @@ private:
     UPROPERTY(EditAnywhere, Category="Weapon", meta=(ToolTip="What weapon the enemy is using"))
     TSubclassOf<AWeapon> weapon_class;
 
-    UPROPERTY(EditAnywhere, Category="Weapon", meta=(ToolTip="How accurate the enemy can shoot (0-100]"))
-    float accuracy;
+    UPROPERTY(EditAnywhere, Category="Weapon", meta=(ToolTip="Max accuracy offset when aiming in degrees (up/down)"))
+    float max_pitch_offset;
 
+    UPROPERTY(EditAnywhere, Category="Weapon", meta=(ToolTip="Max accuracy offset when aiming in degrees (left/right)"))
+    float max_yaw_offset;
+    
+    
     UPROPERTY()
     TObjectPtr<AWeapon> weapon;
     
