@@ -6,6 +6,7 @@
 #include "Interfaces/WeaponUser/WeaponUser.h"
 #include "Interfaces/HasHealth/HasHealth.h"
 #include "Components/ActorComponents/HealthComponent/HealthComponent.h"
+#include "ShatteredChains/CustomTraceChannels.h"
 #include "ShatteredChains/Logging.h"
 #include "ShatteredChains/Utility.h"
 
@@ -57,21 +58,20 @@ void UAN_WeaponFire::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase*
     struct FCollisionQueryParams trace_params;
     // Actually check if it hits the mesh, rather than some collision boundary or something
     trace_params.bTraceComplex = true;
-
-
+    
     // Perform the trace
     UE_LOG(Weapon, Log, LOG_TEXT("Firing weapon"));
     UE_LOG(Weapon, VeryVerbose, LOG_TEXT("[Line Trace] %s -> %s"), *trace_start.ToString(), *trace_end.ToString());
-    const bool hit_something = world->LineTraceSingleByChannel(trace_result, trace_start, trace_end, ECollisionChannel::ECC_Visibility, trace_params);
+    const bool hit_something = world->LineTraceSingleByChannel(trace_result, trace_start, trace_end, ShootableChannel, trace_params);
 
     // Remove one ammunition
     weapon->decrement_mag_ammo_count();
 
-    // Draw a debug line
-    DrawDebugLine(world, trace_start, trace_end, FColor::Red, false, 0.07f, 0U, 0.3f);
 
     if (hit_something)
     {
+        // Draw a debug line
+        DrawDebugLine(world, trace_start, trace_result.ImpactPoint, FColor::Red, false, 0.07f, 0U, 0.3f);
         // Draw box around the spot we hit
         DrawDebugBox(world, trace_result.ImpactPoint, FVector(1, 1, 1), FColor::Blue, false, 3.f, 0U, 5.f);
 
@@ -94,6 +94,8 @@ void UAN_WeaponFire::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase*
     }
     else
     {
+        // Draw a debug line
+        DrawDebugLine(world, trace_start, trace_end, FColor::Red, false, 0.07f, 0U, 0.3f);
         UE_LOG(Weapon, Verbose, LOG_TEXT("Trace hit no target"));
     }
 }
