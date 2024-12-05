@@ -60,6 +60,7 @@ EBTNodeResult::Type UMoveToAnchor::ExecuteTask(UBehaviorTreeComponent& OwnerComp
     if (distance <= enemy_actor->get_anchor_tolerance())
     {
         UE_LOG(Enemy, Log, LOG_TEXT("%s has reached anchor point %s"), *enemy_name, *anchor_point->GetActorLabel());
+        ai_controller->StopMovement();
         blackboard->SetValueAsBool(near_anchor_field, true);
     }
     else
