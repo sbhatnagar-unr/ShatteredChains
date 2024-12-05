@@ -75,12 +75,13 @@ void ARangedEnemy::BeginPlay()
     spawn_parameters.Owner = this;
     // Spawn it with the same transform as the enemy, it will be moved anyway
     weapon = world->SpawnActor<AWeapon>(weapon_class, GetActorTransform(), spawn_parameters);
-    
     if (weapon == nullptr)
     {
         UE_LOG(Enemy, Error, LOG_TEXT("Could not spawn weapon for %s"), *GetActorLabel());
         return;
     }
+    // Set weapon name
+    weapon->SetActorLabel(GetActorLabel() + FString(TEXT("'s weapon")));
     UE_LOG(Enemy, Verbose, LOG_TEXT("Weapon %s successfully spawned for %s"), *weapon->GetActorLabel(), *GetActorLabel());
     
     // Attach it to the enemy
