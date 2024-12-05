@@ -24,11 +24,13 @@ public:
 
     virtual UHealthComponent* get_health_component() const override final;
 
+    virtual void BeginPlay() override;
+    
     virtual void on_death(AActor* killed_by) override;
     
 protected:
     // This is the actor that the enemy will attack
-    UPROPERTY()
+    UPROPERTY(EditAnywhere)
     TObjectPtr<AActor> target;
 
 private:

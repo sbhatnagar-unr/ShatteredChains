@@ -33,9 +33,6 @@ void ARangedEnemy::BeginPlay()
         // Get the world
         world = Validity::check_value<UWorld>(GetWorld(), "Could not get world");
         
-        // Get the target
-        target = Validity::check_value<AActor>(Cast<AActor>(world->GetFirstPlayerController()->GetPawn()), "Could not locate target (player)");
-        
         // Check that we have an Anchor
         Validity::check_value<AAnchorPoint>(anchor_point, "No anchor point");
         

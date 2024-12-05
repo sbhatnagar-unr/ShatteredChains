@@ -12,9 +12,29 @@ AEnemy::AEnemy()
     // Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
     PrimaryActorTick.bCanEverTick = false;
 
+    target = nullptr;
     health_component = CreateDefaultSubobject<UHealthComponent>(TEXT("Health Component"));
 }
 
+void AEnemy::BeginPlay()
+{
+    Super::BeginPlay();
+
+    // Get the target if one was not set in the editor
+    if (target == nullptr)
+    {
+        UE_LOG(Enemy, Log, LOG_TEXT("%s had no target set in editor, using player as target"), *GetActorLabel());
+        target = GetWorld()->GetFirstPlayerController()->GetPawn();
+
+        if (target == nullptr)
+        {
+            UE_LOG(Enemy, Error, LOG_TEXT("%s could not locate target (player)"), *GetActorLabel());
+            return;
+        }
+        UE_LOG(Enemy, Verbose, LOG_TEXT("Found target (player)"));
+    }
+}
+    
 // Called to bind functionality to input
 void AEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {

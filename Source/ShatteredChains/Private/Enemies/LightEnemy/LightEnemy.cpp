@@ -3,8 +3,6 @@
 
 #include "LightEnemy.h"
 #include "ShatteredChains/Logging.h"
-#include "Kismet/GameplayStatics.h"
-
 
 // Sets default values
 ALightEnemy::ALightEnemy() : AEnemy()
@@ -23,20 +21,10 @@ void ALightEnemy::BeginPlay()
     Super::BeginPlay();
     UE_LOG(Enemy, Log, LOG_TEXT("LightEnemy: attack_range=%f attack_damage=%f"), attack_range, attack_damage);
 
-    // Get the target
-    target = Cast<AActor>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
-    if (target == nullptr)
-    {
-        UE_LOG(Enemy, Error, LOG_TEXT("Could not locate target (player)"));
-        return;
-    }
-    UE_LOG(Enemy, Log, LOG_TEXT("Found target (player)"));
-
     // Make sure we have an animation montage
     if (attack_animation_montage == nullptr)
     {
         UE_LOG(Enemy, Error, LOG_TEXT("No attack animation montage"));
-        return;
     }
 
 }
