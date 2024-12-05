@@ -33,7 +33,7 @@ EBTNodeResult::Type UMoveToAnchor::ExecuteTask(UBehaviorTreeComponent& OwnerComp
     // The anchor point
     AAnchorPoint* anchor_point;
     // The location the enemy should move to
-    FVector location;
+    FVector anchor_location;
     // The enemy's name, for logging purposes
     FString enemy_name;
     try
@@ -42,7 +42,7 @@ EBTNodeResult::Type UMoveToAnchor::ExecuteTask(UBehaviorTreeComponent& OwnerComp
         blackboard = Validity::check_value<UBlackboardComponent>(ai_controller->GetBlackboardComponent(), "Could not get AI blackboard");
         enemy_actor = Validity::check_value<ARangedEnemy>(Cast<ARangedEnemy>(ai_controller->GetPawn()), "Could not get enemy actor belonging to this AI");
         anchor_point = Validity::check_value<AAnchorPoint>(enemy_actor->get_anchor_point(), "Could not get anchor point");
-        location = enemy_actor->get_location_to_go_to();
+        anchor_location = enemy_actor->get_location_to_go_to();
         enemy_name = enemy_actor->GetActorLabel();
     }
     catch (const Validity::NullPointerException& e)
@@ -51,11 +51,11 @@ EBTNodeResult::Type UMoveToAnchor::ExecuteTask(UBehaviorTreeComponent& OwnerComp
         return EBTNodeResult::Type::Failed;
     }
 
-    // Get locations of enemy and anchor point
+    // Get locations of enemy
     const FVector enemy_location = enemy_actor->GetActorLocation();
 
-    // Calculate distance to anchor point
-    const float distance = FVector::Dist(enemy_location, location);
+    // Calculate distance to anchor location
+    const float distance = FVector::Dist(enemy_location, anchor_location);
 
     if (distance <= enemy_actor->get_anchor_tolerance())
     {
@@ -66,8 +66,8 @@ EBTNodeResult::Type UMoveToAnchor::ExecuteTask(UBehaviorTreeComponent& OwnerComp
     else
     {
         // Acceptance radius is 0 because that will be handled by the logic in this function
-        ai_controller->MoveToLocation(location, 0, false, true, false, true);
-        UE_LOG(Enemy, VeryVerbose, LOG_TEXT("%s moving to anchor (%s -> %s) %f units away"), *enemy_name, *enemy_location.ToString(), *location.ToString(), distance);
+        ai_controller->MoveToLocation(anchor_location, 0, false, true, false, true);
+        UE_LOG(Enemy, VeryVerbose, LOG_TEXT("%s moving to anchor (%s -> %s) %f units away"), *enemy_name, *enemy_location.ToString(), *anchor_location.ToString(), distance);
     }
     
     return EBTNodeResult::Succeeded;
