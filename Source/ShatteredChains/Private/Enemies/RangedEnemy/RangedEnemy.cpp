@@ -98,7 +98,7 @@ void ARangedEnemy::BeginPlay()
     
     // Get random point in anchor radius, this will be the point it runs to and shoots from
     FNavLocation nav_location;
-    // Try 50 times to get a location
+    // Try 50 (arbitrary) times to get a location
     bool found_location = false;
     for (unsigned int i = 0; i < 50; i++)
     {
