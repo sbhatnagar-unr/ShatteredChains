@@ -72,3 +72,10 @@ Plugins/**/Intermediate/*
 
 # Cache files for the editor to use
 DerivedDataCache/*
+
+# My notes
+notes.txt
+
+# Rider IDE
+.idea/
+ShatteredChains.sln.DotSettings.user
