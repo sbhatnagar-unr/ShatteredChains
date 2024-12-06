@@ -84,7 +84,7 @@ void AWeapon::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* O
     {
         UE_LOG(LogTemp, Log, TEXT("Player overlapped with: %s"), *GetName());
 
-        if (GetOwner() == nullptr)
+        if (GetOwner() != nullptr)
         {
             UE_LOG(Weapon, Verbose, LOG_TEXT("Could not pick up weapon because another Actor is holding it"));
             return;
