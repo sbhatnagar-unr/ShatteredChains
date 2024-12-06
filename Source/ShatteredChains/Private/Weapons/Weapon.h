@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Components/SphereComponent.h"
 #include "Weapon.generated.h"
 
 UCLASS()
@@ -59,6 +60,15 @@ protected:
 
     unsigned int current_magazine_ammo_count;
     unsigned int current_ammo_stock_pile_count;
+
+    // Interactable collision sphere
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collision")
+    USphereComponent* InteractionSphere;
+
+    // Overlap Event
+    UFUNCTION()
+    void OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+        UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
     // Animation montages
     UPROPERTY(EditDefaultsOnly, Category = "Animations")

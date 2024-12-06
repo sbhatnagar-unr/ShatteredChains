@@ -1,9 +1,11 @@
 #pragma once
+#pragma once
 
 #include "CoreMinimal.h"
 #include "InputActionValue.h"
 #include "GameFramework/Character.h"
 #include "Interfaces/HasHealth/HasHealth.h"
+#include "Interfaces/WeaponUser/WeaponUser.h"
 #include "EnhancedInputComponent.h"  // Include enhanced input system
 #include "MyCharacter.generated.h"   // Must be the last include
 
@@ -12,26 +14,39 @@
  *
  * don't delete this, breaks the code for some reason at generated_body()
  */
+
+ // Forward declaration for AWeapon
+class AWeapon;
+
 UCLASS()
-class SHATTEREDCHAINS_API AMyCharacter : public ACharacter, public IHasHealth
+class SHATTEREDCHAINS_API AMyCharacter : public ACharacter, public IHasHealth, public IWeaponUser
 {
     GENERATED_BODY()
+
+    // Camera
+    UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = "true"))
+    class UCameraComponent* Camera;
 
 
 public:
     // Constructor
     AMyCharacter();
 
-    // Camera
-    UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = "true"))
-    class UCameraComponent* Camera;
-
     // Called every frame
     virtual void Tick(float DeltaTime) override;
 
     virtual void on_death(AActor* killed_by) override final;
-    
+
     virtual UHealthComponent* get_health_component() const override final;
+
+    void EquipWeapon(AWeapon* Weapon);
+    void PickUpWeapon(AWeapon* Weapon);
+
+    // This should return a location to start a hitscan from
+    virtual FVector get_hitscan_start_location() const override final;
+
+    // This should return a Vector in the direction to fire
+    virtual FVector get_hitscan_direction() const override final;
 
 protected:
 
@@ -48,6 +63,32 @@ protected:
 
     UPROPERTY(EditAnywhere, Category = "EnhancedInput")
     class UInputAction* LookAction;
+
+    UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+    UInputAction* CrouchAction;
+
+    UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+    UInputAction* SprintAction;
+
+    UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+    UInputAction* SlideAction;
+
+    UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+    UInputAction* RollAction;
+
+    UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+    UInputAction* ProneAction;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EnhancedInput")
+    UInputAction* InteractAction;
+
+    UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+    UInputAction* FireAction;
+
+    UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+    UInputAction* ReloadAction;
+
+
 
     void Move(const FInputActionValue& InputValue);
     void Look(const FInputActionValue& InputValue);
@@ -80,25 +121,25 @@ protected:
     // Initiates Jump sequence, supports double jump
     void StartJump();
 
-    // Ends jump action, needed most likely to prevent infinite jumping
+    // Ends jump action
     void StopJump();
 
-    // Starts sprinting, increasing speed and consuming stamina
+    // Starts sprinting
     void StartSprint();
 
-    // Stops sprinting, restores speed to normal
+    // Stops sprinting
     void StopSprint();
 
-    // Toggle crouch state, adjusting movement speed
+    // Toggle crouch state
     void ToggleCrouch();
 
-    // Begins slide motion, triggered when sprinting
+    // Begins slide motion
     void StartSlide();
 
-    // Ends sliding motion, restoring speed and height
+    // Ends sliding motion
     void StopSlide();
 
-    // Executes a jump from sliding, similar to slide-jumping from apex legends or other various games
+    // Executes a jump from sliding
     void SlideJump();
 
     // Initiates a roll sequence
@@ -107,7 +148,7 @@ protected:
     // Stops roll sequence
     void StopRoll();
 
-    // Enables rolling after a cooldown, needed to prevent infinite rolling
+    // Enables rolling after a cooldown
     void EnableRolling();
 
     // Allows the Character to mantle/climb over obstacles
@@ -116,6 +157,16 @@ protected:
     // Allows the character to perform a wall jump
     void WallJump();
 
+    UFUNCTION()
+    void Interact();
+
+
+    UPROPERTY()
+    AWeapon* CurrentWeapon = nullptr;
+
+    void FireWeapon();
+
+    void ReloadWeapon();
 
     /*--------------------- State Variables ---------------------*/
 
@@ -125,9 +176,6 @@ protected:
     // Tracks if character is sprinting
     bool bIsSprinting = false;
 
-    // Tracks if character is in a sliding state
-    bool bIsSliding = false;
-
     // Determines if the character is eligible to roll
     bool bCanRoll = true;
 
@@ -135,9 +183,33 @@ protected:
     /*--------------------- Input Actions ---------------------*/
 
     // Input actions for sprinting, can be editable in editor
+    /*
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input", meta = (AllowPrivateAccess = "true"))
     UInputAction* SprintAction;
+    */
 
+    /*------------------ Slide Variables ------------------*/
+    
+    // Can slide
+    bool bIsSliding = false;
+
+    // Slide speed
+    UPROPERTY(EditAnywhere, Category = "Slide")
+    float SlideSpeed = 1500.0f;
+
+    // Slide duration
+    UPROPERTY(EditAnywhere, Category = "Slide")
+    float SlideDuration = 0.75f;
+
+    // Timer to stop sliding
+    FTimerHandle SlideStopTimer;
+
+    // Can Slide Jump
+    bool bCanSlideJump = false;
+
+    // Slide jump force
+    UPROPERTY(EditAnywhere, Category = "Slide Jump")
+    FVector SlideJumpForce = FVector(0.0f, 0.0f, 400.0f);
 
     /*--------------------- Movement Speeds ---------------------*/
 
@@ -145,7 +217,7 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Movement")
     float WalkSpeed = 600.0f;
 
-    // Sprinting speed
+    // Sprinting speed 
     UPROPERTY(EditAnywhere, Category = "Movement")
     float SprintSpeed = 1200.0f;
 
@@ -153,14 +225,10 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Movement")
     float CrouchSpeed = 300.0f;
 
-    // Speed during sliding
-    UPROPERTY(EditAnywhere, Category = "Movement")
-    float SlideSpeed = 1500.0f;
-
 
     /*--------------------- Jump Mechanics ---------------------*/
 
-    // Counts current jumps for double jump functionality
+    // Counts current jumps for double jump functionality 
     int32 JumpCount = 0;
 
     // Maximum number of jumps allowed (e.g., double jump)
@@ -170,25 +238,25 @@ protected:
 
     /*--------------------- Stamina Properties ---------------------*/
 
-    // Total stamina available for sprinting
+    // Total stamina available for sprinting 
     UPROPERTY(EditAnywhere, Category = "Stamina")
     float Stamina = 100.0f;
 
-    // Current stamina level
+    // Current stamina level 
     float CurrentStamina;
 
-    // Rate at which stamina drains while sprinting
+    // Rate at which stamina drains while sprinting 
     UPROPERTY(EditAnywhere, Category = "Stamina")
     float StaminaDrainRate = 10.0f;
 
-    // Rate at which stamina recovers when not sprinting
+    // Rate at which stamina recovers when not sprinting 
     UPROPERTY(EditAnywhere, Category = "Stamina")
     float StaminaRecoveryRate = 5.0f;
 
 
     /*--------------------- Animation Properties ---------------------*/
 
-    // Animation montage for rolling action
+    // Animation montage for rolling action 
     UPROPERTY(EditDefaultsOnly, Category = "Animation")
     UAnimMontage* RollAnimMontage;
 
@@ -199,12 +267,11 @@ protected:
 
     /*--------------------- Timer Handles ---------------------*/
 
-    // Timer handle for stopping the slide after a duration
-    FTimerHandle SlideStopTimer;
-
-    // Timer for managing roll cooldown
+    // Timer for managing roll cooldown 
     FTimerHandle RollCooldownTimer;
 
+    // Stores the last input direction
+    FVector LastInputDirection = FVector::ZeroVector;
 
     /*--------------------- Helper Functions ---------------------*/
 
@@ -222,7 +289,7 @@ protected:
 
 
     // Additional variables and methods for prone and ledge grab
-    //
+    // 
     // Character prone state
     bool bIsProne;  // Tracks if the character is in a prone position
 

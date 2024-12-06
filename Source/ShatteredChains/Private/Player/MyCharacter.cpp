@@ -1,4 +1,7 @@
 #include "MyCharacter.h"
+#include "TimerManager.h"
+#include "Engine/World.h"              
+#include "Weapons/Weapon.h"
 #include "GameFramework/CharacterMovementComponent.h" 
 #include "InputMappingContext.h"
 #include "EnhancedInputSubsystems.h"
@@ -12,16 +15,17 @@ DEFINE_LOG_CATEGORY(Player);
 // Sets default values
 AMyCharacter::AMyCharacter()
 {
-     // Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-    PrimaryActorTick.bCanEverTick = true;
+ 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
 
 
-    // Initialize movement states and stamina
-    bIsCrouched = false;
-    bIsSprinting = false;
-    bIsSliding = false;
-    bCanRoll = true;
-    CurrentStamina = Stamina; // Set initial stamina
+	// Initialize movement states and stamina
+	bIsCrouched = false;
+	bIsSprinting = false;
+	bIsSliding = false;
+	bCanRoll = true;
+	CurrentStamina = Stamina; // Set initial stamina
+    CurrentWeapon = nullptr;
 
     Camera = CreateDefaultSubobject<UCameraComponent>("Camera");
     Camera->SetupAttachment(RootComponent);
@@ -34,8 +38,8 @@ AMyCharacter::AMyCharacter()
 // Called when the game starts or when spawned
 void AMyCharacter::BeginPlay()
 {
-    Super::BeginPlay();
-    
+	Super::BeginPlay();
+	
 }
 
 // Player Input bindings
@@ -54,11 +58,43 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
     if (UEnhancedInputComponent* Input = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
     {
+        // Fire Weapon
+        Input->BindAction(FireAction, ETriggerEvent::Started, this, &AMyCharacter::FireWeapon);
+        //Reload Weapon
+        Input->BindAction(ReloadAction, ETriggerEvent::Started, this, &AMyCharacter::ReloadWeapon);
+
+        // Interact
+        Input->BindAction(InteractAction, ETriggerEvent::Started, this, &AMyCharacter::Interact);
+
+        // Wasd 
         Input->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMyCharacter::Move);
 
+        // Look 
         Input->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMyCharacter::Look);
 
+        // Jump
         Input->BindAction(JumpAction, ETriggerEvent::Triggered, this, &AMyCharacter::Jump);
+
+        // Bind crouch toggle
+        Input->BindAction(CrouchAction, ETriggerEvent::Triggered, this, &AMyCharacter::ToggleCrouch);
+
+        // Bind slide action
+        Input->BindAction(SlideAction, ETriggerEvent::Started, this, &AMyCharacter::StartSlide);
+
+        // Bind jump action (trigger slide jump if sliding)
+        Input->BindAction(JumpAction, ETriggerEvent::Started, this, &AMyCharacter::SlideJump);
+
+        // Bind prone hold
+        Input->BindAction(ProneAction, ETriggerEvent::Started, this, &AMyCharacter::ToggleProne);
+
+        // Bind sprint start
+        Input->BindAction(SprintAction, ETriggerEvent::Started, this, &AMyCharacter::StartSprint);
+
+        // Bind sprint stop
+        Input->BindAction(SprintAction, ETriggerEvent::Completed, this, &AMyCharacter::StopSprint);
+
+        // Bind roll action
+        Input->BindAction(RollAction, ETriggerEvent::Started, this, &AMyCharacter::StartRoll);
     }
 
     // Bind axis mappings for movement
@@ -74,40 +110,154 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
     */
 
     // Bind action mappings for sprinting and crouching
-    PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &AMyCharacter::StartSprint);
-    PlayerInputComponent->BindAction("Sprint", IE_Released, this, &AMyCharacter::StopSprint);
-    PlayerInputComponent->BindAction("ToggleCrouch", IE_Pressed, this, &AMyCharacter::ToggleCrouch);
+    // PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &AMyCharacter::StartSprint);
+    // PlayerInputComponent->BindAction("Sprint", IE_Released, this, &AMyCharacter::StopSprint);
+    // PlayerInputComponent->BindAction("ToggleCrouch", IE_Pressed, this, &AMyCharacter::ToggleCrouch);
 
     // Bind action mappings for slide and roll
-    PlayerInputComponent->BindAction("Slide", IE_Pressed, this, &AMyCharacter::StartSlide);
-    PlayerInputComponent->BindAction("Roll", IE_Pressed, this, &AMyCharacter::StartRoll);
+    // PlayerInputComponent->BindAction("Slide", IE_Pressed, this, &AMyCharacter::StartSlide);
+    // PlayerInputComponent->BindAction("Roll", IE_Pressed, this, &AMyCharacter::StartRoll);
 
     // Prone
-    PlayerInputComponent->BindAction("ToggleProne", IE_Pressed, this, &AMyCharacter::ToggleProne);
+    // PlayerInputComponent->BindAction("ToggleProne", IE_Pressed, this, &AMyCharacter::ToggleProne);
 
     // Slide Jump
-    PlayerInputComponent->BindAction("SlideJump", IE_Pressed, this, &AMyCharacter::SlideJump);
+    //PlayerInputComponent->BindAction("SlideJump", IE_Pressed, this, &AMyCharacter::SlideJump);
 
 }
 
-void AMyCharacter::Move(const FInputActionValue& InputValue)
+void AMyCharacter::FireWeapon()
 {
-    FVector2D InputVector = InputValue.Get<FVector2D>();
-
-    if (IsValid(Controller)) 
+    if (CurrentWeapon)
     {
-        // Get Forward Direction
-        const FRotator Rotation = Controller->GetControlRotation();
-        const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-        const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-        const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
-        // Add Movement Input
-        AddMovementInput(ForwardDirection, InputVector.Y);
-        AddMovementInput(RightDirection, InputVector.X);
+        CurrentWeapon->fire(); // Calls the fire function in Weapon.cpp
+        UE_LOG(LogTemp, Log, TEXT("Fired weapon: %s"), *CurrentWeapon->GetName());
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("No weapon equipped to fire."));
     }
 }
+
+
+void AMyCharacter::ReloadWeapon()
+{
+    if (CurrentWeapon)
+    {
+        CurrentWeapon->reload(); // Calls the reload function in Weapon.cpp
+        UE_LOG(LogTemp, Log, TEXT("Reloaded weapon: %s"), *CurrentWeapon->GetName());
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("No weapon equipped to reload."));
+    }
+}
+
+void AMyCharacter::PickUpWeapon(AWeapon* weapon)
+{
+    EquipWeapon(weapon);
+}
+
+
+// Interact Function
+void AMyCharacter::Interact()
+{
+    FVector Start = Camera->GetComponentLocation();
+    FVector End = Start + (Camera->GetForwardVector() * 1500.0f);
+    FHitResult HitResult;
+
+    FCollisionQueryParams Params;
+    Params.AddIgnoredActor(this);
+
+    // Perform the line trace
+    if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
+    {
+        AActor* HitActor = HitResult.GetActor();
+        if (HitActor)
+        {
+            UE_LOG(LogTemp, Log, TEXT("Line Trace Hit Actor: %s"), *HitActor->GetName());
+
+            // Check if the hit actor is a weapon
+            if (AWeapon* weapon = Cast<AWeapon>(HitActor))
+            {
+                UE_LOG(LogTemp, Log, TEXT("Weapon Detected: %s"), *weapon->GetName());
+
+                EquipWeapon(weapon); // Attempt to equip the weapon
+                weapon->SetActorHiddenInGame(true); // Hide the weapon
+                weapon->SetActorEnableCollision(false);
+            }
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("No interactable object detected."));
+    }
+}
+
+
+
+
+
+// equip weapon
+void AMyCharacter::EquipWeapon(AWeapon* weapon)
+{
+    if (!weapon)
+    {
+        return;
+    }
+
+    if (CurrentWeapon)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Current Weapon: %s will be replaced with %s"), *CurrentWeapon->GetName(), *weapon->GetName());
+        CurrentWeapon->Destroy(); // Destroy the old weapon if needed
+    }
+    else
+    {
+        UE_LOG(LogTemp, Log, TEXT("Equipping first weapon: %s"), *weapon->GetName());
+    }
+
+    // Equip new weapon
+    CurrentWeapon = weapon;
+    CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("WeaponSocket"));
+    CurrentWeapon->SetActorEnableCollision(false);
+}
+
+
+
+
+// WASD Movement Function
+void AMyCharacter::Move(const FInputActionValue& Value)
+{
+    FVector2D MovementInput = Value.Get<FVector2D>();
+    if (Controller && MovementInput.SizeSquared() > 0.0f)
+    {
+        // Convert 2D input to a 3D direction vector
+        FVector ForwardDirection = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::X);
+        FVector RightDirection = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::Y);
+
+        FVector CurrentInputDirection = ForwardDirection * MovementInput.Y + RightDirection * MovementInput.X;
+
+        // Normalize the direction
+        CurrentInputDirection.Normalize();
+
+        // Log only if the direction changes significantly
+        if (!CurrentInputDirection.Equals(LastInputDirection, 0.01f)) 
+        {
+            UE_LOG(LogTemp, Log, TEXT("Moving in direction: %s"), *CurrentInputDirection.ToString());
+            LastInputDirection = CurrentInputDirection;
+        }
+
+        // Apply the movement
+        AddMovementInput(ForwardDirection, MovementInput.Y);
+        AddMovementInput(RightDirection, MovementInput.X);
+    }
+    else
+    {
+        // Reset the last direction if no movement input is provided
+        LastInputDirection = FVector::ZeroVector;
+    }
+}
+
 
 void AMyCharacter::Look(const FInputActionValue& InputValue)
 {
@@ -120,9 +270,11 @@ void AMyCharacter::Look(const FInputActionValue& InputValue)
     }
 }
 
+// Jump Function
 void AMyCharacter::Jump()
 {
     ACharacter::Jump();
+    UE_LOG(Player, Log, TEXT("Jump triggered"));
 }
 
 // Forward and Backwards functions
@@ -149,13 +301,18 @@ void AMyCharacter::MoveRight(float Value)
     }
 }
 
-// Jump Functions with double Jump Logic
+// Jump Functions with double Jump Logic for future reference
 void AMyCharacter::StartJump()
 {
     if (JumpCount < MaxJumpCount)
     {
         bPressedJump = true;
         JumpCount++;
+        UE_LOG(Player, Log, TEXT("StartJump triggered: JumpCount = %d"), JumpCount);
+    }
+    else
+    {
+        UE_LOG(Player, Warning, TEXT("StartJump failed: MaxJumpCount reached"));
     }
 }
 
@@ -163,6 +320,7 @@ void AMyCharacter::StartJump()
 void AMyCharacter::StopJump()
 {
     bPressedJump = false;
+    UE_LOG(Player, Log, TEXT("StopJump triggered"));
 }
 
 // Function to register landing
@@ -170,23 +328,27 @@ void AMyCharacter::Landed(const FHitResult& Hit)
 {
     Super::Landed(Hit);
     JumpCount = 0; // Reset jump count on landing
+    UE_LOG(Player, Log, TEXT("Landed: JumpCount reset to %d"), JumpCount);
 }
 
 // Start Sprint Function with Stamina Management
 void AMyCharacter::StartSprint()
 {
-    if (CurrentStamina > 0.0f && !bIsSprinting)
+    if (CurrentStamina > 0.0f && !bIsSprinting) // checks stamina
     {
         bIsSprinting = true;
-        GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+        GetCharacterMovement()->MaxWalkSpeed = SprintSpeed; // increase speed
+        UE_LOG(Player, Log, TEXT("Sprint started: CurrentStamina = %f"), CurrentStamina);
     }
 }
+
 
 // Stop Sprint Function
 void AMyCharacter::StopSprint()
 {
     bIsSprinting = false;
-    GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+    GetCharacterMovement()->MaxWalkSpeed = WalkSpeed; // restore normal speed
+    UE_LOG(Player, Log, TEXT("Sprint stopped"));
 }
 
 // Stamina Caculation Function
@@ -195,33 +357,49 @@ void AMyCharacter::UpdateStamina(float DeltaTime)
     if (bIsSprinting && CurrentStamina > 0.0f)
     {
         CurrentStamina -= StaminaDrainRate * DeltaTime;
+        UE_LOG(Player, Log, TEXT("UpdateStamina: Sprinting - CurrentStamina = %f"), CurrentStamina);
+
         if (CurrentStamina <= 0.0f)
         {
             StopSprint();
+            UE_LOG(Player, Warning, TEXT("UpdateStamina: Stamina depleted, stopping sprint"));
         }
     }
     else if (CurrentStamina < Stamina)
     {
         CurrentStamina += StaminaRecoveryRate * DeltaTime;
+        UE_LOG(Player, Log, TEXT("UpdateStamina: Recovering - CurrentStamina = %f"), CurrentStamina);
     }
 }
 
 // Crouch Toggle Function
 void AMyCharacter::ToggleCrouch()
 {
+    // Get the capsule component for modifying its height
+    UCapsuleComponent* Capsule = GetCapsuleComponent();
+
     if (bIsCrouched)
     {
+        // Restore original height and speed when uncrouching
+        Capsule->SetCapsuleHalfHeight(88.0f); // Default height
         UnCrouch();
         bIsCrouched = false;
         GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+
+        UE_LOG(Player, Log, TEXT("UnCrouch: Height restored to %f"), Capsule->GetUnscaledCapsuleHalfHeight());
     }
     else
     {
+        // Halve the height and reduce movement speed when crouching
+        Capsule->SetCapsuleHalfHeight(44.0f); // Half of the default height
         Crouch();
         bIsCrouched = true;
         GetCharacterMovement()->MaxWalkSpeed = CrouchSpeed;
+
+        UE_LOG(Player, Log, TEXT("Crouch: Height reduced to %f"), Capsule->GetUnscaledCapsuleHalfHeight());
     }
 }
+
 
 // Toggle Prone Function
 void AMyCharacter::ToggleProne()
@@ -236,7 +414,9 @@ void AMyCharacter::ToggleProne()
         GetCapsuleComponent()->SetCapsuleHalfHeight(88.0f); // Default height
         GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 
-        // Optionally, play prone exit animation
+        UE_LOG(Player, Log, TEXT("ToggleProne: Exited prone mode"));
+
+        // Play prone exit animation
         if (ProneAnimMontage)
         {
             PlayAnimMontage(ProneAnimMontage, 1.0f);
@@ -249,10 +429,11 @@ void AMyCharacter::ToggleProne()
         bIsProne = true;
 
         // Adjust collision and movement speed
-        GetCapsuleComponent()->SetCapsuleHalfHeight(44.0f); // Reduced height for prone
+        GetCapsuleComponent()->SetCapsuleHalfHeight(22.0f); // Reduced height for prone
         GetCharacterMovement()->MaxWalkSpeed = CrouchSpeed / 2; // Half crouch speed for prone
 
-        // Optionally, play prone enter animation
+        UE_LOG(Player, Log, TEXT("ToggleProne: Entered prone mode"));
+        // Play prone enter animation
         if (ProneAnimMontage)
         {
             PlayAnimMontage(ProneAnimMontage, 1.0f);
@@ -263,43 +444,82 @@ void AMyCharacter::ToggleProne()
 // Sliding Function
 void AMyCharacter::StartSlide()
 {
+    // Ensure sliding only triggers while sprinting and not already sliding
     if (bIsSprinting && !bIsSliding)
     {
         bIsSliding = true;
+        bCanSlideJump = true; // Allow slide jump
+
+        // Reduce capsule height for sliding
+        GetCapsuleComponent()->SetCapsuleHalfHeight(22.0f); 
         GetCharacterMovement()->MaxWalkSpeed = SlideSpeed;
+
+        // Calculate the slide direction
+        FVector SlideDirection = GetLastMovementInputVector();
+        if (SlideDirection.IsZero())
+        {
+            // Default to forward direction if no movement input
+            SlideDirection = GetActorForwardVector();
+        }
+        SlideDirection.Normalize(); // Ensure the direction vector is normalized
+
+        // Launch the character in the slide direction
+        LaunchCharacter(SlideDirection * SlideSpeed, true, true);
+
+        // Play slide animation
         if (SlideMontage)
         {
-            PlayAnimMontage(SlideMontage, 1.0f);
+            PlayAnimMontage(SlideMontage);
         }
-        GetWorld()->GetTimerManager().SetTimer(SlideStopTimer, this, &AMyCharacter::StopSlide, 1.0f, false);
+
+        // Set a timer to stop sliding after SlideDuration
+        GetWorld()->GetTimerManager().SetTimer(SlideStopTimer, this, &AMyCharacter::StopSlide, SlideDuration, false);
+
+        UE_LOG(LogTemp, Log, TEXT("Slide started in direction: %s"), *SlideDirection.ToString());
     }
 }
 
+
+
 // Stop sliding function
-void AMyCharacter::StopSlide()
+void AMyCharacter::SlideJump()
 {
-    bIsSliding = false;
-    GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
-    GetWorld()->GetTimerManager().ClearTimer(SlideStopTimer);
+    if (bCanSlideJump) // Ensure slide jump is allowed
+    {
+        // Get the character's current velocity
+        FVector CurrentVelocity = GetCharacterMovement()->Velocity;
+
+        // Scale the velocity to adjust the horizontal distance
+        float MomentumScalingFactor = 1.0f; // horizontal distance value 
+        FVector JumpDirection = CurrentVelocity * MomentumScalingFactor;
+
+        // Set a reduced upward force
+        JumpDirection.Z = FMath::Clamp(SlideJumpForce.Z, 200.0f, 600.0f); // Vertical distance value
+
+        // Launch the character
+        LaunchCharacter(JumpDirection, true, true);
+
+        // Stop sliding after the jump
+        StopSlide();
+
+        bCanSlideJump = false; // Disable slide jump until the next slide
+        UE_LOG(LogTemp, Log, TEXT("Slide jump performed: %s"), *JumpDirection.ToString());
+    }
 }
 
-// Slide Jump Function
-void AMyCharacter::SlideJump()
+
+
+void AMyCharacter::StopSlide()
 {
     if (bIsSliding)
     {
-        // Launch the character upwards and forwards
-        FVector LaunchVelocity = GetActorForwardVector() * 800.0f + FVector(0, 0, 600.0f); // Adjust values for forward and upward force
-        LaunchCharacter(LaunchVelocity, true, true);
+        // Restore capsule height and speed
+        GetCapsuleComponent()->SetCapsuleHalfHeight(88.0f); // Default height
+        GetCharacterMovement()->MaxWalkSpeed = WalkSpeed; // Restore walk speed
 
-        // End sliding state
-        StopSlide();
+        bIsSliding = false; // Reset sliding state
 
-        // Optionally, play slide jump animation
-        if (SlideJumpAnimMontage)
-        {
-            PlayAnimMontage(SlideJumpAnimMontage, 1.0f);
-        }
+        UE_LOG(LogTemp, Log, TEXT("Slide stopped"));
     }
 }
 
@@ -307,25 +527,45 @@ void AMyCharacter::SlideJump()
 // Rolling Function
 void AMyCharacter::StartRoll()
 {
-    if (bCanRoll && RollAnimMontage)
+    if (bCanRoll) // Ensure rolling is allowed
     {
-        bCanRoll = false;
-        PlayAnimMontage(RollAnimMontage, 1.0f);
+        bCanRoll = false; // Prevent spamming rolls
 
-        // Temporarily disable character movement during roll
-        GetCharacterMovement()->DisableMovement();
+        // Determine the roll direction based on last movement input
+        FVector RollDirection = GetLastMovementInputVector(); // Get the last input direction
+        if (RollDirection.IsZero())
+        {
+            // Default to forward direction if no movement input
+            RollDirection = GetActorForwardVector();
+        }
+        RollDirection.Normalize(); // Ensure the direction vector is normalized
 
-        // Schedule StopRoll to be called after the montage finishes
-        const float RollDuration = RollAnimMontage->GetPlayLength();
-        GetWorld()->GetTimerManager().SetTimer(RollCooldownTimer, this, &AMyCharacter::StopRoll, RollDuration, false);
+        // Launch the character in the roll direction
+        LaunchCharacter(RollDirection * 600.0f + FVector(0, 0, 200.0f), true, true); // Adjust speed and height
+
+        // Play roll animation
+        if (RollAnimMontage)
+        {
+            PlayAnimMontage(RollAnimMontage, 1.0f);
+        }
+
+        // Set a cooldown timer for rolling
+        const float RollCooldown = 1.0f; // Adjust cooldown time
+        GetWorld()->GetTimerManager().SetTimer(RollCooldownTimer, this, &AMyCharacter::EnableRolling, RollCooldown, false);
+
+        UE_LOG(LogTemp, Log, TEXT("Started Roll in direction: %s"), *RollDirection.ToString());
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Roll is on cooldown"));
     }
 }
 
 // Mostly to stop animation roll
 void AMyCharacter::StopRoll()
 {
-    // Re-enable character movement
     GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+    UE_LOG(LogTemp, Log, TEXT("StopRoll triggered"));
 
     // Allow rolling again after cooldown
     GetWorld()->GetTimerManager().SetTimer(RollCooldownTimer, this, &AMyCharacter::EnableRolling, 1.0f, false);
@@ -335,14 +575,17 @@ void AMyCharacter::StopRoll()
 void AMyCharacter::EnableRolling()
 {
     bCanRoll = true;
+    UE_LOG(LogTemp, Log, TEXT("Rolling re-enabled"));
 }
 
-// Mantle Function for Climbing Ledges
+
+
+
 void AMyCharacter::Mantle()
 {
     // Define the start point (player's eye level) and end point (forward and up)
     FVector Start = GetActorLocation() + FVector(0, 0, 50.0f); // Slightly above character's feet
-    FVector ForwardVector = GetActorForwardVector();
+    FVector ForwardVector = GetActorForwardVector(); 
     FVector End = Start + (ForwardVector * 100.0f) + FVector(0, 0, 100.0f); // Forward and upwards
 
     FHitResult Hit;
@@ -360,14 +603,20 @@ void AMyCharacter::Mantle()
             FVector LaunchVelocity = (MantleTarget - GetActorLocation()) * 2.0f; // Scale for speed
             LaunchCharacter(LaunchVelocity, true, true);
 
-            // Optionally, play a mantling animation
+            // Play mantling animation
             if (MantleAnimMontage)
             {
                 PlayAnimMontage(MantleAnimMontage);
             }
+            UE_LOG(Player, Log, TEXT("Mantle triggered: Target = %s"), *MantleTarget.ToString());
         }
     }
+    else
+    {
+        UE_LOG(Player, Warning, TEXT("Mantle failed: No ledge detected"));
+    }
 }
+
 
 
 // Function determines whether a mantle action is currently possible by checking for ledge presence.
@@ -410,7 +659,7 @@ void AMyCharacter::StartLedgeGrab()
         // Disable movement temporarily
         GetCharacterMovement()->DisableMovement();
 
-        // Optionally, play a ledge grab animation
+        // play a ledge grab animation
         if (LedgeGrabAnimMontage)
         {
             PlayAnimMontage(LedgeGrabAnimMontage);
@@ -428,7 +677,9 @@ void AMyCharacter::PullUpFromLedge()
     // Re-enable movement
     GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
 
-    // Optionally, play a pull-up animation
+    UE_LOG(Player, Log, TEXT("PullUpFromLedge triggered: New Location = %s"), *TargetLocation.ToString());
+
+    // play a pull-up animation
     if (PullUpAnimMontage)
     {
         PlayAnimMontage(PullUpAnimMontage);
@@ -465,13 +716,19 @@ void AMyCharacter::WallJump()
     {
         LaunchCharacter(FVector(0, 0, 600), true, true);
         JumpCount = 1; // Reset jump count after wall jump
+        UE_LOG(Player, Log, TEXT("WallJump triggered"));
+    }
+    else
+    {
+        UE_LOG(Player, Warning, TEXT("WallJump failed: No wall detected"));
     }
 }
+
 
 // Called every frame
 void AMyCharacter::Tick(float DeltaTime)
 {
-    Super::Tick(DeltaTime);
+	Super::Tick(DeltaTime);
 
 }
 
@@ -484,6 +741,18 @@ void AMyCharacter::on_death(AActor* killed_by)
 UHealthComponent* AMyCharacter::get_health_component() const
 {
     return HealthComponent;
+}
+
+// This should return a location to start a hitscan from
+FVector AMyCharacter::get_hitscan_start_location() const
+{
+    return Camera->GetComponentLocation();
+}
+
+// This should return a Vector in the direction to fire
+FVector AMyCharacter::get_hitscan_direction() const
+{
+    return Camera->GetForwardVector();
 }
 
 
@@ -513,4 +782,3 @@ UInputAction* RollAction;
 
 UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 UAnimMontage* SlideJumpAnimMontage;
-

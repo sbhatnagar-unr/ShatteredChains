@@ -65,12 +65,12 @@ EBTNodeResult::Type UBTT_AttackPlayer::ExecuteTask(UBehaviorTreeComponent& Owner
 
     if (distance <= attack_range)
     {
-        UE_LOG(Enemy, Verbose, LOG_TEXT("Enemy is attacking"));
+        UE_LOG(Enemy, VeryVerbose, LOG_TEXT("Enemy is attacking"));
 
         // Rotate to face the player
         const FRotator rotation_to_player = UKismetMathLibrary::FindLookAtRotation(enemy_location, target_location);
         enemy_actor->SetActorRotation(rotation_to_player);
-        UE_LOG(Enemy, Verbose, LOG_TEXT("Rotating to look at player"));
+        UE_LOG(Enemy, VeryVerbose, LOG_TEXT("Rotating to look at player"));
 
         // If the animation is not active, start a new one
         if (!anim_instance->Montage_IsActive(attack_animation_montage))
@@ -97,7 +97,7 @@ EBTNodeResult::Type UBTT_AttackPlayer::ExecuteTask(UBehaviorTreeComponent& Owner
         if (anim_instance->Montage_IsActive(attack_animation_montage))
         {
             anim_instance->Montage_Stop(enemy_actor->get_attack_animation_exit_blend(), attack_animation_montage);
-            UE_LOG(Enemy, VeryVerbose, LOG_TEXT("Stopping montage"));
+            UE_LOG(Enemy, Verbose, LOG_TEXT("Stopping montage"));
             // Set the end time so next time this gets called it can start instantly
         }
 

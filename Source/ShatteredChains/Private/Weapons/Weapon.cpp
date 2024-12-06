@@ -2,6 +2,8 @@
 
 
 #include "Weapon.h"
+#include "Player/MyCharacter.h"
+#include "Components/SphereComponent.h"
 #include "ShatteredChains/Logging.h"
 #include "ShatteredChains/Utility.h"
 
@@ -20,17 +22,31 @@ AWeapon::AWeapon()
     has_fire_animation_montage = false;
     has_reload_animation_montage = false;
     
-    root_scene_component = CreateDefaultSubobject<USceneComponent>(TEXT("Root Scene Component"));
-    weapon_skeletal_mesh_component = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Weapon Skeletal Mesh"));
-    
+    // Root component
+    root_scene_component = CreateDefaultSubobject<USceneComponent>(TEXT("RootScene"));
     RootComponent = root_scene_component;
+   
+    // Skeletal Mesh
+    weapon_skeletal_mesh_component = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
     weapon_skeletal_mesh_component->SetupAttachment(RootComponent);
+
+    // Interaction Sphere
+    InteractionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("InteractionSphere"));
+    InteractionSphere->SetupAttachment(RootComponent);
+    InteractionSphere->SetSphereRadius(100.0f); // Adjustable interaction range
+    InteractionSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    InteractionSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
+    InteractionSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+    InteractionSphere->SetGenerateOverlapEvents(true);
 }
 
 // Called when the game starts or when spawned
 void AWeapon::BeginPlay()
 {
     Super::BeginPlay();
+
+    // Bind the overlap event
+    InteractionSphere->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::OnOverlapBegin);
 
     try
     {
@@ -59,6 +75,24 @@ void AWeapon::BeginPlay()
     current_ammo_stock_pile_count = max_ammo_stock_pile_count;
     refill_magazine();
 }
+
+void AWeapon::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+    AMyCharacter* Character = Cast<AMyCharacter>(OtherActor);
+    if (Character)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Player overlapped with: %s"), *GetName());
+
+        // Use proxy function
+        Character->PickUpWeapon(this);
+
+        // Optional: Make the weapon disappear from the world
+        SetActorHiddenInGame(true);
+        SetActorEnableCollision(false);
+    }
+}
+
 
 
 void AWeapon::fire() const
@@ -109,7 +143,7 @@ void AWeapon::fire() const
         return;
     }
     
-    UE_LOG(Weapon, VeryVerbose, LOG_TEXT("Playing weapon fire animation montage"));
+    UE_LOG(Weapon, Verbose, LOG_TEXT("Playing weapon fire animation montage"));
     
     const float duration = anim_instance->Montage_Play(fire_animation_montage, 1.0f, EMontagePlayReturnType::MontageLength, 0.0f, true);
 
@@ -171,7 +205,7 @@ void AWeapon::reload() const
     }
     
 
-    UE_LOG(Weapon, VeryVerbose, LOG_TEXT("Playing weapon reload animation montage"));
+    UE_LOG(Weapon, Verbose, LOG_TEXT("Playing weapon reload animation montage"));
     const float duration = anim_instance->Montage_Play(reload_animation_montage, 1.0f, EMontagePlayReturnType::MontageLength, 0.0f, true);
 
     // If duration == 0.f that means an error

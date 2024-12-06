@@ -57,7 +57,7 @@ EBTNodeResult::Type UShootPlayer::ExecuteTask(UBehaviorTreeComponent& OwnerComp,
     // Calculate distance to anchor point
     const float distance = FVector::Dist(enemy_location, anchor_point->GetActorLocation());
 
-    if (distance >= anchor_point->get_anchor_radius())
+    if (distance > anchor_point->get_anchor_radius() + enemy_actor->get_anchor_tolerance())
     {
         UE_LOG(Enemy, Verbose, LOG_TEXT("Enemy %s has moved away from anchor point %s"), *enemy_actor->GetActorLabel(), *anchor_point->GetActorLabel());
         blackboard->SetValueAsBool(near_anchor_field, false);

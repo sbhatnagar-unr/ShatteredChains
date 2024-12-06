@@ -110,4 +110,5 @@ void AEnemy::on_death(AActor* killed_by)
 
     mesh->SetCollisionProfileName(FName(TEXT("Ragdoll")));
     mesh->SetSimulatePhysics(true);
+    UE_LOG(Enemy, Log, LOG_TEXT("Enemy %s made ragdoll"), *GetActorLabel());
 }
