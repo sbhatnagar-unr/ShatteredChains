@@ -131,11 +131,11 @@ void AMyCharacter::FireWeapon()
     if (CurrentWeapon)
     {
         CurrentWeapon->fire(); // Calls the fire function in Weapon.cpp
-        UE_LOG(LogTemp, Log, TEXT("Fired weapon: %s"), *CurrentWeapon->GetName());
+        UE_LOG(Player, Log, TEXT("Fired weapon: %s"), *CurrentWeapon->GetName());
     }
     else
     {
-        UE_LOG(LogTemp, Warning, TEXT("No weapon equipped to fire."));
+        UE_LOG(Player, Warning, TEXT("No weapon equipped to fire."));
     }
 }
 
@@ -145,11 +145,11 @@ void AMyCharacter::ReloadWeapon()
     if (CurrentWeapon)
     {
         CurrentWeapon->reload(); // Calls the reload function in Weapon.cpp
-        UE_LOG(LogTemp, Log, TEXT("Reloaded weapon: %s"), *CurrentWeapon->GetName());
+        UE_LOG(Player, Log, TEXT("Reloaded weapon: %s"), *CurrentWeapon->GetName());
     }
     else
     {
-        UE_LOG(LogTemp, Warning, TEXT("No weapon equipped to reload."));
+        UE_LOG(Player, Warning, TEXT("No weapon equipped to reload."));
     }
 }
 
@@ -175,12 +175,12 @@ void AMyCharacter::Interact()
         AActor* HitActor = HitResult.GetActor();
         if (HitActor)
         {
-            UE_LOG(LogTemp, Log, TEXT("Line Trace Hit Actor: %s"), *HitActor->GetName());
+            UE_LOG(Player, Log, TEXT("Line Trace Hit Actor: %s"), *HitActor->GetName());
 
             // Check if the hit actor is a weapon
             if (AWeapon* weapon = Cast<AWeapon>(HitActor))
             {
-                UE_LOG(LogTemp, Log, TEXT("Weapon Detected: %s"), *weapon->GetName());
+                UE_LOG(Player, Log, TEXT("Weapon Detected: %s"), *weapon->GetName());
 
                 EquipWeapon(weapon); // Attempt to equip the weapon
                 weapon->SetActorHiddenInGame(true); // Hide the weapon
@@ -190,7 +190,7 @@ void AMyCharacter::Interact()
     }
     else
     {
-        UE_LOG(LogTemp, Warning, TEXT("No interactable object detected."));
+        UE_LOG(Player, Warning, TEXT("No interactable object detected."));
     }
 }
 
@@ -208,12 +208,12 @@ void AMyCharacter::EquipWeapon(AWeapon* weapon)
 
     if (CurrentWeapon)
     {
-        UE_LOG(LogTemp, Log, TEXT("Current Weapon: %s will be replaced with %s"), *CurrentWeapon->GetName(), *weapon->GetName());
+        UE_LOG(Player, Log, TEXT("Current Weapon: %s will be replaced with %s"), *CurrentWeapon->GetName(), *weapon->GetName());
         CurrentWeapon->Destroy(); // Destroy the old weapon if needed
     }
     else
     {
-        UE_LOG(LogTemp, Log, TEXT("Equipping first weapon: %s"), *weapon->GetName());
+        UE_LOG(Player, Log, TEXT("Equipping first weapon: %s"), *weapon->GetName());
     }
 
     // Equip new weapon
@@ -243,7 +243,7 @@ void AMyCharacter::Move(const FInputActionValue& Value)
         // Log only if the direction changes significantly
         if (!CurrentInputDirection.Equals(LastInputDirection, 0.01f)) 
         {
-            UE_LOG(LogTemp, Log, TEXT("Moving in direction: %s"), *CurrentInputDirection.ToString());
+            UE_LOG(Player, VeryVerbose, TEXT("Moving in direction: %s"), *CurrentInputDirection.ToString());
             LastInputDirection = CurrentInputDirection;
         }
 
@@ -475,7 +475,7 @@ void AMyCharacter::StartSlide()
         // Set a timer to stop sliding after SlideDuration
         GetWorld()->GetTimerManager().SetTimer(SlideStopTimer, this, &AMyCharacter::StopSlide, SlideDuration, false);
 
-        UE_LOG(LogTemp, Log, TEXT("Slide started in direction: %s"), *SlideDirection.ToString());
+        UE_LOG(Player, Log, TEXT("Slide started in direction: %s"), *SlideDirection.ToString());
     }
 }
 
@@ -503,7 +503,7 @@ void AMyCharacter::SlideJump()
         StopSlide();
 
         bCanSlideJump = false; // Disable slide jump until the next slide
-        UE_LOG(LogTemp, Log, TEXT("Slide jump performed: %s"), *JumpDirection.ToString());
+        UE_LOG(Player, Log, TEXT("Slide jump performed: %s"), *JumpDirection.ToString());
     }
 }
 
@@ -519,7 +519,7 @@ void AMyCharacter::StopSlide()
 
         bIsSliding = false; // Reset sliding state
 
-        UE_LOG(LogTemp, Log, TEXT("Slide stopped"));
+        UE_LOG(Player, Log, TEXT("Slide stopped"));
     }
 }
 
@@ -553,11 +553,11 @@ void AMyCharacter::StartRoll()
         const float RollCooldown = 1.0f; // Adjust cooldown time
         GetWorld()->GetTimerManager().SetTimer(RollCooldownTimer, this, &AMyCharacter::EnableRolling, RollCooldown, false);
 
-        UE_LOG(LogTemp, Log, TEXT("Started Roll in direction: %s"), *RollDirection.ToString());
+        UE_LOG(Player, Log, TEXT("Started Roll in direction: %s"), *RollDirection.ToString());
     }
     else
     {
-        UE_LOG(LogTemp, Warning, TEXT("Roll is on cooldown"));
+        UE_LOG(Player, Warning, TEXT("Roll is on cooldown"));
     }
 }
 
@@ -565,7 +565,7 @@ void AMyCharacter::StartRoll()
 void AMyCharacter::StopRoll()
 {
     GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
-    UE_LOG(LogTemp, Log, TEXT("StopRoll triggered"));
+    UE_LOG(Player, Log, TEXT("StopRoll triggered"));
 
     // Allow rolling again after cooldown
     GetWorld()->GetTimerManager().SetTimer(RollCooldownTimer, this, &AMyCharacter::EnableRolling, 1.0f, false);
@@ -575,7 +575,7 @@ void AMyCharacter::StopRoll()
 void AMyCharacter::EnableRolling()
 {
     bCanRoll = true;
-    UE_LOG(LogTemp, Log, TEXT("Rolling re-enabled"));
+    UE_LOG(Player, Log, TEXT("Rolling re-enabled"));
 }
 
 
