@@ -9,6 +9,7 @@
 #include "ShatteredChains/Logging.h"
 #include "Components/CapsuleComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 DEFINE_LOG_CATEGORY(Player);
 
@@ -735,9 +736,23 @@ void AMyCharacter::Tick(float DeltaTime)
 
 void AMyCharacter::on_death(AActor* killed_by)
 {
-    UE_LOG(Player, Log, LOG_TEXT("Player dead"));
+    UE_LOG(Player, Log, LOG_TEXT("Player dead.... restarting level"));
+
+    const UWorld* world = GetWorld();
+
+    if (world == nullptr)
+    {
+        UE_LOG(Player, Error, LOG_TEXT("Could not get world to restart level"));
+        return;
+    }
+
+    const ULevel* current_level = world->GetCurrentLevel();
+    const FName current_level_name = *current_level->GetPackage()->GetName();
+    UGameplayStatics::OpenLevel(this, current_level_name);
+    UE_LOG(Player, Log, LOG_TEXT("Level restarted"));
 }
-    
+
+
 UHealthComponent* AMyCharacter::get_health_component() const
 {
     return HealthComponent;
