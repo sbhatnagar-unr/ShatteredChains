@@ -13,16 +13,12 @@ AAnchorPoint::AAnchorPoint()
     // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
     PrimaryActorTick.bCanEverTick = false;
     anchor_radius = 200;
-    mesh_component = nullptr;
-    sphere_component = nullptr;
-    
-#if WITH_EDITOR
+
     mesh_component = CreateDefaultSubobject<UStaticMeshComponent>("Mesh Component");
     sphere_component = CreateDefaultSubobject<USphereComponent>("Anchor Radius Visual (editor)");
     sphere_component->SetupAttachment(mesh_component);
     sphere_component->InitSphereRadius(anchor_radius);
     sphere_component->SetRelativeLocation(FVector::ZeroVector);
-#endif
 }
 
 // Called when the game starts or when spawned
