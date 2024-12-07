@@ -3,7 +3,6 @@
 
 #include "RangedEnemy.h"
 #include "ShatteredChains/Logging.h"
-#include "ShatteredChains/Utility.h"
 #include "NavigationSystem.h"
 
 // Sets default values
@@ -24,36 +23,54 @@ void ARangedEnemy::BeginPlay()
 {
     Super::BeginPlay();
 
-    UWorld* world;
-    USkeletalMeshComponent* skeletal_mesh_component;
-    UNavigationSystemV1* navigation_system;
-
-    try
+    const FString actor_name = *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED")));
+    
+    // Get the world
+    UWorld* world = GetWorld();
+    if (world == nullptr)
     {
-        // Get the world
-        world = Validity::check_value<UWorld>(GetWorld(), "Could not get world");
-        
-        // Check that we have an Anchor
-        Validity::check_value<AAnchorPoint>(anchor_point, "No anchor point");
-        
-        // Check that we have stuff to attach the weapon
-        Validity::check_value<UClass>(weapon_class, "No weapon class");
-        UE_LOG(Enemy, Verbose, LOG_TEXT("Weapon class for %s is %s"), *GetActorLabel(), *weapon_class->GetName());
-        
-        skeletal_mesh_component = Validity::check_value<USkeletalMeshComponent>(GetMesh(), "No skeletal Mesh");
-        
-        // Get navigation system
-        navigation_system = Validity::check_value<UNavigationSystemV1>(UNavigationSystemV1::GetCurrent(world), "Could not get navigation system");
-        
-        // Check the anchor tolerance
-        Validity::check_value<float>(anchor_tolerance, 0, "Anchor tolerance is unset");
-        UE_LOG(Enemy, VeryVerbose, LOG_TEXT("Anchor tolerance for %s is %f"), *GetActorLabel(), anchor_tolerance);
-    }
-    catch (const Validity::NullPointerException &e)
-    {
-        UE_LOG(Enemy, Error, LOG_TEXT("%hs for %s"), e.what(), *GetActorLabel());
+        UE_LOG(Enemy, Error, LOG_TEXT("Could not get world for %s"), *actor_name);
         return;
     }
+    
+    // Check that we have an Anchor
+    if (anchor_point == nullptr)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("No anchor point for %s"), *actor_name);
+        return;
+    }
+    
+    // Check that we have stuff to attach the weapon
+    if (weapon_class == nullptr)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("No weapon class for %s"), *actor_name);
+        return;
+    }
+    UE_LOG(Enemy, Verbose, LOG_TEXT("Weapon class for %s is %s"), *actor_name, *weapon_class->GetName());
+    
+    USkeletalMeshComponent* skeletal_mesh_component = GetMesh();
+    if (skeletal_mesh_component == nullptr)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("No skeletal Mesh for %s"), *actor_name);
+        return;
+    }
+    
+    // Get navigation system
+    const UNavigationSystemV1* navigation_system = UNavigationSystemV1::GetCurrent(world);
+    if (navigation_system == nullptr)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("Could not get navigation system for %s"), *actor_name);
+        return;
+    }
+    
+    // Check the anchor tolerance
+    if (anchor_tolerance == 0)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("Anchor tolerance is unset for %s"), *actor_name);
+        return;
+    }
+    UE_LOG(Enemy, VeryVerbose, LOG_TEXT("Anchor tolerance for %s is %f"), *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED"))), anchor_tolerance);
+
 
     // Spawn the weapon for the Enemy
     FActorSpawnParameters spawn_parameters;
@@ -62,21 +79,22 @@ void ARangedEnemy::BeginPlay()
     weapon = world->SpawnActor<AWeapon>(weapon_class, GetActorTransform(), spawn_parameters);
     if (weapon == nullptr)
     {
-        UE_LOG(Enemy, Error, LOG_TEXT("Could not spawn weapon for %s"), *GetActorLabel());
+        UE_LOG(Enemy, Error, LOG_TEXT("Could not spawn weapon for %s"), *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED"))));
         return;
     }
     // Set weapon name
-    weapon->SetActorLabel(GetActorLabel() + FString(TEXT("'s weapon")));
-    UE_LOG(Enemy, Verbose, LOG_TEXT("Weapon %s successfully spawned for %s"), *weapon->GetActorLabel(), *GetActorLabel());
+    weapon->Tags.Add(FName((Tags.Num() > 0 ? Tags[0].ToString() : FString("UNKNOWN")) + FString(TEXT("'s weapon"))));
+
+    UE_LOG(Enemy, Verbose, LOG_TEXT("Weapon %s successfully spawned for %s"), *(weapon->Tags.Num() > 0 ? weapon->Tags[0].ToString() : FString(TEXT("UNTAGGED"))), *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED"))));
     
     // Attach it to the enemy
     const bool successfully_attached = weapon->AttachToComponent(skeletal_mesh_component, FAttachmentTransformRules::SnapToTargetIncludingScale, FName(TEXT("GunSocket")));
     if (!successfully_attached)
     {
-        UE_LOG(Enemy, Error, LOG_TEXT("Could not attach %s to %s"), *weapon->GetActorLabel(), *GetActorLabel());
+        UE_LOG(Enemy, Error, LOG_TEXT("Could not attach %s to %s"), *(weapon->Tags.Num() > 0 ? weapon->Tags[0].ToString() : FString(TEXT("UNTAGGED"))), *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED"))));
         return;
     }
-    UE_LOG(Enemy, Verbose, LOG_TEXT("Successfully attached %s to %s"), *GetActorLabel(), *weapon_class->GetName());
+    UE_LOG(Enemy, Verbose, LOG_TEXT("Successfully attached %s to %s"), *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED"))), *weapon_class->GetName());
 
     // https://forums.unrealengine.com/t/getrandomreachablepointinradius/380662
     // So this function is apparently bugged for who knows what reason.  To combat this, we will just run it a bunch of times
@@ -93,13 +111,13 @@ void ARangedEnemy::BeginPlay()
         {
             location_to_go_to = nav_location.Location;
             found_location = true;
-            UE_LOG(Enemy, Verbose, LOG_TEXT("Location to go to in anchor for %s is %s"), *GetActorLabel(), *location_to_go_to.ToString());
+            UE_LOG(Enemy, Verbose, LOG_TEXT("Location to go to in anchor for %s is %s"), *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED"))), *location_to_go_to.ToString());
             break;
         }
     }
     if (!found_location)
     {
-        UE_LOG(Enemy, Warning, LOG_TEXT("Could not find reachable point near anchor \"%s\" (radius=%f).  Defaulting to anchor location (%s)"), *anchor_point->GetActorLabel(), anchor_point->get_anchor_radius(), *anchor_point->GetActorLocation().ToString());
+        UE_LOG(Enemy, Warning, LOG_TEXT("Could not find reachable point near anchor \"%s\" (radius=%f).  Defaulting to anchor location (%s)"), *(anchor_point->Tags.Num() > 0 ? anchor_point->Tags[0].ToString() : FString(TEXT("UNTAGGED"))), anchor_point->get_anchor_radius(), *anchor_point->GetActorLocation().ToString());
         location_to_go_to = anchor_point->GetActorLocation();
     }
 }

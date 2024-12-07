@@ -5,7 +5,6 @@
 #include "Player/MyCharacter.h"
 #include "Components/SphereComponent.h"
 #include "ShatteredChains/Logging.h"
-#include "ShatteredChains/Utility.h"
 
 DEFINE_LOG_CATEGORY(Weapon);
 
@@ -48,27 +47,44 @@ void AWeapon::BeginPlay()
     // Bind the overlap event
     InteractionSphere->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::OnOverlapBegin);
 
-    try
+    const FString actor_name = *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED")));
+
+    
+    // Check for mesh
+    if (weapon_skeletal_mesh_component->GetSkeletalMeshAsset() == nullptr)
     {
-        // Check for mesh
-        Validity::check_value<USkeletalMesh>(weapon_skeletal_mesh_component->GetSkeletalMeshAsset(), "No skeletal mesh for weapon");
-        UE_LOG(Weapon, Verbose, LOG_TEXT("Weapon has skeletal mesh"));
-
-        // Check for animations
-        Validity::check_value<UAnimMontage>(fire_animation_montage, "No fire animation montage for weapon");
-        UE_LOG(Weapon, Verbose, LOG_TEXT("Fire animation montage: %s"), *fire_animation_montage.GetFullName());
-        has_fire_animation_montage = true;
-        
-        Validity::check_value<UAnimMontage>(reload_animation_montage, "No reload animation montage for weapon");
-        UE_LOG(Weapon, Verbose, LOG_TEXT("Reload animation montage: %s"), *reload_animation_montage.GetFullName());
-        has_reload_animation_montage = true;
-        
-        anim_instance = Validity::check_value<UAnimInstance>(weapon_skeletal_mesh_component->GetAnimInstance(), "No anim instance found");
-
+        UE_LOG(Enemy, Error, LOG_TEXT("No skeletal mesh for weapon %s"), *actor_name);
     }
-    catch (const Validity::NullPointerException& e)
+    UE_LOG(Weapon, Verbose, LOG_TEXT("Weapon has skeletal mesh"));
+
+
+    // Check for animations
+    if (fire_animation_montage == nullptr)
     {
-        UE_LOG(Weapon, Error, LOG_TEXT("%hs"), e.what());
+        UE_LOG(Enemy, Error, LOG_TEXT("No fire animation montage for weapon %s"), *actor_name);
+    }
+    else
+    {
+        has_fire_animation_montage = true;
+    }
+    UE_LOG(Weapon, Verbose, LOG_TEXT("Fire animation montage: %s"), *fire_animation_montage.GetFullName());
+
+    
+    if (reload_animation_montage == nullptr)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("No reload animation montage for weapon %s"), *actor_name);
+    }
+    else
+    {
+        has_reload_animation_montage = true;
+    }
+    UE_LOG(Weapon, Verbose, LOG_TEXT("Reload animation montage: %s"), *reload_animation_montage.GetFullName());
+
+        
+    anim_instance = weapon_skeletal_mesh_component->GetAnimInstance();
+    if (anim_instance == nullptr)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("No anim instance found for weapon %s"), *actor_name);
     }
 
     // Set ammo
@@ -226,7 +242,7 @@ void AWeapon::decrement_mag_ammo_count()
 {
     if (current_magazine_ammo_count > 0)
     {
-        UE_LOG(Weapon, Verbose, LOG_TEXT("Removed ammo from magazine on %s (%d->%d)"), *GetActorLabel(), current_magazine_ammo_count, current_magazine_ammo_count-1);
+        UE_LOG(Weapon, Verbose, LOG_TEXT("Removed ammo from magazine on %s (%d->%d)"), *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED"))), current_magazine_ammo_count, current_magazine_ammo_count-1);
         current_magazine_ammo_count--;
     }
     else

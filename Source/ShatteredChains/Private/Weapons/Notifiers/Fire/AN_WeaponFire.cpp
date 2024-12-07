@@ -8,35 +8,54 @@
 #include "Components/ActorComponents/HealthComponent/HealthComponent.h"
 #include "ShatteredChains/CustomTraceChannels.h"
 #include "ShatteredChains/Logging.h"
-#include "ShatteredChains/Utility.h"
 
 void UAN_WeaponFire::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
+    if (MeshComp == nullptr)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("No mesh for animation notify"));
+        return;
+    }
+
+    // The weapon
+    AWeapon* weapon = Cast<AWeapon>(MeshComp->GetOwner());
+    if (weapon == nullptr)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("Could not get weapon actor from MeshComp"));
+        return;
+    }
+    const FString weapon_name = weapon->Tags.Num() > 0 ? weapon->Tags[0].ToString() : FName(TEXT("UNTAGGED")).ToString();
+
+    // The weapon holder as an actor
+    AActor* weapon_holder_actor = Cast<AActor>(weapon->GetAttachParentActor());
+    if (weapon_holder_actor == nullptr)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("Could not get weapon holder from weapon (as AActor)"));
+        return;
+    }
+
+    // The holders name
+    const FString weapon_holder_name = weapon_holder_actor->Tags.Num() > 0 ? weapon_holder_actor->Tags[0].ToString() : FName(TEXT("UNTAGGED")).ToString();
     // The animation instance
     UAnimInstance* anim_instance = MeshComp->GetAnimInstance();
-    // The weapon
-    AWeapon* weapon;
-    // The weapon holder as an actor
-    AActor* weapon_holder_actor;
-    // The weapon holder as a weapon user
-    IWeaponUser* weapon_holder;
-    // The holders name
-    FString weapon_holder_name;
-    // World is needed for the scan
-    const UWorld* world;
-    try
+    if (anim_instance == nullptr)
     {
-        MeshComp = Validity::check_value<USkeletalMeshComponent>(MeshComp, "No mesh for animation notify");
-        weapon = Validity::check_value<AWeapon>(Cast<AWeapon>(MeshComp->GetOwner()), "Could not get weapon actor from MeshComp");
-        weapon_holder_actor = Validity::check_value<AActor>(Cast<AActor>(weapon->GetAttachParentActor()), "Could not get weapon holder from weapon (as AActor)");
-        weapon_holder_name = weapon_holder_actor->GetActorLabel();
-        weapon_holder = Validity::check_value<IWeaponUser>(Cast<IWeaponUser>(weapon_holder_actor), "Weapon holder (" + std::string(TCHAR_TO_UTF8(*weapon_holder_name)) + ") does not implement IWeaponUser");
-        world = Validity::check_value<UWorld>(MeshComp->GetWorld(), "Could not get world");
+        UE_LOG(Enemy, Error, LOG_TEXT("Could not get anim instance for %s"), *weapon_name);
+        return;
     }
-    catch (const Validity::NullPointerException& e)
+
+    // The weapon holder as a weapon user
+    IWeaponUser* weapon_holder = Cast<IWeaponUser>(weapon_holder_actor);
+    if (weapon_holder == nullptr)
     {
-        UE_LOG(Weapon, Error, LOG_TEXT("%hs"), e.what());
-        anim_instance->Montage_Stop(0);
+        UE_LOG(Enemy, Error, LOG_TEXT("Weapon holder (%s) does not implement IWeaponUser"), *weapon_holder_name);
+    }
+    
+    // World is needed for the scan
+    const UWorld* world = MeshComp->GetWorld();
+    if (world == nullptr)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("Could not get world"));
         return;
     }
 
@@ -81,7 +100,7 @@ void UAN_WeaponFire::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase*
 
         // Check if the actor was a character with health
         AActor* a = trace_result.GetActor();
-        const FString hit_actor_label = a->GetActorLabel();
+        const FString hit_actor_label = *(a->Tags.Num() > 0 ? a->Tags[0].ToString() : FString(TEXT("UNTAGGED")));
         const IHasHealth* hit_actor = Cast<IHasHealth>(a);
 
         if (hit_actor == nullptr)

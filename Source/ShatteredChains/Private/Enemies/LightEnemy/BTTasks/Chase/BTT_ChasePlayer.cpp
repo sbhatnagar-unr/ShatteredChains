@@ -5,8 +5,7 @@
 #include "ShatteredChains/Logging.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AIController.h"
-#include "ShatteredChains/Utility.h"
-#include "../../LightEnemy.h"
+#include "Enemies/LightEnemy/LightEnemy.h"
 
 
 UBTT_ChasePlayer::UBTT_ChasePlayer()
@@ -20,25 +19,38 @@ EBTNodeResult::Type UBTT_ChasePlayer::ExecuteTask(UBehaviorTreeComponent& OwnerC
     static const FName in_attacking_range_field(TEXT("in_attacking_range"));
 
     // Enemy AI Controller
-    AAIController* ai_controller;
-    // Enemy AI Blackboard
-    UBlackboardComponent* blackboard;
+    AAIController* ai_controller = OwnerComp.GetAIOwner();
+    if (ai_controller == nullptr)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("Could not get AI Controller"));
+        return EBTNodeResult::Aborted;
+    }
+
     // Enemy Actor
-    ALightEnemy* enemy_actor;
+    const ALightEnemy* enemy_actor = Cast<ALightEnemy>(ai_controller->GetPawn());
+    if (enemy_actor == nullptr)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("Could not get enemy actor belonging to this AI"));
+        return EBTNodeResult::Aborted;
+    }
+    const FString enemy_actor_name = (enemy_actor->Tags.Num() > 0) ? enemy_actor->Tags[0].ToString() : FString(TEXT("UNTAGGED"));
+
+    // Enemy AI Blackboard
+    UBlackboardComponent* blackboard = ai_controller->GetBlackboardComponent();
+    if (blackboard == nullptr)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("Could not get AI blackboard for enemy %s"), *enemy_actor_name);
+        return EBTNodeResult::Aborted;
+    }
+    
     // Enemy's target actor
-    AActor* target_actor;
-    try
+    AActor* target_actor = enemy_actor->get_target();
+    if (target_actor == nullptr)
     {
-        ai_controller = Validity::check_value<AAIController>(OwnerComp.GetAIOwner(), "Could not get AI Controller");
-        blackboard = Validity::check_value<UBlackboardComponent>(ai_controller->GetBlackboardComponent(), "Could not get AI blackboard");
-        enemy_actor = Validity::check_value<ALightEnemy>(Cast<ALightEnemy>(ai_controller->GetPawn()), "Could not get enemy actor belonging to this AI");
-        target_actor = Validity::check_value<AActor>(enemy_actor->get_target(), "Enemy AI could not get player actor");
+        UE_LOG(Enemy, Error, LOG_TEXT("Enemy AI could not get player actor for enemy %s"), *enemy_actor_name);
+        return EBTNodeResult::Aborted;
     }
-    catch (const Validity::NullPointerException& e)
-    {
-        UE_LOG(Enemy, Error, LOG_TEXT("%hs"), e.what());
-        return EBTNodeResult::Type::Failed;
-    }
+    
 
     // Get locations of enemy and target
     const FVector enemy_location = enemy_actor->GetActorLocation();

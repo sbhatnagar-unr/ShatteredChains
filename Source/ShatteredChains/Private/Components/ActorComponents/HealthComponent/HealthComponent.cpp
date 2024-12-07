@@ -32,7 +32,8 @@ void UHealthComponent::BeginPlay()
     IHasHealth* owner = GetOwner<IHasHealth>();
     
     // Set owner name instance variable
-    owner_name = GetOwner()->GetActorLabel();
+    
+    owner_name = GetOwner()->Tags.Num() > 0 ? GetOwner()->Tags[0].ToString() : FString(TEXT("UNTAGGED"));
     
     // If our owner doesn't have the interface
     // It needs to have the interface so we can attach its on_dead method to the delegate
@@ -112,7 +113,7 @@ void UHealthComponent::deal_damage(AActor* dealt_by, const float damage)
     }
     else
     {
-        UE_LOG(Health, Log, LOG_TEXT("%s received %f damage from %s (%f remaining)"), *owner_name, damage, *dealt_by->GetActorLabel(), current_health);
+        UE_LOG(Health, Log, LOG_TEXT("%s received %f damage from %s (%f remaining)"), *owner_name, damage, *(dealt_by->Tags.Num() > 0 ? dealt_by->Tags[0].ToString() : FString(TEXT("UNTAGGED"))), current_health);
     }
 
     

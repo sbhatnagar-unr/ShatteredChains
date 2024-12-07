@@ -7,7 +7,7 @@
 #include "AIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "ShatteredChains/Logging.h"
-#include "ShatteredChains/Utility.h"
+
 #include "Weapons/Weapon.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -21,31 +21,58 @@ UShootPlayer::UShootPlayer()
 EBTNodeResult::Type UShootPlayer::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
     static const FName near_anchor_field(TEXT("NearAnchor"));
+    
+    AAIController* ai_controller = OwnerComp.GetAIOwner();
+    if (ai_controller == nullptr)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("Could not get AI Controller"));
+        return EBTNodeResult::Aborted;
+    }
 
-    // Enemy AI Blackboard
-    UBlackboardComponent* blackboard;
     // Enemy Actor
-    ARangedEnemy* enemy_actor;
+    ARangedEnemy* enemy_actor = Cast<ARangedEnemy>(ai_controller->GetPawn());
+    if (enemy_actor == nullptr)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("Could not get enemy actor belonging to this AI"));
+        return EBTNodeResult::Aborted;
+    }
+
+    const FString enemy_name = (enemy_actor->Tags.Num() > 0) ? enemy_actor->Tags[0].ToString() : FString(TEXT("UNTAGGED"));
+    
+    // Enemy AI Blackboard
+    UBlackboardComponent* blackboard = ai_controller->GetBlackboardComponent();
+    if (blackboard == nullptr)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("Could not get AI blackboard for %s"), *enemy_name);
+        return EBTNodeResult::Aborted;
+    }
+
     // Enemy's target actor
-    AActor* target_actor;
+    const AActor* target_actor = enemy_actor->get_target();
+    if (target_actor == nullptr)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("Enemy AI (%s) could not get target actor"), *enemy_name);
+        return EBTNodeResult::Aborted;
+    }
+
     // Enemy's weapon
-    AWeapon* weapon;
+    const AWeapon* weapon = enemy_actor->get_weapon();
+    if (weapon == nullptr)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("Enemy AI (%s) doesn't have a weapon"), *enemy_name);
+        return EBTNodeResult::Aborted;
+    }
+
     // Enemy's anchor point
-    AAnchorPoint* anchor_point;
-    try
+    AAnchorPoint* anchor_point = enemy_actor->get_anchor_point();
+    if (anchor_point == nullptr)
     {
-        AAIController* ai_controller = Validity::check_value<AAIController>(OwnerComp.GetAIOwner(), "Could not get AI Controller");
-        blackboard = Validity::check_value<UBlackboardComponent>(ai_controller->GetBlackboardComponent(), "Could not get AI blackboard");
-        enemy_actor = Validity::check_value<ARangedEnemy>(Cast<ARangedEnemy>(ai_controller->GetPawn()), "Could not get enemy actor belonging to this AI");
-        target_actor = Validity::check_value<AActor>(enemy_actor->get_target(), "Enemy AI could not get target actor");
-        weapon = Validity::check_value<AWeapon>(enemy_actor->get_weapon(), "Enemy AI doesn't have a weapon");
-        anchor_point = Validity::check_value<AAnchorPoint>(enemy_actor->get_anchor_point(), "Enemy AI doesn't have an anchor point");
+        UE_LOG(Enemy, Error, LOG_TEXT("Enemy AI (%s) doesn't have an anchor point"), *enemy_name);
+        return EBTNodeResult::Aborted;
     }
-    catch (const Validity::NullPointerException& e)
-    {
-        UE_LOG(Enemy, Error, LOG_TEXT("%hs"), e.what());
-        return EBTNodeResult::Type::Failed;
-    }
+
+
+    
     
     // Rotate to face the player
     const FRotator rotation_to_player = UKismetMathLibrary::FindLookAtRotation(enemy_actor->GetActorLocation(), target_actor->GetTargetLocation());
@@ -59,7 +86,7 @@ EBTNodeResult::Type UShootPlayer::ExecuteTask(UBehaviorTreeComponent& OwnerComp,
 
     if (distance > anchor_point->get_anchor_radius() + enemy_actor->get_anchor_tolerance())
     {
-        UE_LOG(Enemy, Verbose, LOG_TEXT("Enemy %s has moved away from anchor point %s"), *enemy_actor->GetActorLabel(), *anchor_point->GetActorLabel());
+        UE_LOG(Enemy, Verbose, LOG_TEXT("Enemy %s has moved away from anchor point %s"), *enemy_name, *(anchor_point->Tags.Num() > 0 ? anchor_point->Tags[0].ToString() : FString(TEXT("UNTAGGED"))));
         blackboard->SetValueAsBool(near_anchor_field, false);
         return EBTNodeResult::Succeeded;
     }

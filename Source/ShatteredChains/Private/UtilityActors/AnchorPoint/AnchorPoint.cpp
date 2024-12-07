@@ -2,8 +2,6 @@
 
 
 #include "AnchorPoint.h"
-
-#include "PhysicsEngine/SphereElem.h"
 #include "ShatteredChains/Logging.h"
 
 DEFINE_LOG_CATEGORY(UtilityActor);
@@ -33,14 +31,14 @@ void AAnchorPoint::BeginPlay()
     Super::BeginPlay();
     SetActorHiddenInGame(true);
 
-    UE_LOG(UtilityActor, Verbose, LOG_TEXT("Anchor location (%s) is %s"), *GetActorLabel(), *GetActorLocation().ToString());
+    UE_LOG(UtilityActor, Verbose, LOG_TEXT("Anchor location HELLO (%s) is %s"), *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED"))), *GetActorLocation().ToString());
     if (anchor_radius == 0)
     {
-        UE_LOG(UtilityActor, Error, LOG_TEXT("Anchor radius (%s) was never set"), *GetActorLabel());
+        UE_LOG(UtilityActor, Error, LOG_TEXT("Anchor radius (%s) was never set"), *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED"))));
     }
     else
     {
-        UE_LOG(UtilityActor, VeryVerbose, LOG_TEXT("Anchor point (%s) radius %f"), *GetActorLabel(), anchor_radius);
+        UE_LOG(UtilityActor, VeryVerbose, LOG_TEXT("Anchor point (%s) radius %f"), *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED"))), anchor_radius);
     }
 }
 

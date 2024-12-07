@@ -7,7 +7,6 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "UtilityActors/AnchorPoint/AnchorPoint.h"
 #include "Enemies/RangedEnemy/RangedEnemy.h"
-#include "ShatteredChains/Utility.h"
 
 UMoveToAnchor::UMoveToAnchor()
 {
@@ -23,33 +22,44 @@ EBTNodeResult::Type UMoveToAnchor::ExecuteTask(UBehaviorTreeComponent& OwnerComp
     the future so they are separated in case of this.
     */
     static const FName near_anchor_field(TEXT("NearAnchor"));
-    
+
     // Enemy AI Controller
-    AAIController* ai_controller;
+    AAIController* ai_controller = OwnerComp.GetAIOwner();
+    if (ai_controller == nullptr)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("Could not get AI Controller"));
+        return EBTNodeResult::Aborted;
+    }
+
     // Enemy AI Blackboard
-    UBlackboardComponent* blackboard;
+    UBlackboardComponent* blackboard = ai_controller->GetBlackboardComponent();
+    if (blackboard == nullptr)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("Could not get AI blackboard"));
+        return EBTNodeResult::Aborted;
+    }
+
     // The enemy actor
-    ARangedEnemy* enemy_actor;
+    ARangedEnemy* enemy_actor = Cast<ARangedEnemy>(ai_controller->GetPawn());
+    if (enemy_actor == nullptr)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("Could not get enemy actor belonging to this AI"));
+        return EBTNodeResult::Aborted;
+    }
+
     // The anchor point
-    AAnchorPoint* anchor_point;
+    AAnchorPoint* anchor_point = enemy_actor->get_anchor_point();
+    if (anchor_point == nullptr)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("Could not get anchor point"));
+        return EBTNodeResult::Aborted;
+    }
+
     // The location the enemy should move to
-    FVector anchor_location;
+    const FVector anchor_location = enemy_actor->get_location_to_go_to();
+
     // The enemy's name, for logging purposes
-    FString enemy_name;
-    try
-    {
-        ai_controller = Validity::check_value<AAIController>(OwnerComp.GetAIOwner(), "Could not get AI Controller");
-        blackboard = Validity::check_value<UBlackboardComponent>(ai_controller->GetBlackboardComponent(), "Could not get AI blackboard");
-        enemy_actor = Validity::check_value<ARangedEnemy>(Cast<ARangedEnemy>(ai_controller->GetPawn()), "Could not get enemy actor belonging to this AI");
-        anchor_point = Validity::check_value<AAnchorPoint>(enemy_actor->get_anchor_point(), "Could not get anchor point");
-        anchor_location = enemy_actor->get_location_to_go_to();
-        enemy_name = enemy_actor->GetActorLabel();
-    }
-    catch (const Validity::NullPointerException& e)
-    {
-        UE_LOG(Enemy, Error, LOG_TEXT("%hs"), e.what());
-        return EBTNodeResult::Type::Failed;
-    }
+    const FString enemy_name = *(enemy_actor->Tags.Num() > 0 ? enemy_actor->Tags[0].ToString() : FString(TEXT("UNTAGGED")));
 
     // Get locations of enemy
     const FVector enemy_location = enemy_actor->GetActorLocation();
@@ -59,7 +69,7 @@ EBTNodeResult::Type UMoveToAnchor::ExecuteTask(UBehaviorTreeComponent& OwnerComp
 
     if (distance <= enemy_actor->get_anchor_tolerance())
     {
-        UE_LOG(Enemy, Log, LOG_TEXT("%s has reached anchor point %s"), *enemy_name, *anchor_point->GetActorLabel());
+        UE_LOG(Enemy, Log, LOG_TEXT("%s has reached anchor point %s"), *enemy_name, *(anchor_point->Tags.Num() > 0 ? anchor_point->Tags[0].ToString() : FString(TEXT("UNTAGGED"))));
         ai_controller->StopMovement();
         blackboard->SetValueAsBool(near_anchor_field, true);
     }
