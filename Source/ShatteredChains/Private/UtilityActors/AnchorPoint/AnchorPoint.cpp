@@ -16,6 +16,7 @@ AAnchorPoint::AAnchorPoint()
 
     mesh_component = CreateDefaultSubobject<UStaticMeshComponent>("Mesh Component");
     sphere_component = CreateDefaultSubobject<USphereComponent>("Anchor Radius Visual (editor)");
+    sphere_component->SetAbsolute(false, false, true);
     sphere_component->SetupAttachment(mesh_component);
     sphere_component->InitSphereRadius(anchor_radius);
     sphere_component->SetRelativeLocation(FVector::ZeroVector);
