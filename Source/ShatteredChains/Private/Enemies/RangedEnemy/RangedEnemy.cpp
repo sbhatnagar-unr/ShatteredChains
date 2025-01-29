@@ -81,15 +81,15 @@ void ARangedEnemy::BeginPlay()
         return;
     }
     // Set weapon name
-    weapon->Tags.Add(FName(actor_name + FString(TEXT("'s weapon"))));
+    weapon->set_actor_name(actor_name + FString(TEXT("'s ")) + weapon->GetName());
 
-    UE_LOG(Enemy, Verbose, LOG_TEXT("Weapon %s successfully spawned for %s"), *(weapon->Tags.Num() > 0 ? weapon->Tags[0].ToString() : FString(TEXT("UNTAGGED"))), *actor_name);
+    UE_LOG(Enemy, Verbose, LOG_TEXT("Weapon %s successfully spawned for %s"), *(weapon->get_actor_name()), *actor_name);
     
     // Attach it to the enemy
     const bool successfully_attached = weapon->AttachToComponent(skeletal_mesh_component, FAttachmentTransformRules::SnapToTargetIncludingScale, FName(TEXT("GunSocket")));
     if (!successfully_attached)
     {
-        UE_LOG(Enemy, Error, LOG_TEXT("Could not attach %s to %s"), *(weapon->Tags.Num() > 0 ? weapon->Tags[0].ToString() : FString(TEXT("UNTAGGED"))), *actor_name);
+        UE_LOG(Enemy, Error, LOG_TEXT("Could not attach %s to %s"), *(weapon->get_actor_name()), *actor_name);
         return;
     }
     UE_LOG(Enemy, Verbose, LOG_TEXT("Successfully attached %s to %s"), *actor_name, *weapon_class->GetName());
@@ -115,7 +115,7 @@ void ARangedEnemy::BeginPlay()
     }
     if (!found_location)
     {
-        UE_LOG(Enemy, Warning, LOG_TEXT("Could not find reachable point near anchor \"%s\" (radius=%f).  Defaulting to anchor location (%s)"), *(anchor_point->Tags.Num() > 0 ? anchor_point->Tags[0].ToString() : FString(TEXT("UNTAGGED"))), anchor_point->get_anchor_radius(), *anchor_point->GetActorLocation().ToString());
+        UE_LOG(Enemy, Warning, LOG_TEXT("Could not find reachable point near anchor \"%s\" (radius=%f).  Defaulting to anchor location (%s)"), *(anchor_point->get_actor_name()), anchor_point->get_anchor_radius(), *anchor_point->GetActorLocation().ToString());
         location_to_go_to = anchor_point->GetActorLocation();
     }
 }

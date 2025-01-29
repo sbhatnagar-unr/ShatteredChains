@@ -5,10 +5,11 @@
 #include "CoreMinimal.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/Actor.h"
+#include "Interfaces/NamedActor/NamedActor.h"
 #include "AnchorPoint.generated.h"
 
 UCLASS()
-class SHATTEREDCHAINS_API AAnchorPoint : public AActor
+class SHATTEREDCHAINS_API AAnchorPoint : public AActor, public INamedActor
 {
     GENERATED_BODY()
 

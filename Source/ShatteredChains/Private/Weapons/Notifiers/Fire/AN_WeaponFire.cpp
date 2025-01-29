@@ -24,7 +24,7 @@ void UAN_WeaponFire::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase*
         UE_LOG(Enemy, Error, LOG_TEXT("Could not get weapon actor from MeshComp"));
         return;
     }
-    const FString weapon_name = weapon->Tags.Num() > 0 ? weapon->Tags[0].ToString() : FName(TEXT("UNTAGGED")).ToString();
+    const FString weapon_name = weapon->get_actor_name();
 
     // The weapon holder as an actor
     AActor* weapon_holder_actor = Cast<AActor>(weapon->GetAttachParentActor());
@@ -35,7 +35,13 @@ void UAN_WeaponFire::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase*
     }
 
     // The holders name
-    const FString weapon_holder_name = weapon_holder_actor->Tags.Num() > 0 ? weapon_holder_actor->Tags[0].ToString() : FName(TEXT("UNTAGGED")).ToString();
+    const INamedActor* const weapon_holder_named_actor = Cast<INamedActor>(weapon_holder_actor);
+    if (weapon_holder_named_actor == nullptr)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("Weapon (%s) holder does not inherit INamedActor"), *weapon_name);
+        return;
+    }
+    const FString weapon_holder_name = weapon_holder_named_actor->get_actor_name();
     // The animation instance
     UAnimInstance* anim_instance = MeshComp->GetAnimInstance();
     if (anim_instance == nullptr)
@@ -99,8 +105,15 @@ void UAN_WeaponFire::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase*
         DrawDebugBox(world, trace_result.ImpactPoint, FVector(1, 1, 1), FColor::Blue, false, 3.f, 0U, 5.f);
 
         // Check if the actor was a character with health
-        AActor* a = trace_result.GetActor();
-        const FString hit_actor_label = *(a->Tags.Num() > 0 ? a->Tags[0].ToString() : FString(TEXT("UNTAGGED")));
+        TObjectPtr<AActor> a = trace_result.GetActor();
+        const INamedActor* const named_actor = Cast<INamedActor>(a);
+        FString hit_actor_label = FString(TEXT("UNTAGGED"));
+        
+        if (named_actor != nullptr)
+        {
+            hit_actor_label = named_actor->get_actor_name();
+        }
+
         const IHasHealth* hit_actor = Cast<IHasHealth>(a);
 
         if (hit_actor == nullptr)

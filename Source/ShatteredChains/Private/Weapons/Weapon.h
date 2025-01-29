@@ -5,10 +5,11 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/SphereComponent.h"
+#include "Interfaces/NamedActor/NamedActor.h"
 #include "Weapon.generated.h"
 
 UCLASS()
-class AWeapon : public AActor
+class AWeapon : public AActor, public INamedActor
 {
     GENERATED_BODY()
 

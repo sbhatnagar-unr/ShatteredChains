@@ -6,11 +6,12 @@
 #include "Components/ActorComponents/HealthComponent/HealthComponent.h"
 #include "Components/ActorComponents/BoneColliderComponent/BoneColliderComponent.h"
 #include "Interfaces/HasHealth/HasHealth.h"
+#include "Interfaces/NamedActor/NamedActor.h"
 #include "GameFramework/Character.h"
 #include "Enemy.generated.h"
 
 UCLASS()
-class AEnemy : public ACharacter, public IHasHealth
+class AEnemy : public ACharacter, public IHasHealth, public INamedActor
 {
     GENERATED_BODY()
 
@@ -28,15 +29,11 @@ public:
     virtual void BeginPlay() override;
     
     virtual void on_death(AActor* killed_by) override;
-
-    FString get_name() const;
     
 protected:
     // This is the actor that the enemy will attack
     UPROPERTY(EditAnywhere)
     TObjectPtr<AActor> target;
-
-    FString actor_name;
 
 private:
     UPROPERTY(EditAnywhere)

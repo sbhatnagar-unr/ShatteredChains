@@ -30,10 +30,10 @@ EBTNodeResult::Type UBTT_ChasePlayer::ExecuteTask(UBehaviorTreeComponent& OwnerC
     const ALightEnemy* enemy_actor = Cast<ALightEnemy>(ai_controller->GetPawn());
     if (enemy_actor == nullptr)
     {
-        UE_LOG(Enemy, Error, LOG_TEXT("Could not get enemy actor belonging to this AI"));
+        UE_LOG(Enemy, Error, LOG_TEXT("Could not get enemy actor from task"));
         return EBTNodeResult::Aborted;
     }
-    const FString enemy_actor_name = (enemy_actor->Tags.Num() > 0) ? enemy_actor->Tags[0].ToString() : FString(TEXT("UNTAGGED"));
+    const FString enemy_actor_name = enemy_actor->get_actor_name();
 
     // Enemy AI Blackboard
     UBlackboardComponent* blackboard = ai_controller->GetBlackboardComponent();

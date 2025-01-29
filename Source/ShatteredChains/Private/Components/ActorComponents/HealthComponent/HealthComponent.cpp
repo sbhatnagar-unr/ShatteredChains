@@ -3,6 +3,7 @@
 
 #include "Components/ActorComponents/HealthComponent/HealthComponent.h"
 #include "Interfaces/HasHealth/HasHealth.h"
+#include "Interfaces/NamedActor/NamedActor.h"
 #include "ShatteredChains/Logging.h"
 
 DEFINE_LOG_CATEGORY(Health);
@@ -30,10 +31,15 @@ void UHealthComponent::BeginPlay()
 
     // Get owner
     IHasHealth* owner = GetOwner<IHasHealth>();
+    const INamedActor* const owner_na = GetOwner<INamedActor>();
+    if (owner_na == nullptr)
+    {
+        UE_LOG(Health, Error, LOG_TEXT("Health Component owner must inherit from INamedActor, owner of type %s does not"), *(GetOwner()->GetName()));
+        return;
+    }
     
     // Set owner name instance variable
-    
-    owner_name = GetOwner()->Tags.Num() > 0 ? GetOwner()->Tags[0].ToString() : FString(TEXT("UNTAGGED"));
+    owner_name = owner_na->get_actor_name();
     
     // If our owner doesn't have the interface
     // It needs to have the interface so we can attach its on_dead method to the delegate
@@ -103,14 +109,20 @@ void UHealthComponent::deal_damage(AActor* dealt_by, const float damage)
 
     current_health -= damage * damage_multiplier;
 
+    const INamedActor* const dealt_by_na = Cast<INamedActor>(dealt_by);
+    if (dealt_by_na == nullptr)
+    {
+        UE_LOG(Health, Error, LOG_TEXT("Damage dealt_by actor is not an INamedActor (%s)"), *(dealt_by->GetName()));
+        dealt_by = nullptr;
+    }
+
     if (dealt_by == nullptr)
     {
-        UE_LOG(Health, Log, LOG_TEXT("%s received %f damage from UNKNOWN (%f remaining)"), *owner_name, damage, current_health);
-        UE_LOG(Health, Warning, LOG_TEXT("No dealt_by AActor for damage applied to %s (%f remaining)"), *owner_name, current_health);
+        UE_LOG(Health, Error, LOG_TEXT("%s received %f damage from UNKNOWN (%f remaining)"), *owner_name, damage, current_health);
     }
     else
     {
-        UE_LOG(Health, Log, LOG_TEXT("%s received %f damage from %s (%f remaining)"), *owner_name, damage, *(dealt_by->Tags.Num() > 0 ? dealt_by->Tags[0].ToString() : FString(TEXT("UNTAGGED"))), current_health);
+        UE_LOG(Health, Log, LOG_TEXT("%s received %f damage from %s (%f remaining)"), *owner_name, damage, *(dealt_by_na->get_actor_name()), current_health);
     }
 
     

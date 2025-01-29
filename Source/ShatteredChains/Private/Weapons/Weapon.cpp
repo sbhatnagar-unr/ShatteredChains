@@ -43,13 +43,12 @@ AWeapon::AWeapon()
 void AWeapon::BeginPlay()
 {
     Super::BeginPlay();
+    
+    actor_name = Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED"));
 
     // Bind the overlap event
     InteractionSphere->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::OnOverlapBegin);
 
-    const FString actor_name = *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED")));
-
-    
     // Check for mesh
     if (weapon_skeletal_mesh_component->GetSkeletalMeshAsset() == nullptr)
     {
@@ -242,7 +241,7 @@ void AWeapon::decrement_mag_ammo_count()
 {
     if (current_magazine_ammo_count > 0)
     {
-        UE_LOG(Weapon, Verbose, LOG_TEXT("Removed ammo from magazine on %s (%d->%d)"), *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED"))), current_magazine_ammo_count, current_magazine_ammo_count-1);
+        UE_LOG(Weapon, Verbose, LOG_TEXT("Removed ammo from magazine on %s (%d->%d)"), *actor_name, current_magazine_ammo_count, current_magazine_ammo_count-1);
         current_magazine_ammo_count--;
     }
     else

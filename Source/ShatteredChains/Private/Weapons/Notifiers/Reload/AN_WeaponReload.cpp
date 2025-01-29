@@ -22,7 +22,7 @@ void UAN_WeaponReload::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBas
         return;
     }
 
-    const FString weapon_name = (weapon->Tags.Num() > 0) ? weapon->Tags[0].ToString() : FString(TEXT("UNTAGGED"));
+    const FString weapon_name = weapon->get_actor_name();
     
 
     // Reload the weapon

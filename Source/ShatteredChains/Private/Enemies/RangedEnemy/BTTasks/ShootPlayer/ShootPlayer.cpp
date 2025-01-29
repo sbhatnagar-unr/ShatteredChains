@@ -37,7 +37,7 @@ EBTNodeResult::Type UShootPlayer::ExecuteTask(UBehaviorTreeComponent& OwnerComp,
         return EBTNodeResult::Aborted;
     }
 
-    const FString enemy_name = (enemy_actor->Tags.Num() > 0) ? enemy_actor->Tags[0].ToString() : FString(TEXT("UNTAGGED"));
+    const FString enemy_name = enemy_actor->get_actor_name();
     
     // Enemy AI Blackboard
     UBlackboardComponent* blackboard = ai_controller->GetBlackboardComponent();
@@ -86,7 +86,7 @@ EBTNodeResult::Type UShootPlayer::ExecuteTask(UBehaviorTreeComponent& OwnerComp,
 
     if (distance > anchor_point->get_anchor_radius() + enemy_actor->get_anchor_tolerance())
     {
-        UE_LOG(Enemy, Verbose, LOG_TEXT("Enemy %s has moved away from anchor point %s"), *enemy_name, *(anchor_point->Tags.Num() > 0 ? anchor_point->Tags[0].ToString() : FString(TEXT("UNTAGGED"))));
+        UE_LOG(Enemy, Verbose, LOG_TEXT("Enemy %s has moved away from anchor point %s"), *enemy_name, *(anchor_point->get_actor_name()));
         blackboard->SetValueAsBool(near_anchor_field, false);
         return EBTNodeResult::Succeeded;
     }
