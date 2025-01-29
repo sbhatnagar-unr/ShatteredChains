@@ -33,6 +33,7 @@ AMyCharacter::AMyCharacter()
     Camera->bUsePawnControlRotation = true;
 
     HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("Health Component"));
+    InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory Component"));
 
 }
 
@@ -770,6 +771,11 @@ FVector AMyCharacter::get_hitscan_direction() const
     return Camera->GetForwardVector();
 }
 
+
+TObjectPtr<UInventoryComponent> AMyCharacter::get_inventory_component() const
+{
+    return InventoryComponent;
+}
 
 
 

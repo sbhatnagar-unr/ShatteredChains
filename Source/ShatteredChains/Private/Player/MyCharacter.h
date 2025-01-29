@@ -4,7 +4,10 @@
 #include "CoreMinimal.h"
 #include "InputActionValue.h"
 #include "GameFramework/Character.h"
+#include "Components/HealthComponent/HealthComponent.h"
+#include "Components/InventoryComponent/InventoryComponent.h"
 #include "Interfaces/HasHealth/HasHealth.h"
+#include "Interfaces/HasInventory/HasInventory.h"
 #include "Interfaces/WeaponUser/WeaponUser.h"
 #include "EnhancedInputComponent.h"  // Include enhanced input system
 #include "MyCharacter.generated.h"   // Must be the last include
@@ -19,7 +22,7 @@
 class AWeapon;
 
 UCLASS()
-class SHATTEREDCHAINS_API AMyCharacter : public ACharacter, public IHasHealth, public IWeaponUser
+class SHATTEREDCHAINS_API AMyCharacter : public ACharacter, public IHasHealth, public IWeaponUser, public IHasInventory
 {
     GENERATED_BODY()
 
@@ -38,6 +41,7 @@ public:
     virtual void on_death(AActor* killed_by) override final;
 
     virtual UHealthComponent* get_health_component() const override final;
+    virtual TObjectPtr<UInventoryComponent> get_inventory_component() const override final;
 
     void EquipWeapon(AWeapon* Weapon);
     void PickUpWeapon(AWeapon* Weapon);
@@ -349,4 +353,7 @@ protected:
 
     UPROPERTY(VisibleAnywhere)
     UHealthComponent* HealthComponent;
+
+    UPROPERTY(VisibleAnywhere)
+    UInventoryComponent* InventoryComponent;
 };
