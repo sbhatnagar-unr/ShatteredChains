@@ -12,6 +12,7 @@ DECLARE_LOG_CATEGORY_EXTERN(Health, Log, All);
 DECLARE_LOG_CATEGORY_EXTERN(Player, Log, All);
 DECLARE_LOG_CATEGORY_EXTERN(Weapon, Log, All);
 DECLARE_LOG_CATEGORY_EXTERN(UtilityActor, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(BoneCollider, Log, All);
 
 // Put this line in all the "Upper most" C++ file where you need each category
 // Each of these lines can appear AT MOST ONCE across ALL C++ files
