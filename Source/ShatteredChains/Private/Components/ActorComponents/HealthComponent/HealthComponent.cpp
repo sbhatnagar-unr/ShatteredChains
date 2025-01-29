@@ -43,12 +43,9 @@ void UHealthComponent::BeginPlay()
         return;
     }
     // Otherwise attach the delegate
-    else
-    {
-        // Here we already know that owner implements the IHasHealth interface
-        on_death_delegate.AddDynamic(owner, &IHasHealth::on_death);
-        UE_LOG(Health, Verbose, LOG_TEXT("Added %s on_death delegate"), *owner_name);
-    }
+    // Here we already know that owner implements the IHasHealth interface
+    on_death_delegate.AddDynamic(owner, &IHasHealth::on_death);
+    UE_LOG(Health, Verbose, LOG_TEXT("Added %s on_death delegate"), *owner_name);
 
     // If the max_health is 0 (unset)
     if (max_health <= 0.f)
