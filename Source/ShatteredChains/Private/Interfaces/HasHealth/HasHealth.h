@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponents/HealthComponent/HealthComponent.h"
+#include "Components/HealthComponent/HealthComponent.h"
 #include "UObject/Interface.h"
 #include "HasHealth.generated.h"
 

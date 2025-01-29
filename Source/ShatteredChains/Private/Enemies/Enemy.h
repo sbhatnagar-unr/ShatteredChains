@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponents/HealthComponent/HealthComponent.h"
-#include "Components/ActorComponents/BoneColliderComponent/BoneColliderComponent.h"
+#include "Components/HealthComponent/HealthComponent.h"
+#include "Components/BoneColliderComponent/BoneColliderComponent.h"
 #include "Interfaces/HasHealth/HasHealth.h"
 #include "Interfaces/NamedActor/NamedActor.h"
 #include "GameFramework/Character.h"

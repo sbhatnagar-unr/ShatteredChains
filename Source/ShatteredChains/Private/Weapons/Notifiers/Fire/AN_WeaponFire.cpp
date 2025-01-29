@@ -5,7 +5,7 @@
 #include "Weapons/Weapon.h"
 #include "Interfaces/WeaponUser/WeaponUser.h"
 #include "Interfaces/HasHealth/HasHealth.h"
-#include "Components/ActorComponents/HealthComponent/HealthComponent.h"
+#include "Components/HealthComponent/HealthComponent.h"
 #include "ShatteredChains/CustomTraceChannels.h"
 #include "ShatteredChains/Logging.h"
 

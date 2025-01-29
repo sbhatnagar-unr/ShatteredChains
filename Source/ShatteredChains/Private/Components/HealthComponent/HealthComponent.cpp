@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Components/ActorComponents/HealthComponent/HealthComponent.h"
+#include "Components/HealthComponent/HealthComponent.h"
 #include "Interfaces/HasHealth/HasHealth.h"
 #include "Interfaces/NamedActor/NamedActor.h"
 #include "ShatteredChains/Logging.h"

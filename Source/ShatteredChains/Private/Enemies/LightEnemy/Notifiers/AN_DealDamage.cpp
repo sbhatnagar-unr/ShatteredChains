@@ -5,7 +5,7 @@
 #include "ShatteredChains/Logging.h"
 #include "Enemies/LightEnemy/LightEnemy.h"
 #include "Interfaces/HasHealth/HasHealth.h"
-#include "Components/ActorComponents/HealthComponent/HealthComponent.h"
+#include "Components/HealthComponent/HealthComponent.h"
 
 void UAN_DealDamage::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
