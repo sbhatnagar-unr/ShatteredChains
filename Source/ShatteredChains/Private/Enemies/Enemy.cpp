@@ -16,6 +16,7 @@ AEnemy::AEnemy()
 
     target = nullptr;
     health_component = CreateDefaultSubobject<UHealthComponent>(TEXT("Health Component"));
+    bone_collider_component = CreateDefaultSubobject<UBoneColliderComponent>(TEXT("Bone Collider Component"));
 }
 
 void AEnemy::BeginPlay()
