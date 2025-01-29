@@ -19,12 +19,12 @@ ALightEnemy::ALightEnemy() : AEnemy()
 void ALightEnemy::BeginPlay()
 {
     Super::BeginPlay();
-    UE_LOG(Enemy, Log, LOG_TEXT("LightEnemy: attack_range=%f attack_damage=%f"), attack_range, attack_damage);
+    UE_LOG(Enemy, Log, LOG_TEXT("LightEnemy (%s): attack_range=%f attack_damage=%f"), *actor_name, attack_range, attack_damage);
 
     // Make sure we have an animation montage
     if (attack_animation_montage == nullptr)
     {
-        UE_LOG(Enemy, Error, LOG_TEXT("No attack animation montage"));
+        UE_LOG(Enemy, Error, LOG_TEXT("No attack animation montage for %s"), *actor_name);
     }
 
 }

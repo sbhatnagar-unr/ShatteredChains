@@ -23,8 +23,6 @@ void ARangedEnemy::BeginPlay()
 {
     Super::BeginPlay();
 
-    const FString actor_name = *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED")));
-    
     // Get the world
     UWorld* world = GetWorld();
     if (world == nullptr)
@@ -69,7 +67,7 @@ void ARangedEnemy::BeginPlay()
         UE_LOG(Enemy, Error, LOG_TEXT("Anchor tolerance is unset for %s"), *actor_name);
         return;
     }
-    UE_LOG(Enemy, VeryVerbose, LOG_TEXT("Anchor tolerance for %s is %f"), *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED"))), anchor_tolerance);
+    UE_LOG(Enemy, VeryVerbose, LOG_TEXT("Anchor tolerance for %s is %f"), *actor_name, anchor_tolerance);
 
 
     // Spawn the weapon for the Enemy
@@ -79,22 +77,22 @@ void ARangedEnemy::BeginPlay()
     weapon = world->SpawnActor<AWeapon>(weapon_class, GetActorTransform(), spawn_parameters);
     if (weapon == nullptr)
     {
-        UE_LOG(Enemy, Error, LOG_TEXT("Could not spawn weapon for %s"), *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED"))));
+        UE_LOG(Enemy, Error, LOG_TEXT("Could not spawn weapon for %s"), *actor_name);
         return;
     }
     // Set weapon name
-    weapon->Tags.Add(FName((Tags.Num() > 0 ? Tags[0].ToString() : FString("UNKNOWN")) + FString(TEXT("'s weapon"))));
+    weapon->Tags.Add(FName(actor_name + FString(TEXT("'s weapon"))));
 
-    UE_LOG(Enemy, Verbose, LOG_TEXT("Weapon %s successfully spawned for %s"), *(weapon->Tags.Num() > 0 ? weapon->Tags[0].ToString() : FString(TEXT("UNTAGGED"))), *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED"))));
+    UE_LOG(Enemy, Verbose, LOG_TEXT("Weapon %s successfully spawned for %s"), *(weapon->Tags.Num() > 0 ? weapon->Tags[0].ToString() : FString(TEXT("UNTAGGED"))), *actor_name);
     
     // Attach it to the enemy
     const bool successfully_attached = weapon->AttachToComponent(skeletal_mesh_component, FAttachmentTransformRules::SnapToTargetIncludingScale, FName(TEXT("GunSocket")));
     if (!successfully_attached)
     {
-        UE_LOG(Enemy, Error, LOG_TEXT("Could not attach %s to %s"), *(weapon->Tags.Num() > 0 ? weapon->Tags[0].ToString() : FString(TEXT("UNTAGGED"))), *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED"))));
+        UE_LOG(Enemy, Error, LOG_TEXT("Could not attach %s to %s"), *(weapon->Tags.Num() > 0 ? weapon->Tags[0].ToString() : FString(TEXT("UNTAGGED"))), *actor_name);
         return;
     }
-    UE_LOG(Enemy, Verbose, LOG_TEXT("Successfully attached %s to %s"), *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED"))), *weapon_class->GetName());
+    UE_LOG(Enemy, Verbose, LOG_TEXT("Successfully attached %s to %s"), *actor_name, *weapon_class->GetName());
 
     // https://forums.unrealengine.com/t/getrandomreachablepointinradius/380662
     // So this function is apparently bugged for who knows what reason.  To combat this, we will just run it a bunch of times
@@ -111,7 +109,7 @@ void ARangedEnemy::BeginPlay()
         {
             location_to_go_to = nav_location.Location;
             found_location = true;
-            UE_LOG(Enemy, Verbose, LOG_TEXT("Location to go to in anchor for %s is %s"), *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED"))), *location_to_go_to.ToString());
+            UE_LOG(Enemy, Verbose, LOG_TEXT("Location to go to in anchor for %s is %s"), *actor_name, *location_to_go_to.ToString());
             break;
         }
     }
