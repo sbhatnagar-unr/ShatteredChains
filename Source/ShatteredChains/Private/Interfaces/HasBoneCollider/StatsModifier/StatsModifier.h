@@ -23,6 +23,9 @@ public:
     void set_multiplicative_health_modifier(const float new_multiplicative_health_modifier);
 
 private:
+    // These are applied to the base damage
+    // Additive is applied first
+    // Then multiplicative is applied to the result
     float additive_health_modifier;
     float multiplicative_health_modifier;
 };
