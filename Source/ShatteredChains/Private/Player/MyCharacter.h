@@ -10,6 +10,7 @@
 #include "Interfaces/HasInventory/HasInventory.h"
 #include "Interfaces/WeaponUser/WeaponUser.h"
 #include "EnhancedInputComponent.h"  // Include enhanced input system
+#include "Interfaces/NamedActor/NamedActor.h"
 #include "MyCharacter.generated.h"   // Must be the last include
 
 /**
@@ -22,7 +23,7 @@
 class AWeapon;
 
 UCLASS()
-class SHATTEREDCHAINS_API AMyCharacter : public ACharacter, public IHasHealth, public IWeaponUser, public IHasInventory
+class SHATTEREDCHAINS_API AMyCharacter : public ACharacter, public IHasHealth, public IWeaponUser, public IHasInventory, public INamedActor
 {
     GENERATED_BODY()
 

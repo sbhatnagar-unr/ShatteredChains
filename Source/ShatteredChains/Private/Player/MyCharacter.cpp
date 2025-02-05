@@ -35,6 +35,8 @@ AMyCharacter::AMyCharacter()
     HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("Health Component"));
     InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory Component"));
 
+    actor_name = "Player";
+
 }
 
 // Called when the game starts or when spawned
