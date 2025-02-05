@@ -161,3 +161,12 @@ const TMap<FName, TObjectPtr<UStatsModifier>>* AEnemy::get_bone_collider_stats_m
 {
     return &stats_modifiers;
 }
+
+
+void AEnemy::hit_bone(const FName bone_name)
+{
+    TObjectPtr<UStatsModifier> modifier = stats_modifiers[bone_name];
+
+    // Apply other modifier stats, like speed, accuracy, etc.
+    UE_LOG(BoneCollision, Log, LOG_TEXT("PLACEHOLDER FOR WHEN CHARACTER STATS ARE MODIFIED AFTER A BONE IS HIT"));
+}
