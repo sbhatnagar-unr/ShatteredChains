@@ -36,9 +36,8 @@ void UBoneColliderComponent::BeginPlay()
         UE_LOG(BoneCollider, Error, LOG_TEXT("Bone collider owner (%s) is not a ACharacter"), *(owner_na->get_default_actor_name()));
         return;
     }
-    UE_LOG(BoneCollider, Log, LOG_TEXT("Bone collider added to '%s'"), *(owner_na->get_default_actor_name()));
-
     skeletal_mesh = owner->GetMesh();
+    UE_LOG(BoneCollider, Log, LOG_TEXT("Bone collider added to '%s'"), *(owner_na->get_default_actor_name()));
 }
 
 
