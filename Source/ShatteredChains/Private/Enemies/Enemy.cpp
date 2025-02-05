@@ -3,6 +3,8 @@
 
 #include "Enemies/Enemy.h"
 #include "AIController.h"
+#include "AssetTypeCategories.h"
+#include "PhysicsEngine/PhysicsAsset.h"
 #include "ShatteredChains/Logging.h"
 #include "ShatteredChains/CustomTraceChannels.h"
 
@@ -38,6 +40,37 @@ void AEnemy::BeginPlay()
             return;
         }
         UE_LOG(Enemy, Verbose, LOG_TEXT("Found target (player)"));
+    }
+
+    const TObjectPtr<USkeletalMeshComponent> mesh = GetMesh();
+    if (mesh == nullptr)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("Enemy '%s' has no skeletal mesh"), *actor_name);
+        return;
+    }
+
+    const TObjectPtr<UPhysicsAsset> physics_asset = mesh->GetPhysicsAsset();
+    if (physics_asset == nullptr)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("Enemy '%s' has no physics assets"), *actor_name);
+        return;
+    }
+
+    // Get all collision physics assets and create stats modifiers for them
+    for (int32 i = 0; i < physics_asset->SkeletalBodySetups.Num(); i++)
+    {
+        stats_modifiers.Add(physics_asset->SkeletalBodySetups[i]->BoneName, NewObject<UStatsModifier>());
+    }
+
+    // Here we set all the modifier values
+    stats_modifiers["head"]->set_multiplicative_health_modifier(0);
+
+    // Log the modifiers
+    for (const TPair<FName, TObjectPtr<UStatsModifier>> pair : stats_modifiers)
+    {
+        const FName key = pair.Key;
+        const UStatsModifier* modifier = pair.Value;
+        UE_LOG(Enemy, Verbose, LOG_TEXT("Modifiers for '%s' on group '%s': HEALTH_ADD=%f\tHEALTH_MUL=%f"), *actor_name, *(key.ToString()), modifier->get_additive_health_modifier(), modifier->get_multiplicative_health_modifier());
     }
 }
 

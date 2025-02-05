@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/HealthComponent/HealthComponent.h"
 #include "Components/BoneColliderComponent/BoneColliderComponent.h"
+#include "Components/BoneColliderComponent/StatsModifier/StatsModifier.h"
 #include "Interfaces/HasHealth/HasHealth.h"
 #include "Interfaces/NamedActor/NamedActor.h"
 #include "Interfaces/HasBoneCollider/HasBoneCollider.h"
@@ -49,4 +50,8 @@ private:
 
     UPROPERTY(EditInstanceOnly)
     FString default_actor_name;
+
+    // Bone collision stats modifiers
+    UPROPERTY()
+    TMap<FName, TObjectPtr<UStatsModifier>> stats_modifiers;
 };
