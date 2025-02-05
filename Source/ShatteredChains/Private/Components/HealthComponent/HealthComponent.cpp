@@ -6,8 +6,6 @@
 #include "Interfaces/NamedActor/NamedActor.h"
 #include "ShatteredChains/Logging.h"
 
-DEFINE_LOG_CATEGORY(Health);
-
 // Sets default values for this component's properties
 UHealthComponent::UHealthComponent()
 {

@@ -6,8 +6,6 @@
 #include "Components/SphereComponent.h"
 #include "ShatteredChains/Logging.h"
 
-DEFINE_LOG_CATEGORY(Weapon);
-
 // Sets default values
 AWeapon::AWeapon()
 {

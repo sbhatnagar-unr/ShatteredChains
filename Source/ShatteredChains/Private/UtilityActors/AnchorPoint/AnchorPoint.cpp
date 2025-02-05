@@ -4,8 +4,6 @@
 #include "AnchorPoint.h"
 #include "ShatteredChains/Logging.h"
 
-DEFINE_LOG_CATEGORY(UtilityActor);
-
 
 // Sets default values
 AAnchorPoint::AAnchorPoint()

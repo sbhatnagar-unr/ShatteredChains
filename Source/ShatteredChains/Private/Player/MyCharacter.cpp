@@ -11,8 +11,6 @@
 #include "Camera/CameraComponent.h"
 #include "Kismet/GameplayStatics.h"
 
-DEFINE_LOG_CATEGORY(Player);
-
 // Sets default values
 AMyCharacter::AMyCharacter()
 {
