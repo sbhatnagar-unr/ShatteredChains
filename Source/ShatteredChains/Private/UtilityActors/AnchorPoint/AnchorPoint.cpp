@@ -27,8 +27,6 @@ void AAnchorPoint::BeginPlay()
 {
     Super::BeginPlay();
 
-    actor_name = Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED"));
-    
     SetActorHiddenInGame(true);
 
     UE_LOG(UtilityActor, Verbose, LOG_TEXT("Anchor location HELLO (%s) is %s"), *actor_name, *GetActorLocation().ToString());
@@ -45,6 +43,12 @@ void AAnchorPoint::BeginPlay()
 float AAnchorPoint::get_anchor_radius() const
 {
     return anchor_radius;    
+}
+
+
+FString AAnchorPoint::get_default_actor_name() const
+{
+    return actor_name;
 }
 
 

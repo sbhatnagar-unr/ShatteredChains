@@ -23,6 +23,7 @@ class SHATTEREDCHAINS_API INamedActor
     // Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
     virtual FString get_actor_name() const;
+    virtual FString get_default_actor_name() const PURE_VIRTUAL(INamedActor::get_default_actor_name, return FString("NO DEFAULT NAME"););
     virtual void set_actor_name(const FString &new_name);
 
 

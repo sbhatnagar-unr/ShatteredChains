@@ -19,8 +19,6 @@ UHealthComponent::UHealthComponent()
     current_health = 0.f;
     damage_multiplier = 1.f;
     is_dead = false;
-
-    owner_name = FString("UNKNOWN");
 }
 
 
@@ -38,9 +36,8 @@ void UHealthComponent::BeginPlay()
         return;
     }
     
-    // Set owner name instance variable
-    owner_name = owner_na->get_actor_name();
-    
+    const FString owner_name = owner_na->get_default_actor_name();
+
     // If our owner doesn't have the interface
     // It needs to have the interface so we can attach its on_dead method to the delegate
     if (owner == nullptr)
@@ -61,8 +58,6 @@ void UHealthComponent::BeginPlay()
     
     current_health = max_health;
     is_dead = false;
-    
-    
 }
 
 
@@ -106,8 +101,9 @@ void UHealthComponent::deal_damage(AActor* dealt_by, const float damage)
     /*
     Applies damage, if health becomes negative, it gets set to 0
     */
-
     current_health -= damage * damage_multiplier;
+    
+    const FString owner_name = GetOwner<INamedActor>()->get_actor_name();
 
     const INamedActor* const dealt_by_na = Cast<INamedActor>(dealt_by);
     if (dealt_by_na == nullptr)

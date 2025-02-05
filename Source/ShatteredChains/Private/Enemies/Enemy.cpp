@@ -24,7 +24,7 @@ void AEnemy::BeginPlay()
     Super::BeginPlay();
 
     // Set actor name
-    actor_name = Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED"));
+    actor_name = default_actor_name;
     
     // Get the target if one was not set in the editor
     if (target == nullptr)
@@ -124,4 +124,10 @@ void AEnemy::on_death(AActor* killed_by)
     mesh->SetCollisionProfileName(FName(TEXT("Ragdoll")));
     mesh->SetSimulatePhysics(true);
     UE_LOG(Enemy, Log, LOG_TEXT("Enemy %s made ragdoll"), *actor_name);
+}
+
+
+FString AEnemy::get_default_actor_name() const
+{
+    return default_actor_name;
 }

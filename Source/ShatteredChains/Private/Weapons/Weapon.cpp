@@ -44,7 +44,7 @@ void AWeapon::BeginPlay()
 {
     Super::BeginPlay();
     
-    actor_name = Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED"));
+    actor_name = default_actor_name;
 
     // Bind the overlap event
     InteractionSphere->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::OnOverlapBegin);
@@ -313,3 +313,10 @@ void AWeapon::refill_magazine()
         UE_LOG(Weapon, Verbose, LOG_TEXT("No ammo to refill"));
     }
 }
+
+
+FString AWeapon::get_default_actor_name() const
+{
+    return default_actor_name;
+}
+

@@ -33,6 +33,9 @@ public:
     float get_weapon_damage() const;
 
     virtual void refill_magazine();
+
+    virtual FString get_default_actor_name() const override final;
+
     
 protected:
     // Called when the game starts or when spawned
@@ -79,4 +82,9 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category = "Animations")
     TObjectPtr<UAnimMontage> reload_animation_montage;
     bool has_reload_animation_montage;
+
+
+private:
+    UPROPERTY(EditInstanceOnly)
+    FString default_actor_name;
 };

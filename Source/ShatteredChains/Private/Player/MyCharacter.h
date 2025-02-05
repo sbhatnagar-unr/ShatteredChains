@@ -53,6 +53,8 @@ public:
     // This should return a Vector in the direction to fire
     virtual FVector get_hitscan_direction() const override final;
 
+    virtual FString get_default_actor_name() const override final;
+    
 protected:
 
     // Input mapping for enhanced input

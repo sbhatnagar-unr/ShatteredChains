@@ -41,7 +41,4 @@ private:
     
     float current_health;
     bool is_dead;
-
-    FString owner_name;
-        
 };

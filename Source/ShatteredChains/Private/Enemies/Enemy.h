@@ -29,6 +29,7 @@ public:
     virtual void BeginPlay() override;
     
     virtual void on_death(AActor* killed_by) override;
+    virtual FString get_default_actor_name() const override final;
     
 protected:
     // This is the actor that the enemy will attack
@@ -42,4 +43,6 @@ private:
     UPROPERTY()
     TObjectPtr<UBoneColliderComponent> bone_collider_component;
 
+    UPROPERTY(EditInstanceOnly)
+    FString default_actor_name;
 };

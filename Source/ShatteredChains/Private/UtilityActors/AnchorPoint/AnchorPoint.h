@@ -25,6 +25,8 @@ public:
     UPROPERTY(EditDefaultsOnly)
     TObjectPtr<UStaticMeshComponent> mesh_component;
 
+    virtual FString get_default_actor_name() const override final;
+    
 #if WITH_EDITOR
     virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override final;
 #endif
@@ -36,4 +38,7 @@ protected:
 private:
     UPROPERTY(EditInstanceOnly, Category="Anchor", meta=(ToolTip="Acceptable radius for things to be considered anchored"))
     float anchor_radius;
+
+    UPROPERTY(EditInstanceOnly)
+    FString actor_name;
 };

@@ -780,6 +780,12 @@ TObjectPtr<UInventoryComponent> AMyCharacter::get_inventory_component() const
 }
 
 
+FString AMyCharacter::get_default_actor_name() const
+{
+    return FString("Player");
+}
+
+
 
 // UPROPERTY for input mapping context.
 UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input", meta = (AllowPrivateAccess = "true"))
