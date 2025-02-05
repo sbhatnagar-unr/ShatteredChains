@@ -40,13 +40,7 @@ void AEnemy::BeginPlay()
         UE_LOG(Enemy, Verbose, LOG_TEXT("Found target (player)"));
     }
 }
-    
-// Called to bind functionality to input
-void AEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-    Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-}
 
 AActor* AEnemy::get_target() const
 {
@@ -130,4 +124,10 @@ void AEnemy::on_death(AActor* killed_by)
 FString AEnemy::get_default_actor_name() const
 {
     return default_actor_name;
+}
+
+
+ TObjectPtr<UBoneColliderComponent> AEnemy::get_bone_collider_component() const
+{
+    return bone_collider_component;
 }

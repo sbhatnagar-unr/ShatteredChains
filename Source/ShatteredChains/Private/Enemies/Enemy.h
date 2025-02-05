@@ -7,11 +7,12 @@
 #include "Components/BoneColliderComponent/BoneColliderComponent.h"
 #include "Interfaces/HasHealth/HasHealth.h"
 #include "Interfaces/NamedActor/NamedActor.h"
+#include "Interfaces/HasBoneCollider/HasBoneCollider.h"
 #include "GameFramework/Character.h"
 #include "Enemy.generated.h"
 
 UCLASS()
-class AEnemy : public ACharacter, public IHasHealth, public INamedActor
+class AEnemy : public ACharacter, public IHasHealth, public INamedActor, public IHasBoneCollider
 {
     GENERATED_BODY()
 
@@ -19,17 +20,20 @@ public:
     // Sets default values for this character's properties
     AEnemy();
     
-    // Called to bind functionality to input
-    virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
     AActor* get_target() const;
 
-    virtual UHealthComponent* get_health_component() const override final;
 
     virtual void BeginPlay() override;
-    
+
+    // IHasHealth functions
+    virtual UHealthComponent* get_health_component() const override final;
     virtual void on_death(AActor* killed_by) override;
+
+    // INamedActor functions
     virtual FString get_default_actor_name() const override final;
+
+    // IHasBoneCollider functions
+    virtual TObjectPtr<UBoneColliderComponent> get_bone_collider_component() const override final;
     
 protected:
     // This is the actor that the enemy will attack
