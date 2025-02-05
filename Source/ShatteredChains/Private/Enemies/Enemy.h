@@ -4,11 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Components/HealthComponent/HealthComponent.h"
-#include "Components/BoneColliderComponent/BoneColliderComponent.h"
-#include "Components/BoneColliderComponent/StatsModifier/StatsModifier.h"
 #include "Interfaces/HasHealth/HasHealth.h"
 #include "Interfaces/NamedActor/NamedActor.h"
 #include "Interfaces/HasBoneCollider/HasBoneCollider.h"
+#include "Interfaces/HasBoneCollider/StatsModifier/StatsModifier.h"
 #include "GameFramework/Character.h"
 #include "Enemy.generated.h"
 
@@ -34,7 +33,8 @@ public:
     virtual FString get_default_actor_name() const override final;
 
     // IHasBoneCollider functions
-    virtual TObjectPtr<UBoneColliderComponent> get_bone_collider_component() const override final;
+    virtual const TMap<FName, TObjectPtr<UStatsModifier>>* get_bone_collider_stats_modifiers() const override final;
+    
     
 protected:
     // This is the actor that the enemy will attack
@@ -44,9 +44,6 @@ protected:
 private:
     UPROPERTY(EditAnywhere)
     TObjectPtr<UHealthComponent> health_component;
-
-    UPROPERTY()
-    TObjectPtr<UBoneColliderComponent> bone_collider_component;
 
     UPROPERTY(EditInstanceOnly)
     FString default_actor_name;

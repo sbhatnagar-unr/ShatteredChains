@@ -8,8 +8,6 @@
 #include "ShatteredChains/Logging.h"
 #include "ShatteredChains/CustomTraceChannels.h"
 
-DEFINE_LOG_CATEGORY(Enemy);
-
 // Sets default values
 AEnemy::AEnemy()
 {
@@ -18,7 +16,6 @@ AEnemy::AEnemy()
 
     target = nullptr;
     health_component = CreateDefaultSubobject<UHealthComponent>(TEXT("Health Component"));
-    bone_collider_component = CreateDefaultSubobject<UBoneColliderComponent>(TEXT("Bone Collider Component"));
 }
 
 void AEnemy::BeginPlay()
@@ -63,14 +60,14 @@ void AEnemy::BeginPlay()
     }
 
     // Here we set all the modifier values
-    stats_modifiers["head"]->set_multiplicative_health_modifier(0);
+    stats_modifiers["head"]->set_multiplicative_damage_modifier(10);
 
     // Log the modifiers
     for (const TPair<FName, TObjectPtr<UStatsModifier>> pair : stats_modifiers)
     {
         const FName key = pair.Key;
         const UStatsModifier* modifier = pair.Value;
-        UE_LOG(Enemy, Verbose, LOG_TEXT("Modifiers for '%s' on group '%s': HEALTH_ADD=%f\tHEALTH_MUL=%f"), *actor_name, *(key.ToString()), modifier->get_additive_health_modifier(), modifier->get_multiplicative_health_modifier());
+        UE_LOG(BoneCollision, Verbose, LOG_TEXT("Modifiers for '%s' on group '%s': DAMAGE_ADD=%f\tDAMAGE_MUL=%f"), *actor_name, *(key.ToString()), modifier->get_additive_damage_modifier(), modifier->get_multiplicative_damage_modifier());
     }
 }
 
@@ -160,7 +157,7 @@ FString AEnemy::get_default_actor_name() const
 }
 
 
- TObjectPtr<UBoneColliderComponent> AEnemy::get_bone_collider_component() const
+const TMap<FName, TObjectPtr<UStatsModifier>>* AEnemy::get_bone_collider_stats_modifiers() const
 {
-    return bone_collider_component;
+    return &stats_modifiers;
 }
