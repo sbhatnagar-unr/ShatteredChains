@@ -14,6 +14,8 @@ public:
     // Need both for UE5
     UBoneColliderComponent();
 
+    void hit_bone(FName bone) const;
+    
 protected:
     // Called when the game starts
     virtual void BeginPlay() override;

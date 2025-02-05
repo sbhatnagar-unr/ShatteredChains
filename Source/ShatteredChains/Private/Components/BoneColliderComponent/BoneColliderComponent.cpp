@@ -41,3 +41,9 @@ void UBoneColliderComponent::BeginPlay()
     skeletal_mesh = owner->GetMesh();
 }
 
+
+void UBoneColliderComponent::hit_bone(const FName bone) const
+{
+    UE_LOG(BoneCollider, Log, LOG_TEXT("Bone '%s' on actor '%s' was hit"), *(bone.ToString()), *(GetOwner<INamedActor>()->get_actor_name()));
+}
+

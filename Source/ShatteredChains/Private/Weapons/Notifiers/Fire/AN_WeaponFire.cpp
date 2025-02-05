@@ -6,6 +6,7 @@
 #include "Interfaces/WeaponUser/WeaponUser.h"
 #include "Interfaces/HasHealth/HasHealth.h"
 #include "Components/HealthComponent/HealthComponent.h"
+#include "Interfaces/HasBoneCollider/HasBoneCollider.h"
 #include "ShatteredChains/CustomTraceChannels.h"
 #include "ShatteredChains/Logging.h"
 
@@ -107,16 +108,16 @@ void UAN_WeaponFire::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase*
         // Check if the actor was a character with health
         TObjectPtr<AActor> a = trace_result.GetActor();
         const INamedActor* const named_actor = Cast<INamedActor>(a);
-        FString hit_actor_label = FString(TEXT("UNTAGGED"));
+        FString hit_actor_label = FString(TEXT("NOT A NAMED ACTOR"));
         
         if (named_actor != nullptr)
         {
             hit_actor_label = named_actor->get_actor_name();
         }
 
-        const IHasHealth* hit_actor = Cast<IHasHealth>(a);
+        const IHasHealth* hit_health_actor = Cast<IHasHealth>(a);
 
-        if (hit_actor == nullptr)
+        if (hit_health_actor == nullptr)
         {
             // Log the thing we hits name
             UE_LOG(Weapon, Verbose, LOG_TEXT("Trace hit un-damageable target (%s)"), *hit_actor_label);
@@ -125,8 +126,20 @@ void UAN_WeaponFire::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase*
     
         // If the hit actor has health
         const float weapon_damage = weapon->get_weapon_damage();
-        hit_actor->get_health_component()->deal_damage(Cast<AActor>(weapon_holder), weapon_damage);
+        hit_health_actor->get_health_component()->deal_damage(Cast<AActor>(weapon_holder), weapon_damage);
         UE_LOG(Weapon, Log, LOG_TEXT("Trace hit target (%s), %f damage dealt"), *hit_actor_label, weapon_damage);
+
+        // Bone collision
+        const IHasBoneCollider* hit_bone_actor = Cast<IHasBoneCollider>(a);
+        if (hit_bone_actor == nullptr)
+        {
+            UE_LOG(Weapon, Verbose, LOG_TEXT("Trace hit target (%s), no bone collider"), *hit_actor_label);
+        }
+
+        // If the actor has a bone collider
+        hit_bone_actor->get_bone_collider_component()->hit_bone(trace_result.BoneName);
+
+        
     }
     else
     {
