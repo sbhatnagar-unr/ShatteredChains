@@ -20,8 +20,7 @@ protected:
 
 
 private:
+    // The mesh that this bone collider is for
     UPROPERTY()
     TObjectPtr<USkeletalMeshComponent> skeletal_mesh;
-
-    FString owner_name;
 };

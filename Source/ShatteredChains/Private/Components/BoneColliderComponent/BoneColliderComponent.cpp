@@ -14,23 +14,7 @@ DEFINE_LOG_CATEGORY(BoneCollider);
 UBoneColliderComponent::UBoneColliderComponent()
 {
     // Dont tick for performance reasons
-    PrimaryComponentTick.bCanEverTick = true;
-
-    // const INamedActor* const owner_na = Cast<INamedActor>(GetOwner());
-    // if (owner_na == nullptr)
-    // {
-    //     UE_LOG(BoneCollider, Error, LOG_TEXT("Bone collider owner (%s) does not inherit INamedActor"), *(GetOwner()->GetName()));
-    //     return;
-    // }
-    //
-    // owner_name = owner_na->get_actor_name();
-    //
-    // const TObjectPtr<ACharacter> owner = Cast<ACharacter>(GetOwner());
-    // if (owner == nullptr)
-    // {
-    //     UE_LOG(BoneCollider, Error, LOG_TEXT("Bone collider owner (%s) is not a ACharacter"), *owner_name);
-    // }
-    // skeletal_mesh = owner->GetMesh();
+    PrimaryComponentTick.bCanEverTick = false;
 }
 
 
@@ -38,6 +22,22 @@ UBoneColliderComponent::UBoneColliderComponent()
 void UBoneColliderComponent::BeginPlay()
 {
     Super::BeginPlay();
+
+    const INamedActor* const owner_na = Cast<INamedActor>(GetOwner());
+    if (owner_na == nullptr)
+    {
+        UE_LOG(BoneCollider, Error, LOG_TEXT("Bone collider owner (%s) does not inherit INamedActor"), *(GetOwner()->GetName()));
+        return;
+    }
     
+    const TObjectPtr<ACharacter> owner = Cast<ACharacter>(GetOwner());
+    if (owner == nullptr)
+    {
+        UE_LOG(BoneCollider, Error, LOG_TEXT("Bone collider owner (%s) is not a ACharacter"), *(owner_na->get_default_actor_name()));
+        return;
+    }
+    UE_LOG(BoneCollider, Log, LOG_TEXT("Bone collider added to '%s'"), *(owner_na->get_default_actor_name()));
+
+    skeletal_mesh = owner->GetMesh();
 }
 
