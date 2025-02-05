@@ -11,7 +11,6 @@ class SHATTEREDCHAINS_API UBoneColliderComponent : public UActorComponent
 {
     GENERATED_BODY()
 public:
-    // Need both for UE5
     UBoneColliderComponent();
 
     void hit_bone(FName bone) const;
