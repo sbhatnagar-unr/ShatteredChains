@@ -4,6 +4,7 @@
 #include "Enemies/Enemy.h"
 #include "AIController.h"
 #include "AssetTypeCategories.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "PhysicsEngine/PhysicsAsset.h"
 #include "ShatteredChains/Logging.h"
 #include "ShatteredChains/CustomTraceChannels.h"
@@ -16,6 +17,27 @@ AEnemy::AEnemy()
 
     target = nullptr;
     health_component = CreateDefaultSubobject<UHealthComponent>(TEXT("Health Component"));
+
+    leg_shot_damage_adder = 0;
+    leg_shot_damage_multiplier = 1;
+    leg_shot_speed_adder = 0;
+    leg_shot_speed_multiplier = 1;
+    arm_shot_damage_adder = 0;
+    arm_shot_damage_multiplier = 1;
+    arm_shot_speed_adder = 0;
+    arm_shot_speed_multiplier = 1;
+    hand_shot_damage_adder = 0;
+    hand_shot_damage_multiplier = 1;
+    hand_shot_speed_adder = 0;
+    hand_shot_speed_multiplier = 1;
+    torso_shot_damage_adder = 0;
+    torso_shot_damage_multiplier = 1;
+    torso_shot_speed_adder = 0;
+    torso_shot_speed_multiplier = 1;
+    head_shot_damage_adder = 0;
+    head_shot_damage_multiplier = 1;
+    head_shot_speed_adder = 0;
+    head_shot_speed_multiplier = 1;
 }
 
 void AEnemy::BeginPlay()
@@ -154,8 +176,14 @@ const TMap<FName, TObjectPtr<UStatsModifier>>* AEnemy::get_bone_collider_stats_m
 
 void AEnemy::hit_bone(const FName bone_name)
 {
-    TObjectPtr<UStatsModifier> modifier = stats_modifiers[bone_name];
+    const TObjectPtr<UStatsModifier> modifier = stats_modifiers[bone_name];
 
+    UE_LOG(BoneCollision, Log, LOG_TEXT("Enemy '%s' got hit in bone '%s'"), *actor_name, *(bone_name.ToString()));
+    
     // Apply other modifier stats, like speed, accuracy, etc.
-    UE_LOG(BoneCollision, Log, LOG_TEXT("PLACEHOLDER FOR WHEN CHARACTER STATS ARE MODIFIED AFTER A BONE IS HIT"));
+    UCharacterMovementComponent* movement_component = GetCharacterMovement();
+    const float old_movement_speed = movement_component->MaxWalkSpeed;
+    movement_component->MaxWalkSpeed += modifier->get_additive_speed_modifier();
+    movement_component->MaxWalkSpeed *= modifier->get_multiplicative_speed_modifier();
+    UE_LOG(BoneCollision, Log, LOG_TEXT("Changing enemy '%s' speed: %f -> %f"), *actor_name, old_movement_speed, movement_component->MaxWalkSpeed);
 }
