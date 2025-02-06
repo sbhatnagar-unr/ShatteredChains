@@ -25,5 +25,7 @@ class SHATTEREDCHAINS_API IHasBoneCollider
     // Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
     virtual const TMap<FName, TObjectPtr<UStatsModifier>>* get_bone_collider_stats_modifiers() const PURE_VIRTUAL(IHasBoneCollider::get_bone_collider_stats_modifiers, return nullptr;);
-    virtual void hit_bone(FName bone_name) PURE_VIRTUAL(IHasBoneCollider::hit_bone, return;);
+    virtual void hit_bone(const FName bone_name) PURE_VIRTUAL(IHasBoneCollider::hit_bone, return;);
+
+    static void add_stats_modifiers(UPhysicsAsset* physics_asset, TMap<FName, TObjectPtr<UStatsModifier>> *stats_modifiers);
 };
