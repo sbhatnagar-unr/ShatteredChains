@@ -27,6 +27,9 @@ void ALightEnemy::BeginPlay()
         UE_LOG(Enemy, Error, LOG_TEXT("No attack animation montage for %s"), *actor_name);
     }
 
+    // Here we set all the modifier values
+    stats_modifiers["head"]->set_multiplicative_damage_modifier(10);
+
 }
 
 

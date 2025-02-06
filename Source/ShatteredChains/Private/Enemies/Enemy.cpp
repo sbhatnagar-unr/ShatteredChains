@@ -58,17 +58,6 @@ void AEnemy::BeginPlay()
     {
         stats_modifiers.Add(physics_asset->SkeletalBodySetups[i]->BoneName, NewObject<UStatsModifier>());
     }
-
-    // Here we set all the modifier values
-    stats_modifiers["head"]->set_multiplicative_damage_modifier(10);
-
-    // Log the modifiers
-    for (const TPair<FName, TObjectPtr<UStatsModifier>> pair : stats_modifiers)
-    {
-        const FName key = pair.Key;
-        const UStatsModifier* modifier = pair.Value;
-        UE_LOG(BoneCollision, Verbose, LOG_TEXT("Modifiers for '%s' on group '%s': DAMAGE_ADD=%f\tDAMAGE_MUL=%f"), *actor_name, *(key.ToString()), modifier->get_additive_damage_modifier(), modifier->get_multiplicative_damage_modifier());
-    }
 }
 
 

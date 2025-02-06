@@ -42,14 +42,14 @@ protected:
     UPROPERTY(EditAnywhere)
     TObjectPtr<AActor> target;
 
+    // Bone collision stats modifiers
+    UPROPERTY()
+    TMap<FName, TObjectPtr<UStatsModifier>> stats_modifiers;
+    
 private:
     UPROPERTY(EditAnywhere)
     TObjectPtr<UHealthComponent> health_component;
 
     UPROPERTY(EditInstanceOnly)
     FString default_actor_name;
-
-    // Bone collision stats modifiers
-    UPROPERTY()
-    TMap<FName, TObjectPtr<UStatsModifier>> stats_modifiers;
 };
