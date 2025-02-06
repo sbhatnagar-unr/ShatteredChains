@@ -6,6 +6,8 @@
 #include "GameFramework/Character.h"
 #include "Components/HealthComponent/HealthComponent.h"
 #include "Components/InventoryComponent/InventoryComponent.h"
+#include "Interfaces/HasBoneCollider/HasBoneCollider.h"
+#include "Interfaces/HasBoneCollider/StatsModifier/StatsModifier.h"
 #include "Interfaces/HasHealth/HasHealth.h"
 #include "Interfaces/HasInventory/HasInventory.h"
 #include "Interfaces/WeaponUser/WeaponUser.h"
@@ -23,7 +25,7 @@
 class AWeapon;
 
 UCLASS()
-class SHATTEREDCHAINS_API AMyCharacter : public ACharacter, public IHasHealth, public IWeaponUser, public IHasInventory, public INamedActor
+class SHATTEREDCHAINS_API AMyCharacter : public ACharacter, public IHasHealth, public IWeaponUser, public IHasInventory, public INamedActor, public IHasBoneCollider
 {
     GENERATED_BODY()
 
@@ -54,6 +56,10 @@ public:
     virtual FVector get_hitscan_direction() const override final;
 
     virtual FString get_default_actor_name() const override final;
+
+    // IHasBoneCollider
+    virtual void hit_bone(const FName bone_name) override final;
+    virtual const TMap<FName, TObjectPtr<UStatsModifier>>* get_bone_collider_stats_modifiers() const override final;
     
 protected:
 
@@ -359,4 +365,84 @@ protected:
 
     UPROPERTY(VisibleAnywhere)
     UInventoryComponent* InventoryComponent;
+
+
+    // Bone Collision
+    // Stats modifiers map
+    UPROPERTY()
+    TMap<FName, TObjectPtr<UStatsModifier>> stats_modifiers;
+
+    // Adders/Multipliers
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Additional damage added whenever a leg shot is hit (+ increases and - decreases)"))
+    float leg_shot_damage_adder;
+    
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for damage whenever a leg shot is hit"))
+    float leg_shot_damage_multiplier;
+    
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Additional speed added whenever a leg shot is hit (+ increases and - decreases)"))
+    float leg_shot_speed_adder;
+    
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for speed whenever a leg shot is hit"))
+    float leg_shot_speed_multiplier;
+
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Additional damage added whenever a foot shot is hit (+ increases and - decreases)"))
+    float foot_shot_damage_adder;
+    
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for damage whenever a foot shot is hit"))
+    float foot_shot_damage_multiplier;
+    
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Additional speed added whenever a foot shot is hit (+ increases and - decreases)"))
+    float foot_shot_speed_adder;
+    
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for speed whenever a foot shot is hit"))
+    float foot_shot_speed_multiplier;
+    
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Additional damage added whenever a arm shot is hit (+ increases and - decreases)"))
+    float arm_shot_damage_adder;
+    
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for damage whenever a arm shot is hit"))
+    float arm_shot_damage_multiplier;
+    
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Additional speed added whenever a arm shot is hit (+ increases and - decreases)"))
+    float arm_shot_speed_adder;
+    
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for speed whenever a arm shot is hit"))
+    float arm_shot_speed_multiplier;
+
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Additional damage added whenever a hand shot is hit (+ increases and - decreases)"))
+    float hand_shot_damage_adder;
+    
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for damage whenever a hand shot is hit"))
+    float hand_shot_damage_multiplier;
+    
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Additional speed added whenever a hand shot is hit (+ increases and - decreases)"))
+    float hand_shot_speed_adder;
+    
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for speed whenever a hand shot is hit"))
+    float hand_shot_speed_multiplier;
+    
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Additional damage added whenever a torso shot is hit (+ increases and - decreases)"))
+    float torso_shot_damage_adder;
+    
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for damage whenever a torso shot is hit"))
+    float torso_shot_damage_multiplier;
+    
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Additional speed added whenever a torso shot is hit (+ increases and - decreases)"))
+    float torso_shot_speed_adder;
+    
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for speed whenever a torso shot is hit"))
+    float torso_shot_speed_multiplier;
+    
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Additional damage added whenever a head shot is hit (+ increases and - decreases)"))
+    float head_shot_damage_adder;
+
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for damage whenever a head shot is hit"))
+    float head_shot_damage_multiplier;
+
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Additional speed added whenever a head shot is hit (+ increases and - decreases)"))
+    float head_shot_speed_adder;
+
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for speed whenever a head shot is hit"))
+    float head_shot_speed_multiplier;
+
 };
