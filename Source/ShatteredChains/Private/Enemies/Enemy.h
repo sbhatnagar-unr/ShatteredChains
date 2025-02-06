@@ -34,7 +34,7 @@ public:
 
     // IHasBoneCollider functions
     virtual const TMap<FName, TObjectPtr<UStatsModifier>>* get_bone_collider_stats_modifiers() const override final;
-    virtual void hit_bone(FName bone_name) override;
+    virtual void hit_bone(const FName bone_name) override;
 
     
 protected:

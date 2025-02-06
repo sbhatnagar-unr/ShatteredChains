@@ -76,10 +76,7 @@ void AEnemy::BeginPlay()
     }
 
     // Get all collision physics assets and create stats modifiers for them
-    for (int32 i = 0; i < physics_asset->SkeletalBodySetups.Num(); i++)
-    {
-        stats_modifiers.Add(physics_asset->SkeletalBodySetups[i]->BoneName, NewObject<UStatsModifier>());
-    }
+    add_stats_modifiers(physics_asset, &stats_modifiers);
 }
 
 
@@ -183,7 +180,9 @@ void AEnemy::hit_bone(const FName bone_name)
     // Apply other modifier stats, like speed, accuracy, etc.
     UCharacterMovementComponent* movement_component = GetCharacterMovement();
     const float old_movement_speed = movement_component->MaxWalkSpeed;
+    
     movement_component->MaxWalkSpeed += modifier->get_additive_speed_modifier();
     movement_component->MaxWalkSpeed *= modifier->get_multiplicative_speed_modifier();
+
     UE_LOG(BoneCollision, Log, LOG_TEXT("Changing enemy '%s' speed: %f -> %f"), *actor_name, old_movement_speed, movement_component->MaxWalkSpeed);
 }
