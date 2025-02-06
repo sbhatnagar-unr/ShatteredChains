@@ -18,9 +18,13 @@ public:
 
     float get_additive_damage_modifier() const;
     float get_multiplicative_damage_modifier() const;
+    float get_additive_speed_modifier() const;
+    float get_multiplicative_speed_modifier() const;
 
     void set_additive_damage_modifier(const float new_additive_damage_modifier);
     void set_multiplicative_damage_modifier(const float new_multiplicative_damage_modifier);
+    void set_additive_speed_modifier(const float new_additive_speed_modifier);
+    void set_multiplicative_speed_modifier(const float new_multiplicative_speed_modifier);
 
 private:
     // These are applied to the base damage
@@ -28,4 +32,8 @@ private:
     // Then multiplicative is applied to the result
     float additive_damage_modifier;
     float multiplicative_damage_modifier;
+
+    // These can be used however needed
+    float additive_speed_modifier;
+    float multiplicative_speed_modifier;
 };
