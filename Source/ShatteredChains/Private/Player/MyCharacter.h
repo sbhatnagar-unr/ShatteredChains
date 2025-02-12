@@ -60,7 +60,10 @@ public:
     // IHasBoneCollider
     virtual void hit_bone(const FName bone_name) override final;
     virtual const TMap<FName, TObjectPtr<UStatsModifier>>* get_bone_collider_stats_modifiers() const override final;
-    
+
+
+    virtual USoundBase* get_damage_sound() const override final;
+
 protected:
 
     // Input mapping for enhanced input
@@ -367,6 +370,14 @@ protected:
     UInventoryComponent* InventoryComponent;
 
 
+
+    // Sound effects
+    UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
+    TObjectPtr<USoundBase> jump_sound;
+
+    UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
+    TObjectPtr<USoundBase> take_damage_sound;
+    
     // Bone Collision
     // Stats modifiers map
     UPROPERTY()

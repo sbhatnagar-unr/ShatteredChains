@@ -36,6 +36,8 @@ public:
     virtual const TMap<FName, TObjectPtr<UStatsModifier>>* get_bone_collider_stats_modifiers() const override final;
     virtual void hit_bone(const FName bone_name) override;
 
+    virtual USoundBase* get_damage_sound() const override final;
+
     
 protected:
     // This is the actor that the enemy will attack
@@ -114,4 +116,7 @@ private:
 
     UPROPERTY(EditInstanceOnly)
     FString default_actor_name;
+
+    UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
+    TObjectPtr<USoundBase> take_damage_sound;
 };

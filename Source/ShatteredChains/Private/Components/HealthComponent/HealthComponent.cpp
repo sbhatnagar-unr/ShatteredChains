@@ -5,6 +5,7 @@
 #include "Interfaces/HasHealth/HasHealth.h"
 #include "Interfaces/NamedActor/NamedActor.h"
 #include "ShatteredChains/Logging.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values for this component's properties
 UHealthComponent::UHealthComponent()
@@ -101,9 +102,11 @@ void UHealthComponent::deal_damage(AActor* dealt_by, const float damage)
     */
     current_health -= damage * damage_multiplier;
     
-    const FString owner_name = GetOwner<INamedActor>()->get_actor_name();
-
     const INamedActor* const dealt_by_na = Cast<INamedActor>(dealt_by);
+    const FString owner_name = dealt_by_na->get_actor_name();
+
+    UGameplayStatics::PlaySound2D(GetWorld(), GetOwner<IHasHealth>()->get_damage_sound(), 1, 1, 0, nullptr, GetOwner(), false);
+
     if (dealt_by_na == nullptr)
     {
         UE_LOG(Health, Error, LOG_TEXT("Damage dealt_by actor is not an INamedActor (%s)"), *(dealt_by->GetName()));

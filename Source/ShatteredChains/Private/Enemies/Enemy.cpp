@@ -77,6 +77,12 @@ void AEnemy::BeginPlay()
 
     // Get all collision physics assets and create stats modifiers for them
     add_stats_modifiers(physics_asset, &stats_modifiers);
+
+    // Check audio
+    if (take_damage_sound == nullptr)
+    {
+        UE_LOG(Enemy, Warning, LOG_TEXT("No take damage sound effect for enemy %s"), *actor_name);
+    }
 }
 
 
@@ -185,4 +191,10 @@ void AEnemy::hit_bone(const FName bone_name)
     movement_component->MaxWalkSpeed *= modifier->get_multiplicative_speed_modifier();
 
     UE_LOG(BoneCollision, Log, LOG_TEXT("Changing enemy '%s' speed: %f -> %f"), *actor_name, old_movement_speed, movement_component->MaxWalkSpeed);
+}
+
+
+USoundBase* AEnemy::get_damage_sound() const
+{
+    return take_damage_sound;
 }

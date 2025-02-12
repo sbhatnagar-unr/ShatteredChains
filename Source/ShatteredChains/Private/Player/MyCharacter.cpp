@@ -139,7 +139,16 @@ void AMyCharacter::BeginPlay()
     stats_modifiers["RightHand"]->set_multiplicative_damage_modifier(hand_shot_damage_multiplier);
     stats_modifiers["RightHand"]->set_additive_speed_modifier(hand_shot_speed_adder);
     stats_modifiers["RightHand"]->set_multiplicative_speed_modifier(hand_shot_speed_multiplier);
-    
+
+    // Check audio
+    if (take_damage_sound == nullptr)
+    {
+        UE_LOG(Player, Warning, LOG_TEXT("No take damage sound effect for player %s"), *actor_name);
+    }
+    if (jump_sound == nullptr)
+    {
+        UE_LOG(Player, Warning, LOG_TEXT("No jump sound effect for player %s"), *actor_name);
+    }
 }
 
 // Player Input bindings
@@ -904,6 +913,13 @@ void AMyCharacter::hit_bone(const FName bone_name)
 
     UE_LOG(BoneCollision, Log, LOG_TEXT("Changing player '%s' speed: %f -> %f"), *actor_name, old_movement_speed, movement_component->MaxWalkSpeed);
 }
+
+
+USoundBase* AMyCharacter::get_damage_sound() const
+{
+    return take_damage_sound;    
+}
+
 
 
 // UPROPERTY for input mapping context.
