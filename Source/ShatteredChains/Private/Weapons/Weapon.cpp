@@ -5,6 +5,7 @@
 #include "Player/MyCharacter.h"
 #include "Components/SphereComponent.h"
 #include "ShatteredChains/Logging.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AWeapon::AWeapon()
@@ -87,6 +88,21 @@ void AWeapon::BeginPlay()
     // Set ammo
     current_ammo_stock_pile_count = max_ammo_stock_pile_count;
     refill_magazine();
+
+
+    // Check sound effects
+    if (shoot_sound == nullptr)
+    {
+        UE_LOG(Weapon, Warning, LOG_TEXT("No shoot sound effect for weapon %s"), *actor_name);
+    }
+    if (reload_sound == nullptr)
+    {
+        UE_LOG(Weapon, Warning, LOG_TEXT("No reload sound effect for weapon %s"), *actor_name);
+    }
+    if (out_of_ammo_sound == nullptr)
+    {
+        UE_LOG(Weapon, Warning, LOG_TEXT("No out of ammo sound effect for weapon %s"), *actor_name);
+    }
 }
 
 void AWeapon::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -130,6 +146,9 @@ void AWeapon::fire() const
     if (current_magazine_ammo_count <= 0)
     {
         UE_LOG(Weapon, Verbose, LOG_TEXT("No ammo, skipping fire"));
+        // Play out_of_ammo sound
+        // Function internally handles nullptr audio
+        UGameplayStatics::PlaySound2D(GetWorld(), out_of_ammo_sound, 1, 1, 0, nullptr, this, false);
         return;
     }
 
@@ -171,6 +190,10 @@ void AWeapon::fire() const
     {
         UE_LOG(Weapon, Error, LOG_TEXT("Could not play weapon fire animation montage"));
     }
+
+    // Play fire sound
+    // Function internally handles nullptr audio
+    UGameplayStatics::PlaySound2D(GetWorld(), shoot_sound, 1, 1, 0, nullptr, this, false);
 }
 
 
@@ -232,6 +255,10 @@ void AWeapon::reload() const
     {
         UE_LOG(Weapon, Error, LOG_TEXT("Could not play weapon reload animation montage"));
     }
+
+    // Play reload sound
+    // Function internally handles nullptr audio
+    UGameplayStatics::PlaySound2D(GetWorld(), reload_sound, 1, 1, 0, nullptr, this, false);
 }
 
 

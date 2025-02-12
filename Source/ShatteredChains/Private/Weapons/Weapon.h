@@ -87,4 +87,13 @@ protected:
 private:
     UPROPERTY(EditInstanceOnly)
     FString default_actor_name;
+
+    UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
+    TObjectPtr<USoundBase> shoot_sound;
+
+    UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
+    TObjectPtr<USoundBase> reload_sound;
+
+    UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
+    TObjectPtr<USoundBase> out_of_ammo_sound;
 };
