@@ -90,7 +90,7 @@ void UAN_WeaponFire::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase*
     trace_params.AddIgnoredActor(weapon_holder_actor);
     
     // Perform the trace
-    UE_LOG(Weapon, Log, LOG_TEXT("Firing weapon"));
+    UE_LOG(Weapon, Log, LOG_TEXT("Firing weapon (%d mag ammo remaining)"), weapon->get_current_magazine_ammo_count());
     UE_LOG(Weapon, VeryVerbose, LOG_TEXT("[Line Trace] %s -> %s"), *trace_start.ToString(), *trace_end.ToString());
     const bool hit_something = world->LineTraceSingleByChannel(trace_result, trace_start, trace_end, ShootableChannel, trace_params);
 
