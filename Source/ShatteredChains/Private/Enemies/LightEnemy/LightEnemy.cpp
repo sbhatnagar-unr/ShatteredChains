@@ -2,6 +2,8 @@
 
 
 #include "LightEnemy.h"
+
+#include "AIController.h"
 #include "ShatteredChains/Logging.h"
 
 // Sets default values
@@ -13,8 +15,8 @@ ALightEnemy::ALightEnemy() : AEnemy()
 
     attack_animation_montage = nullptr;
     attack_animation_exit_blend = 0.2f;
-    
-    target_detection_range = 3000;
+
+    should_chase_target = false;
 }
 
 // Called when the game starts or when spawned
@@ -90,6 +92,19 @@ void ALightEnemy::BeginPlay()
     stats_modifiers["calf_r"]->set_additive_speed_modifier(leg_shot_speed_adder);
     stats_modifiers["calf_r"]->set_multiplicative_speed_modifier(leg_shot_speed_multiplier);
 
+
+    pawn_sensing_component->OnSeePawn.AddDynamic(this, &ALightEnemy::on_see_pawn);
+    
+}
+
+// IDE says that parameter "pawn" should be const, but it can't be because the delegate's function signatures DOES NOT have const parameter
+void ALightEnemy::on_see_pawn(APawn* pawn)
+{
+    if (pawn == target.Get())
+    {
+        should_chase_target = true;
+        UE_LOG(Enemy, Log, LOG_TEXT("Enemy '%s' sees target"), *actor_name);
+    }
 }
 
 
@@ -122,7 +137,13 @@ void ALightEnemy::on_death(AActor* killed_by)
 }
 
 
-float ALightEnemy::get_target_detection_range() const
+bool ALightEnemy::get_should_chase_target() const
 {
-    return target_detection_range;
+    return should_chase_target;
+}
+
+
+void ALightEnemy::set_should_chase_target(const bool chase_target)
+{
+    should_chase_target = chase_target;
 }

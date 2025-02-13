@@ -23,8 +23,9 @@ public:
     
     virtual void on_death(AActor* killed_by) override final;
 
-    float get_target_detection_range() const;
-    
+    bool get_should_chase_target() const;
+    void set_should_chase_target(const bool chase_target);
+
 private:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
@@ -43,6 +44,8 @@ private:
     UPROPERTY(EditAnywhere, Category="Attacking")
     float attack_damage;
 
-    UPROPERTY(EditAnywhere, Category="Attacking", meta=(ToolTip="Range the enemy can detect its target, If <= 0 then range is infinite."))
-    float target_detection_range;
+    UFUNCTION()
+    void on_see_pawn(APawn* pawn);
+
+    bool should_chase_target;
 };
