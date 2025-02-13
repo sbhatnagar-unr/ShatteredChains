@@ -7,12 +7,14 @@
 // Sets default values
 ALightEnemy::ALightEnemy() : AEnemy()
 {
-    attack_damage = 0;
+    attack_damage = 10;
     // Default attack range
     attack_range = 100;
 
     attack_animation_montage = nullptr;
     attack_animation_exit_blend = 0.2f;
+    
+    target_detection_range = 3000;
 }
 
 // Called when the game starts or when spawned
@@ -117,4 +119,10 @@ float ALightEnemy::get_attack_animation_exit_blend() const
 void ALightEnemy::on_death(AActor* killed_by)
 {
     AEnemy::on_death(killed_by);
+}
+
+
+float ALightEnemy::get_target_detection_range() const
+{
+    return target_detection_range;
 }

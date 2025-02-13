@@ -22,6 +22,8 @@ public:
     float get_attack_animation_exit_blend() const;
     
     virtual void on_death(AActor* killed_by) override final;
+
+    float get_target_detection_range() const;
     
 private:
     // Called when the game starts or when spawned
@@ -40,4 +42,7 @@ private:
     
     UPROPERTY(EditAnywhere, Category="Attacking")
     float attack_damage;
+
+    UPROPERTY(EditAnywhere, Category="Attacking", meta=(ToolTip="Range the enemy can detect its target, If <= 0 then range is infinite."))
+    float target_detection_range;
 };
