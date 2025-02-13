@@ -18,6 +18,8 @@ AEnemy::AEnemy()
     target = nullptr;
     health_component = CreateDefaultSubobject<UHealthComponent>(TEXT("Health Component"));
 
+    pawn_sensing_component = CreateDefaultSubobject<UPawnSensingComponent>(TEXT("Pawn Sensing Component"));
+    
     leg_shot_damage_adder = 0;
     leg_shot_damage_multiplier = 1;
     leg_shot_speed_adder = 0;
@@ -197,4 +199,9 @@ void AEnemy::hit_bone(const FName bone_name)
 USoundBase* AEnemy::get_damage_sound() const
 {
     return take_damage_sound;
+}
+
+UPawnSensingComponent* AEnemy::get_pawn_sensing_component() const
+{
+    return pawn_sensing_component;
 }

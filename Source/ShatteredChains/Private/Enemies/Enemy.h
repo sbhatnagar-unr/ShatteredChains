@@ -9,6 +9,7 @@
 #include "Interfaces/HasBoneCollider/HasBoneCollider.h"
 #include "Interfaces/HasBoneCollider/StatsModifier/StatsModifier.h"
 #include "GameFramework/Character.h"
+#include "Perception/PawnSensingComponent.h"
 #include "Enemy.generated.h"
 
 UCLASS()
@@ -38,12 +39,17 @@ public:
 
     virtual USoundBase* get_damage_sound() const override final;
 
+    UPawnSensingComponent* get_pawn_sensing_component() const;
+
     
 protected:
     // This is the actor that the enemy will attack
     UPROPERTY(EditAnywhere)
     TObjectPtr<AActor> target;
-
+    
+    UPROPERTY(EditAnywhere);
+    TObjectPtr<UPawnSensingComponent> pawn_sensing_component;
+    
     // Bone collision stats modifiers
     UPROPERTY()
     TMap<FName, TObjectPtr<UStatsModifier>> stats_modifiers;
