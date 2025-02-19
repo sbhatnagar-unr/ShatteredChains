@@ -324,6 +324,16 @@ protected:
     // Function to detect ledge presence for grabbing
     bool DetectLedge();
 
+    // inventory is open
+    bool bIsInventoryOpen = false;
+
+    // toggle inventory input action
+    UFUNCTION()
+    void ToggleInventory(const FInputActionValue& Value);
+
+    //inventory log
+    UFUNCTION()
+    void LogInventory(const FInputActionValue& Value);
 
     // Animation montages for each movement type
     UPROPERTY(EditDefaultsOnly, Category = "Animation")
@@ -369,7 +379,13 @@ protected:
     UPROPERTY(VisibleAnywhere)
     UInventoryComponent* InventoryComponent;
 
+    // inventory toggle
+    UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+    UInputAction* IA_ToggleInventory;
 
+    // log inventory 
+    UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+    UInputAction* IA_LogInventory;    
 
     // Sound effects
     UPROPERTY(EditDefaultsOnly, Category="Sound Effects")

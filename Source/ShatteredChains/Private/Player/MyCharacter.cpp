@@ -199,11 +199,18 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
         // Bind sprint start
         Input->BindAction(SprintAction, ETriggerEvent::Started, this, &AMyCharacter::StartSprint);
 
-        // Bind sprint stop
+        // Bind sprint stop 
         Input->BindAction(SprintAction, ETriggerEvent::Completed, this, &AMyCharacter::StopSprint);
 
-        // Bind roll action
+        // Bind roll action "alt"
         Input->BindAction(RollAction, ETriggerEvent::Started, this, &AMyCharacter::StartRoll);
+
+        //bind toggle inventory ui "i"
+        Input->BindAction(IA_ToggleInventory, ETriggerEvent::Triggered, this, &AMyCharacter::ToggleInventory);
+
+        //bind log invetory "o"
+        Input->BindAction(IA_LogInventory, ETriggerEvent::Triggered, this, &AMyCharacter::LogInventory);
+
     }
 
     // Bind axis mappings for movement
@@ -687,8 +694,44 @@ void AMyCharacter::EnableRolling()
     UE_LOG(Player, Log, TEXT("Rolling re-enabled"));
 }
 
+// Toggle Inventory UI (placeholder, can be linked to an actual UI)
+void AMyCharacter::ToggleInventory(const FInputActionValue& Value)
+{
+    if (!Value.Get<bool>()) return; // Ensure input is valid
 
+    bIsInventoryOpen = !bIsInventoryOpen;
 
+    if (bIsInventoryOpen)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Inventory Opened"));
+        // TODO: Show Inventory UI
+    }
+    else
+    {
+        UE_LOG(LogTemp, Log, TEXT("Inventory Closed"));
+        // TODO: Hide Inventory UI
+    }
+}
+
+// Logs current inventory items when "O" is pressed
+void AMyCharacter::LogInventory(const FInputActionValue& Value)
+{
+    if (!Value.Get<bool>()) return; // Ensure input is valid
+
+    if (!InventoryComponent)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("No Inventory Component Found!"));
+        return;
+    }
+
+    TArray<FInventoryItem> InventoryItems = InventoryComponent->GetInventory();
+    
+    UE_LOG(LogTemp, Log, TEXT("---- Current Inventory ----"));
+    for (const FInventoryItem& Item : InventoryItems)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Item: %s, Quantity: %d"), *Item.ItemID.ToString(), Item.Quantity);
+    }
+}
 
 void AMyCharacter::Mantle()
 {
