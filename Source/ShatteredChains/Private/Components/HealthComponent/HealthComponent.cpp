@@ -14,7 +14,7 @@ UHealthComponent::UHealthComponent()
     // off to improve performance if you don't need them.
     PrimaryComponentTick.bCanEverTick = false;
 
-    max_health = 0.f;
+    max_health = 100.f;
     current_health = 0.f;
     damage_multiplier = 1.f;
     is_dead = false;
