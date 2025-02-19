@@ -7,6 +7,7 @@ DEFINE_LOG_CATEGORY(Player)
 DEFINE_LOG_CATEGORY(Weapon)
 DEFINE_LOG_CATEGORY(UtilityActor)
 DEFINE_LOG_CATEGORY(BoneCollision)
+DEFINE_LOG_CATEGORY(Inventory)
 
 
 std::string basename(const char* file_path)
