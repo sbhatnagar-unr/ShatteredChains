@@ -109,12 +109,12 @@ void UAN_WeaponFire::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase*
         TObjectPtr<AActor> a = trace_result.GetActor();
         const INamedActor* const named_actor = Cast<INamedActor>(a);
         FString hit_actor_label = FString(TEXT("NOT A NAMED ACTOR"));
+
         
         if (named_actor != nullptr)
         {
             hit_actor_label = named_actor->get_actor_name();
         }
-
         const IHasHealth* hit_health_actor = Cast<IHasHealth>(a);
 
         if (hit_health_actor == nullptr)
@@ -132,6 +132,11 @@ void UAN_WeaponFire::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase*
         if (IHasBoneCollider* hit_bone_actor = Cast<IHasBoneCollider>(a))
         {
             const TObjectPtr<UStatsModifier>* modifier_ptr = hit_bone_actor->get_bone_collider_stats_modifiers()->Find(trace_result.BoneName);
+            if (modifier_ptr == nullptr)
+            {
+                UE_LOG(BoneCollision, Error, LOG_TEXT("Actor '%s' does not have modifier for bone %s.  Its possible its capsule component is blocking the shot, set trace channel Shootable to Ignore on the capsule component."), *hit_actor_label, *(trace_result.BoneName.ToString()));
+                return;
+            }
             const TObjectPtr<UStatsModifier> modifier = *modifier_ptr;
             
             const float old_damage = weapon_damage;

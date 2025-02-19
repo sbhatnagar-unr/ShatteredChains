@@ -64,19 +64,17 @@ EBTNodeResult::Type UShootPlayer::ExecuteTask(UBehaviorTreeComponent& OwnerComp,
     }
 
     // Enemy's anchor point
-    AAnchorPoint* anchor_point = enemy_actor->get_anchor_point();
+    const AAnchorPoint* anchor_point = enemy_actor->get_anchor_point();
     if (anchor_point == nullptr)
     {
         UE_LOG(Enemy, Error, LOG_TEXT("Enemy AI (%s) doesn't have an anchor point"), *enemy_name);
         return EBTNodeResult::Aborted;
     }
-
-
-    
     
     // Rotate to face the player
     const FRotator rotation_to_player = UKismetMathLibrary::FindLookAtRotation(enemy_actor->GetActorLocation(), target_actor->GetTargetLocation());
     enemy_actor->SetActorRotation(rotation_to_player);
+
 
     // Get locations of enemy and anchor point
     const FVector enemy_location = enemy_actor->GetActorLocation();
