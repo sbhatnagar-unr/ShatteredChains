@@ -724,12 +724,13 @@ void AMyCharacter::LogInventory(const FInputActionValue& Value)
         return;
     }
 
-    TArray<FInventoryItem> InventoryItems = InventoryComponent->GetInventory();
+    TMap<FName, FInventoryItem> InventoryItems = InventoryComponent->GetInventory();
     
-    UE_LOG(LogTemp, Log, TEXT("---- Current Inventory ----"));
-    for (const FInventoryItem& Item : InventoryItems)
+    UE_LOG(Player, Log, LOG_TEXT("---- Current Inventory ----"));
+    for (const auto &ItemPair : InventoryItems)
     {
-        UE_LOG(LogTemp, Log, TEXT("Item: %s, Quantity: %d"), *Item.ItemID.ToString(), Item.Quantity);
+        FInventoryItem Item = ItemPair.Value;
+        UE_LOG(Player, Log, LOG_TEXT("Item: %s, Quantity: %d"), *Item.ItemID.ToString(), Item.Quantity);
     }
 }
 

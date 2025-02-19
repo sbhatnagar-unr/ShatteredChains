@@ -74,7 +74,7 @@ private:
     UPROPERTY(EditAnywhere, Category = "Inventory", meta = (Tooltip = "Maximum grenades a player can carry"))
     int32 MaxGrenades = 5;
 
-    TArray<FInventoryItem> Items;  // The player's inventory
+    TMap<FName, FInventoryItem> Items;  // The player's inventory
     TArray<FName> EquippedWeapons; // Equipped weapons
 
 public:
@@ -88,7 +88,7 @@ public:
     bool HasItem(FName ItemID, int32 Quantity) const;
 
     UFUNCTION(BlueprintCallable, Category = "Inventory")
-    TArray<FInventoryItem> GetInventory() const;
+    TMap<FName, FInventoryItem> GetInventory() const;
 
     UFUNCTION(BlueprintCallable, Category = "Inventory")
     bool EquipWeapon(FName WeaponID);

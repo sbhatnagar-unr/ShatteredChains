@@ -3,6 +3,8 @@
 
 #include "InventoryComponent.h"
 
+#include "ShatteredChains/Logging.h"
+
 // Sets default values for this component's properties
 UInventoryComponent::UInventoryComponent()
 {
@@ -16,19 +18,19 @@ void UInventoryComponent::BeginPlay()
 }
 
 // Add an item to the inventory
-bool UInventoryComponent::AddItem(FName ItemID, EItemType ItemType, int32 Quantity, int32 MaxQuantity)
+bool UInventoryComponent::AddItem(const FName ItemID, const EItemType ItemType, const int32 Quantity, const int32 MaxQuantity)
 {
     if (Quantity <= 0) return false;
 
     int32 ItemCount = 0;
-    for (const FInventoryItem& Item : Items)
+    for (const auto &Item : Items)
     {
-        ItemCount += Item.Quantity;
+        ItemCount += Item.Value.Quantity;
     }
 
     if (ItemCount + Quantity > MaxInventorySize)
     {
-        UE_LOG(LogTemp, Warning, TEXT("Inventory is full!"));
+        UE_LOG(Inventory, Warning, TEXT("Inventory is full!"));
         return false;
     }
 
@@ -37,77 +39,73 @@ bool UInventoryComponent::AddItem(FName ItemID, EItemType ItemType, int32 Quanti
     {
         if (EquippedWeapons.Num() >= MaxWeapons)
         {
-            UE_LOG(LogTemp, Warning, TEXT("Cannot carry more than %d weapons!"), MaxWeapons);
+            UE_LOG(Inventory, Warning, LOG_TEXT("Cannot carry more than %d weapons!"), MaxWeapons);
             return false;
         }
     }
 
     // Check if item exists
-    for (FInventoryItem& Item : Items)
+    if (Items.Contains(ItemID))
     {
-        if (Item.ItemID == ItemID)
-        {
-            int32 NewQuantity = Item.Quantity + Quantity;
-            Item.Quantity = FMath::Min(NewQuantity, Item.MaxQuantity);
-            return true;
-        }
+        FInventoryItem* InventoryItem = &Items[ItemID];
+        InventoryItem->Quantity = FMath::Min(InventoryItem->Quantity + Quantity, InventoryItem->MaxQuantity);
+    }
+    else
+    {
+        Items.Add(ItemID, FInventoryItem(ItemID, ItemType, Quantity, MaxQuantity));
     }
 
-    Items.Add(FInventoryItem(ItemID, ItemType, Quantity, MaxQuantity));
     return true;
 }
 
 // Remove an item from the inventory
-bool UInventoryComponent::RemoveItem(FName ItemID, int32 Quantity)
+bool UInventoryComponent::RemoveItem(const FName ItemID, const int32 Quantity)
 {
     if (Quantity <= 0) return false;
 
-    for (int32 i = 0; i < Items.Num(); i++)
+    // If we have the item
+    if (Items.Contains(ItemID))
     {
-        if (Items[i].ItemID == ItemID)
+        // Remove the quantity
+        FInventoryItem* InventoryItem = &Items[ItemID];
+        InventoryItem->Quantity -= Quantity;
+        // If we run out, remove the item
+        if (InventoryItem->Quantity <= 0)
         {
-            if (Items[i].Quantity >= Quantity)
-            {
-                Items[i].Quantity -= Quantity;
-                if (Items[i].Quantity == 0)
-                {
-                    Items.RemoveAt(i);
-                }
-                return true;
-            }
-            return false;
+            Items.Remove(ItemID);
         }
+        return true;
     }
+
+    // If we dont have the item
+    UE_LOG(Inventory, Warning, LOG_TEXT("Inventory does not have %s item, cant remove it."), *(ItemID.ToString()));
     return false;
 }
 
 // Check if an item exists in the inventory
-bool UInventoryComponent::HasItem(FName ItemID, int32 Quantity) const
+bool UInventoryComponent::HasItem(const FName ItemID, const int32 Quantity) const
 {
-    for (const FInventoryItem& Item : Items)
-    {
-        if (Item.ItemID == ItemID && Item.Quantity >= Quantity)
-        {
-            return true;
-        }
-    }
-    return false;
+    // If we dont have the item
+    if (!Items.Contains(ItemID)) return false;
+
+    // If we do have it
+    return Items[ItemID].Quantity >= Quantity;
 }
 
 // Get all inventory items
-TArray<FInventoryItem> UInventoryComponent::GetInventory() const
+TMap<FName, FInventoryItem> UInventoryComponent::GetInventory() const
 {
     return Items;
 }
 
 // Equip a weapon
-bool UInventoryComponent::EquipWeapon(FName WeaponID)
+bool UInventoryComponent::EquipWeapon(const FName WeaponID)
 {
     if (!HasItem(WeaponID, 1)) return false;
 
     if (EquippedWeapons.Num() >= MaxWeapons)
     {
-        UE_LOG(LogTemp, Warning, TEXT("Cannot equip more than %d weapons!"), MaxWeapons);
+        UE_LOG(Inventory, Warning, LOG_TEXT("Cannot equip more than %d weapons!"), MaxWeapons);
         return false;
     }
 
