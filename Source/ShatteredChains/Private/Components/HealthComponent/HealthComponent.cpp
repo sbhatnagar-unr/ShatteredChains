@@ -100,29 +100,37 @@ void UHealthComponent::deal_damage(AActor* dealt_by, const float damage)
     /*
     Applies damage, if health becomes negative, it gets set to 0
     */
+    // Do the damage
     current_health -= damage * damage_multiplier;
-    
-    const INamedActor* const dealt_by_na = Cast<INamedActor>(dealt_by);
-    const FString owner_name = dealt_by_na->get_actor_name();
 
-    UGameplayStatics::PlaySound2D(GetWorld(), GetOwner<IHasHealth>()->get_damage_sound(), 1, 1, 0, nullptr, GetOwner(), false);
-
-    if (dealt_by_na == nullptr)
+    // Get owner name
+    const INamedActor* owner = GetOwner<INamedActor>();
+    if (owner == nullptr)
     {
-        UE_LOG(Health, Error, LOG_TEXT("Damage dealt_by actor is not an INamedActor (%s)"), *(dealt_by->GetName()));
-        dealt_by = nullptr;
+        UE_LOG(Health, Error, LOG_TEXT("Health component has no owner"));
+        return;
     }
-
+    const FString owner_name = owner->get_actor_name();
+    
+    // Get dealt_by actor name
+    FString dealt_by_name;
     if (dealt_by == nullptr)
     {
-        UE_LOG(Health, Error, LOG_TEXT("%s received %f damage from UNKNOWN (%f remaining)"), *owner_name, damage, current_health);
+        // UE_LOG(Health, Error, LOG_TEXT("Damage dealt_by actor is not an INamedActor (%s)"), *(dealt_by->GetName()));
+        dealt_by_name = FString("NULLPTR");    
     }
     else
     {
-        UE_LOG(Health, Log, LOG_TEXT("%s received %f damage from %s (%f remaining)"), *owner_name, damage, *(dealt_by_na->get_actor_name()), current_health);
+        dealt_by_name = Cast<INamedActor>(dealt_by)->get_actor_name();
     }
 
-    
+    // Play the damage sound
+    UGameplayStatics::PlaySound2D(GetWorld(), GetOwner<IHasHealth>()->get_damage_sound(), 1, 1, 0, nullptr, GetOwner(), false);
+
+    // Log the damage
+    UE_LOG(Health, Log, LOG_TEXT("%s received %f damage from %s (%f remaining)"), *owner_name, damage, *dealt_by_name, current_health);
+
+    // If we just died
     if (current_health <= 0 && !is_dead)
     {
         UE_LOG(Health, Log, LOG_TEXT("%s is dead"), *owner_name);
