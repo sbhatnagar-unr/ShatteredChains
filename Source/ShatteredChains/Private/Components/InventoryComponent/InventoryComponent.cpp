@@ -18,7 +18,7 @@ void UInventoryComponent::BeginPlay()
 }
 
 // Add an item to the inventory
-bool UInventoryComponent::AddItem(const FName ItemID, const EItemType ItemType, const int32 Quantity, const int32 MaxQuantity)
+bool UInventoryComponent::AddItem(const FName &ItemID, const EItemType ItemType, const int32 Quantity, const int32 MaxQuantity)
 {
     if (Quantity <= 0) return false;
 
@@ -59,7 +59,7 @@ bool UInventoryComponent::AddItem(const FName ItemID, const EItemType ItemType, 
 }
 
 // Remove an item from the inventory
-bool UInventoryComponent::RemoveItem(const FName ItemID, const int32 Quantity)
+bool UInventoryComponent::RemoveItem(const FName &ItemID, const int32 Quantity)
 {
     if (Quantity <= 0) return false;
 
@@ -83,7 +83,7 @@ bool UInventoryComponent::RemoveItem(const FName ItemID, const int32 Quantity)
 }
 
 // Check if an item exists in the inventory
-bool UInventoryComponent::HasItem(const FName ItemID, const int32 Quantity) const
+bool UInventoryComponent::HasItem(const FName &ItemID, const int32 Quantity) const
 {
     // If we dont have the item
     if (!Items.Contains(ItemID)) return false;
@@ -99,7 +99,7 @@ TMap<FName, FInventoryItem> UInventoryComponent::GetInventory() const
 }
 
 // Equip a weapon
-bool UInventoryComponent::EquipWeapon(const FName WeaponID)
+bool UInventoryComponent::EquipWeapon(const FName &WeaponID)
 {
     if (!HasItem(WeaponID, 1)) return false;
 

@@ -79,19 +79,19 @@ private:
 
 public:
     UFUNCTION(BlueprintCallable, Category = "Inventory")
-    bool AddItem(FName ItemID, EItemType ItemType, int32 Quantity, int32 MaxQuantity = 1);
+    bool AddItem(const FName &ItemID, EItemType ItemType, int32 Quantity, int32 MaxQuantity = 1);
 
     UFUNCTION(BlueprintCallable, Category = "Inventory")
-    bool RemoveItem(FName ItemID, int32 Quantity);
+    bool RemoveItem(const FName &ItemID, int32 Quantity);
 
     UFUNCTION(BlueprintCallable, Category = "Inventory")
-    bool HasItem(FName ItemID, int32 Quantity) const;
+    bool HasItem(const FName &ItemID, int32 Quantity) const;
 
     UFUNCTION(BlueprintCallable, Category = "Inventory")
     TMap<FName, FInventoryItem> GetInventory() const;
 
     UFUNCTION(BlueprintCallable, Category = "Inventory")
-    bool EquipWeapon(FName WeaponID);
+    bool EquipWeapon(const FName &WeaponID);
 
     UFUNCTION(BlueprintCallable, Category = "Inventory")
     FName GetEquippedWeapon() const;
