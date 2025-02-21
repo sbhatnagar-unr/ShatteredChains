@@ -2,7 +2,6 @@
 
 
 #include "InventoryComponent.h"
-
 #include "ShatteredChains/Logging.h"
 
 // Sets default values for this component's properties
@@ -68,10 +67,13 @@ bool UInventoryComponent::RemoveItem(const FName &ItemID, const int32 Quantity)
     {
         // Remove the quantity
         FInventoryItem* InventoryItem = &Items[ItemID];
+        UE_LOG(Inventory, Log, LOG_TEXT("Removing %d items from %s"), Quantity, *(ItemID.ToString()));
         InventoryItem->Quantity -= Quantity;
+
         // If we run out, remove the item
         if (InventoryItem->Quantity <= 0)
         {
+            UE_LOG(Inventory, Log, LOG_TEXT("Item %s quantity <= 0, removing it from inventory"), *(ItemID.ToString()));
             Items.Remove(ItemID);
         }
         return true;
