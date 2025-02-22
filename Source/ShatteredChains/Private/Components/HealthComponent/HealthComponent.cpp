@@ -101,7 +101,7 @@ void UHealthComponent::deal_damage(AActor* dealt_by, const float damage)
     Applies damage, if health becomes negative, it gets set to 0
     */
     // Do the damage
-    current_health -= damage * damage_multiplier;
+    current_health = FMath::Max(current_health - (damage * damage_multiplier), 0);
 
     // Get owner name
     const INamedActor* owner = GetOwner<INamedActor>();
