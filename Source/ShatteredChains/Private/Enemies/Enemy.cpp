@@ -3,8 +3,8 @@
 
 #include "Enemies/Enemy.h"
 #include "AIController.h"
-#include "AssetTypeCategories.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "PhysicsEngine/PhysicsAsset.h"
 #include "ShatteredChains/Logging.h"
 #include "ShatteredChains/CustomTraceChannels.h"
@@ -85,6 +85,11 @@ void AEnemy::BeginPlay()
     {
         UE_LOG(Enemy, Warning, LOG_TEXT("No take damage sound effect for enemy %s"), *actor_name);
     }
+
+    if (death_sound == nullptr)
+    {
+        UE_LOG(Enemy, Warning, LOG_TEXT("No death sound effect for enemy %s"), *actor_name);
+    }
 }
 
 
@@ -103,6 +108,9 @@ UHealthComponent* AEnemy::get_health_component() const
 void AEnemy::on_death(AActor* killed_by)
 {
     const INamedActor* const killed_by_na = Cast<INamedActor>(killed_by);
+
+    UGameplayStatics::PlaySound2D(GetWorld(), death_sound, 1, 1, 0, nullptr, this, false);
+
     
     if (killed_by_na != nullptr)
     {

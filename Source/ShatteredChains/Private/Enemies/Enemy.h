@@ -125,4 +125,7 @@ private:
 
     UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
     TObjectPtr<USoundBase> take_damage_sound;
+
+    UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
+    TObjectPtr<USoundBase> death_sound;
 };
