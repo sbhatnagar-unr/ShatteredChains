@@ -6,58 +6,43 @@
 UStatsModifier::UStatsModifier()
 {
     // Default to values that won't modify anything
-    additive_damage_modifier = 0;
-    multiplicative_damage_modifier = 1;
-
-    additive_speed_modifier = 0;
-    multiplicative_speed_modifier = 1;
+    damage_multiplier = 1;
+    speed_multiplier = 1;
+    accuracy_multiplier = 1;
 }
 
-
-
-float UStatsModifier::get_additive_damage_modifier() const
+float UStatsModifier::get_damage_multiplier() const
 {
-    return additive_damage_modifier;
+    return damage_multiplier;
 }
 
 
-float UStatsModifier::get_multiplicative_damage_modifier() const
+float UStatsModifier::get_speed_multiplier() const
 {
-    return multiplicative_damage_modifier;
+    return speed_multiplier;
 }
 
 
-void UStatsModifier::set_additive_damage_modifier(const float new_additive_damage_modifier)
+float UStatsModifier::get_accuracy_multiplier() const
 {
-    additive_damage_modifier = new_additive_damage_modifier;
+    return accuracy_multiplier;
 }
 
 
-void UStatsModifier::set_multiplicative_damage_modifier(const float new_multiplicative_damage_modifier)
+
+void UStatsModifier::set_damage_multiplier(const float new_damage_multiplier)
 {
-    multiplicative_damage_modifier = new_multiplicative_damage_modifier;
+    damage_multiplier = new_damage_multiplier;
 }
 
-float UStatsModifier::get_additive_speed_modifier() const
+
+void UStatsModifier::set_speed_multiplier(const float new_speed_multiplier)
 {
-    return additive_speed_modifier;
+    speed_multiplier = new_speed_multiplier;
 }
 
 
-float UStatsModifier::get_multiplicative_speed_modifier() const
+void UStatsModifier::set_accuracy_multiplier(const float new_accuracy_multiplier)
 {
-    return multiplicative_speed_modifier;
+    accuracy_multiplier = new_accuracy_multiplier;
 }
-
-
-void UStatsModifier::set_additive_speed_modifier(const float new_additive_speed_modifier)
-{
-    additive_speed_modifier = new_additive_speed_modifier;
-}
-
-
-void UStatsModifier::set_multiplicative_speed_modifier(const float new_multiplicative_speed_modifier)
-{
-    multiplicative_speed_modifier = new_multiplicative_speed_modifier;
-}
-

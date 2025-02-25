@@ -16,24 +16,16 @@ class SHATTEREDCHAINS_API UStatsModifier : public UObject
 public:
     UStatsModifier();
 
-    float get_additive_damage_modifier() const;
-    float get_multiplicative_damage_modifier() const;
-    float get_additive_speed_modifier() const;
-    float get_multiplicative_speed_modifier() const;
+    float get_damage_multiplier() const;
+    float get_speed_multiplier() const;
+    float get_accuracy_multiplier() const;
 
-    void set_additive_damage_modifier(const float new_additive_damage_modifier);
-    void set_multiplicative_damage_modifier(const float new_multiplicative_damage_modifier);
-    void set_additive_speed_modifier(const float new_additive_speed_modifier);
-    void set_multiplicative_speed_modifier(const float new_multiplicative_speed_modifier);
+    void set_damage_multiplier(const float new_damage_multiplier);
+    void set_speed_multiplier(const float new_speed_multiplier);
+    void set_accuracy_multiplier(const float new_accuracy_multiplier);
 
 private:
-    // These are applied to the base damage
-    // Additive is applied first
-    // Then multiplicative is applied to the result
-    float additive_damage_modifier;
-    float multiplicative_damage_modifier;
-
-    // These can be used however needed
-    float additive_speed_modifier;
-    float multiplicative_speed_modifier;
+    float damage_multiplier;
+    float speed_multiplier;
+    float accuracy_multiplier;
 };
