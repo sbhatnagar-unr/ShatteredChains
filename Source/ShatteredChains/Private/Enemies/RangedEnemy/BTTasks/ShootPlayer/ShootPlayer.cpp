@@ -91,7 +91,11 @@ EBTNodeResult::Type UShootPlayer::ExecuteTask(UBehaviorTreeComponent& OwnerComp,
     
     if (weapon->get_current_magazine_ammo_count() > 0)
     {
-        weapon->fire();
+        // Only shoot if we can see the player
+        if (ai_controller->LineOfSightTo(target_actor))
+        {
+            weapon->fire();
+        }
     }
     else
     {
