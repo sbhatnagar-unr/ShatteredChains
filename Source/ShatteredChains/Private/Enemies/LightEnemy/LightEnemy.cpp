@@ -32,65 +32,53 @@ void ALightEnemy::BeginPlay()
     }
 
     // Here we set all the bone collision modifier values
-    stats_modifiers["head"]->set_additive_damage_modifier(head_shot_damage_adder);
-    stats_modifiers["head"]->set_multiplicative_damage_modifier(head_shot_damage_multiplier);
-    stats_modifiers["head"]->set_additive_speed_modifier(head_shot_speed_adder);
-    stats_modifiers["head"]->set_multiplicative_speed_modifier(head_shot_speed_multiplier);
+    stats_modifiers["head"]->set_damage_multiplier(head_shot_damage_multiplier);
+    stats_modifiers["head"]->set_speed_multiplier(head_shot_speed_multiplier);
+    stats_modifiers["head"]->set_accuracy_multiplier(head_shot_accuracy_multiplier);
 
-    stats_modifiers["pelvis"]->set_additive_damage_modifier(torso_shot_damage_adder);
-    stats_modifiers["pelvis"]->set_multiplicative_damage_modifier(torso_shot_damage_multiplier);
-    stats_modifiers["pelvis"]->set_additive_speed_modifier(torso_shot_speed_adder);
-    stats_modifiers["pelvis"]->set_multiplicative_speed_modifier(torso_shot_speed_multiplier);
+    stats_modifiers["pelvis"]->set_damage_multiplier(torso_shot_damage_multiplier);
+    stats_modifiers["pelvis"]->set_speed_multiplier(torso_shot_speed_multiplier);
+    stats_modifiers["pelvis"]->set_accuracy_multiplier(torso_shot_accuracy_multiplier);
 
-    stats_modifiers["cc_base_pelvis"]->set_additive_damage_modifier(torso_shot_damage_adder);
-    stats_modifiers["cc_base_pelvis"]->set_multiplicative_damage_modifier(torso_shot_damage_multiplier);
-    stats_modifiers["cc_base_pelvis"]->set_additive_speed_modifier(torso_shot_speed_adder);
-    stats_modifiers["cc_base_pelvis"]->set_multiplicative_speed_modifier(torso_shot_speed_multiplier);
+    stats_modifiers["cc_base_pelvis"]->set_damage_multiplier(torso_shot_damage_multiplier);
+    stats_modifiers["cc_base_pelvis"]->set_speed_multiplier(torso_shot_speed_multiplier);
+    stats_modifiers["cc_base_pelvis"]->set_accuracy_multiplier(torso_shot_accuracy_multiplier);
 
-    stats_modifiers["spine_03"]->set_additive_damage_modifier(torso_shot_damage_adder);
-    stats_modifiers["spine_03"]->set_multiplicative_damage_modifier(torso_shot_damage_multiplier);
-    stats_modifiers["spine_03"]->set_additive_speed_modifier(torso_shot_speed_adder);
-    stats_modifiers["spine_03"]->set_multiplicative_speed_modifier(torso_shot_speed_multiplier);
+    stats_modifiers["spine_03"]->set_damage_multiplier(torso_shot_damage_multiplier);
+    stats_modifiers["spine_03"]->set_speed_multiplier(torso_shot_speed_multiplier);
+    stats_modifiers["spine_03"]->set_accuracy_multiplier(torso_shot_accuracy_multiplier);
     
-    stats_modifiers["upperarm_l"]->set_additive_damage_modifier(arm_shot_damage_adder);
-    stats_modifiers["upperarm_l"]->set_multiplicative_damage_modifier(arm_shot_damage_multiplier);
-    stats_modifiers["upperarm_l"]->set_additive_speed_modifier(arm_shot_speed_adder);
-    stats_modifiers["upperarm_l"]->set_multiplicative_speed_modifier(arm_shot_speed_multiplier);
+    stats_modifiers["upperarm_l"]->set_damage_multiplier(arm_shot_damage_multiplier);
+    stats_modifiers["upperarm_l"]->set_speed_multiplier(arm_shot_speed_multiplier);
+    stats_modifiers["upperarm_l"]->set_accuracy_multiplier(arm_shot_accuracy_multiplier);
     
-    stats_modifiers["hand_l"]->set_additive_damage_modifier(hand_shot_damage_adder);
-    stats_modifiers["hand_l"]->set_multiplicative_damage_modifier(hand_shot_damage_multiplier);
-    stats_modifiers["hand_l"]->set_additive_speed_modifier(hand_shot_speed_adder);
-    stats_modifiers["hand_l"]->set_multiplicative_speed_modifier(hand_shot_speed_multiplier);
+    stats_modifiers["hand_l"]->set_damage_multiplier(hand_shot_damage_multiplier);
+    stats_modifiers["hand_l"]->set_speed_multiplier(hand_shot_speed_multiplier);
+    stats_modifiers["hand_l"]->set_accuracy_multiplier(hand_shot_accuracy_multiplier);
     
-    stats_modifiers["upperarm_r"]->set_additive_damage_modifier(arm_shot_damage_adder);
-    stats_modifiers["upperarm_r"]->set_multiplicative_damage_modifier(arm_shot_damage_multiplier);
-    stats_modifiers["upperarm_r"]->set_additive_speed_modifier(arm_shot_speed_adder);
-    stats_modifiers["upperarm_r"]->set_multiplicative_speed_modifier(arm_shot_speed_multiplier);
+    stats_modifiers["upperarm_r"]->set_damage_multiplier(arm_shot_damage_multiplier);
+    stats_modifiers["upperarm_r"]->set_speed_multiplier(arm_shot_speed_multiplier);
+    stats_modifiers["upperarm_r"]->set_accuracy_multiplier(arm_shot_accuracy_multiplier);
     
-    stats_modifiers["hand_r"]->set_additive_damage_modifier(hand_shot_damage_adder);
-    stats_modifiers["hand_r"]->set_multiplicative_damage_modifier(hand_shot_damage_multiplier);
-    stats_modifiers["hand_r"]->set_additive_speed_modifier(hand_shot_speed_adder);
-    stats_modifiers["hand_r"]->set_multiplicative_speed_modifier(hand_shot_speed_multiplier);
+    stats_modifiers["hand_r"]->set_damage_multiplier(hand_shot_damage_multiplier);
+    stats_modifiers["hand_r"]->set_speed_multiplier(hand_shot_speed_multiplier);
+    stats_modifiers["hand_r"]->set_accuracy_multiplier(hand_shot_accuracy_multiplier);
     
-    stats_modifiers["thigh_l"]->set_additive_damage_modifier(leg_shot_damage_adder);
-    stats_modifiers["thigh_l"]->set_multiplicative_damage_modifier(leg_shot_damage_multiplier);
-    stats_modifiers["thigh_l"]->set_additive_speed_modifier(leg_shot_speed_adder);
-    stats_modifiers["thigh_l"]->set_multiplicative_speed_modifier(leg_shot_speed_multiplier);
+    stats_modifiers["thigh_l"]->set_damage_multiplier(leg_shot_damage_multiplier);
+    stats_modifiers["thigh_l"]->set_speed_multiplier(leg_shot_speed_multiplier);
+    stats_modifiers["thigh_l"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
     
-    stats_modifiers["calf_l"]->set_additive_damage_modifier(leg_shot_damage_adder);
-    stats_modifiers["calf_l"]->set_multiplicative_damage_modifier(leg_shot_damage_multiplier);
-    stats_modifiers["calf_l"]->set_additive_speed_modifier(leg_shot_speed_adder);
-    stats_modifiers["calf_l"]->set_multiplicative_speed_modifier(leg_shot_speed_multiplier);
+    stats_modifiers["calf_l"]->set_damage_multiplier(leg_shot_damage_multiplier);
+    stats_modifiers["calf_l"]->set_speed_multiplier(leg_shot_speed_multiplier);
+    stats_modifiers["calf_l"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
     
-    stats_modifiers["thigh_r"]->set_additive_damage_modifier(leg_shot_damage_adder);
-    stats_modifiers["thigh_r"]->set_multiplicative_damage_modifier(leg_shot_damage_multiplier);
-    stats_modifiers["thigh_r"]->set_additive_speed_modifier(leg_shot_speed_adder);
-    stats_modifiers["thigh_r"]->set_multiplicative_speed_modifier(leg_shot_speed_multiplier);
+    stats_modifiers["thigh_r"]->set_damage_multiplier(leg_shot_damage_multiplier);
+    stats_modifiers["thigh_r"]->set_speed_multiplier(leg_shot_speed_multiplier);
+    stats_modifiers["thigh_r"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
     
-    stats_modifiers["calf_r"]->set_additive_damage_modifier(leg_shot_damage_adder);
-    stats_modifiers["calf_r"]->set_multiplicative_damage_modifier(leg_shot_damage_multiplier);
-    stats_modifiers["calf_r"]->set_additive_speed_modifier(leg_shot_speed_adder);
-    stats_modifiers["calf_r"]->set_multiplicative_speed_modifier(leg_shot_speed_multiplier);
+    stats_modifiers["calf_r"]->set_damage_multiplier(leg_shot_damage_multiplier);
+    stats_modifiers["calf_r"]->set_speed_multiplier(leg_shot_speed_multiplier);
+    stats_modifiers["calf_r"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
 
 
     pawn_sensing_component->OnSeePawn.AddDynamic(this, &ALightEnemy::on_see_pawn);

@@ -36,30 +36,24 @@ AMyCharacter::AMyCharacter()
     actor_name = "Player";
 
 
-    leg_shot_damage_adder = 0;
     leg_shot_damage_multiplier = 1;
-    leg_shot_speed_adder = 0;
     leg_shot_speed_multiplier = 1;
-    foot_shot_damage_adder = 0;
+    leg_shot_accuracy_multiplier = 1;
     foot_shot_damage_multiplier = 1;
-    foot_shot_speed_adder = 0;
     foot_shot_speed_multiplier = 1;
-    arm_shot_damage_adder = 0;
+    foot_shot_accuracy_multiplier = 1;
     arm_shot_damage_multiplier = 1;
-    arm_shot_speed_adder = 0;
     arm_shot_speed_multiplier = 1;
-    hand_shot_damage_adder = 0;
+    arm_shot_accuracy_multiplier = 1;
     hand_shot_damage_multiplier = 1;
-    hand_shot_speed_adder = 0;
     hand_shot_speed_multiplier = 1;
-    torso_shot_damage_adder = 0;
+    hand_shot_accuracy_multiplier = 1;
     torso_shot_damage_multiplier = 1;
-    torso_shot_speed_adder = 0;
     torso_shot_speed_multiplier = 1;
-    head_shot_damage_adder = 0;
+    torso_shot_accuracy_multiplier = 1;
     head_shot_damage_multiplier = 1;
-    head_shot_speed_adder = 0;
     head_shot_speed_multiplier = 1;
+    head_shot_accuracy_multiplier = 1;
 
 }
 
@@ -70,75 +64,61 @@ void AMyCharacter::BeginPlay()
 
     add_stats_modifiers(GetMesh()->GetPhysicsAsset(), &stats_modifiers);
 
-    stats_modifiers["Hips"]->set_additive_damage_modifier(torso_shot_damage_adder);
-    stats_modifiers["Hips"]->set_multiplicative_damage_modifier(torso_shot_damage_multiplier);
-    stats_modifiers["Hips"]->set_additive_speed_modifier(torso_shot_speed_adder);
-    stats_modifiers["Hips"]->set_multiplicative_speed_modifier(torso_shot_speed_multiplier);
+    stats_modifiers["Hips"]->set_damage_multiplier(torso_shot_damage_multiplier);
+    stats_modifiers["Hips"]->set_speed_multiplier(torso_shot_speed_multiplier);
+    stats_modifiers["Hips"]->set_accuracy_multiplier(torso_shot_accuracy_multiplier);
 
-    stats_modifiers["LeftUpLeg"]->set_additive_damage_modifier(leg_shot_damage_adder);
-    stats_modifiers["LeftUpLeg"]->set_multiplicative_damage_modifier(leg_shot_damage_multiplier);
-    stats_modifiers["LeftUpLeg"]->set_additive_speed_modifier(leg_shot_speed_adder);
-    stats_modifiers["LeftUpLeg"]->set_multiplicative_speed_modifier(leg_shot_speed_multiplier);
+    stats_modifiers["LeftUpLeg"]->set_damage_multiplier(leg_shot_damage_multiplier);
+    stats_modifiers["LeftUpLeg"]->set_speed_multiplier(leg_shot_speed_multiplier);
+    stats_modifiers["LeftUpLeg"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
 
-    stats_modifiers["LeftLeg"]->set_additive_damage_modifier(leg_shot_damage_adder);
-    stats_modifiers["LeftLeg"]->set_multiplicative_damage_modifier(leg_shot_damage_multiplier);
-    stats_modifiers["LeftLeg"]->set_additive_speed_modifier(leg_shot_speed_adder);
-    stats_modifiers["LeftLeg"]->set_multiplicative_speed_modifier(leg_shot_speed_multiplier);
+    stats_modifiers["LeftLeg"]->set_damage_multiplier(leg_shot_damage_multiplier);
+    stats_modifiers["LeftLeg"]->set_speed_multiplier(leg_shot_speed_multiplier);
+    stats_modifiers["LeftLeg"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
     
-    stats_modifiers["LeftFoot"]->set_additive_damage_modifier(foot_shot_damage_adder);
-    stats_modifiers["LeftFoot"]->set_multiplicative_damage_modifier(foot_shot_damage_multiplier);
-    stats_modifiers["LeftFoot"]->set_additive_speed_modifier(foot_shot_speed_adder);
-    stats_modifiers["LeftFoot"]->set_multiplicative_speed_modifier(foot_shot_speed_multiplier);
+    stats_modifiers["LeftFoot"]->set_damage_multiplier(foot_shot_damage_multiplier);
+    stats_modifiers["LeftFoot"]->set_speed_multiplier(foot_shot_speed_multiplier);
+    stats_modifiers["LeftFoot"]->set_accuracy_multiplier(foot_shot_accuracy_multiplier);
 
-    stats_modifiers["RightUpLeg"]->set_additive_damage_modifier(leg_shot_damage_adder);
-    stats_modifiers["RightUpLeg"]->set_multiplicative_damage_modifier(leg_shot_damage_multiplier);
-    stats_modifiers["RightUpLeg"]->set_additive_speed_modifier(leg_shot_speed_adder);
-    stats_modifiers["RightUpLeg"]->set_multiplicative_speed_modifier(leg_shot_speed_multiplier);
+    stats_modifiers["RightUpLeg"]->set_damage_multiplier(leg_shot_damage_multiplier);
+    stats_modifiers["RightUpLeg"]->set_speed_multiplier(leg_shot_speed_multiplier);
+    stats_modifiers["RightUpLeg"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
 
-    stats_modifiers["RightLeg"]->set_additive_damage_modifier(leg_shot_damage_adder);
-    stats_modifiers["RightLeg"]->set_multiplicative_damage_modifier(leg_shot_damage_multiplier);
-    stats_modifiers["RightLeg"]->set_additive_speed_modifier(leg_shot_speed_adder);
-    stats_modifiers["RightLeg"]->set_multiplicative_speed_modifier(leg_shot_speed_multiplier);
+    stats_modifiers["RightLeg"]->set_damage_multiplier(leg_shot_damage_multiplier);
+    stats_modifiers["RightLeg"]->set_speed_multiplier(leg_shot_speed_multiplier);
+    stats_modifiers["RightLeg"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
     
-    stats_modifiers["RightFoot"]->set_additive_damage_modifier(foot_shot_damage_adder);
-    stats_modifiers["RightFoot"]->set_multiplicative_damage_modifier(foot_shot_damage_multiplier);
-    stats_modifiers["RightFoot"]->set_additive_speed_modifier(foot_shot_speed_adder);
-    stats_modifiers["RightFoot"]->set_multiplicative_speed_modifier(foot_shot_speed_multiplier);
+    stats_modifiers["RightFoot"]->set_damage_multiplier(foot_shot_damage_multiplier);
+    stats_modifiers["RightFoot"]->set_speed_multiplier(foot_shot_speed_multiplier);
+    stats_modifiers["RightFoot"]->set_accuracy_multiplier(foot_shot_accuracy_multiplier);
 
-    stats_modifiers["Spine1"]->set_additive_damage_modifier(torso_shot_damage_adder);
-    stats_modifiers["Spine1"]->set_multiplicative_damage_modifier(torso_shot_damage_multiplier);
-    stats_modifiers["Spine1"]->set_additive_speed_modifier(torso_shot_speed_adder);
-    stats_modifiers["Spine1"]->set_multiplicative_speed_modifier(torso_shot_speed_multiplier);
+    stats_modifiers["Spine1"]->set_damage_multiplier(torso_shot_damage_multiplier);
+    stats_modifiers["Spine1"]->set_speed_multiplier(torso_shot_speed_multiplier);
+    stats_modifiers["Spine1"]->set_accuracy_multiplier(torso_shot_accuracy_multiplier);
     
-    stats_modifiers["Spine2"]->set_additive_damage_modifier(torso_shot_damage_adder);
-    stats_modifiers["Spine2"]->set_multiplicative_damage_modifier(torso_shot_damage_multiplier);
-    stats_modifiers["Spine2"]->set_additive_speed_modifier(torso_shot_speed_adder);
-    stats_modifiers["Spine2"]->set_multiplicative_speed_modifier(torso_shot_speed_multiplier);
+    stats_modifiers["Spine2"]->set_damage_multiplier(torso_shot_damage_multiplier);
+    stats_modifiers["Spine2"]->set_speed_multiplier(torso_shot_speed_multiplier);
+    stats_modifiers["Spine2"]->set_accuracy_multiplier(torso_shot_accuracy_multiplier);
 
-    stats_modifiers["LeftArm"]->set_additive_damage_modifier(arm_shot_damage_adder);
-    stats_modifiers["LeftArm"]->set_multiplicative_damage_modifier(arm_shot_damage_multiplier);
-    stats_modifiers["LeftArm"]->set_additive_speed_modifier(arm_shot_speed_adder);
-    stats_modifiers["LeftArm"]->set_multiplicative_speed_modifier(arm_shot_speed_multiplier);
+    stats_modifiers["LeftArm"]->set_damage_multiplier(arm_shot_damage_multiplier);
+    stats_modifiers["LeftArm"]->set_speed_multiplier(arm_shot_speed_multiplier);
+    stats_modifiers["LeftArm"]->set_accuracy_multiplier(arm_shot_accuracy_multiplier);
     
-    stats_modifiers["LeftHand"]->set_additive_damage_modifier(hand_shot_damage_adder);
-    stats_modifiers["LeftHand"]->set_multiplicative_damage_modifier(hand_shot_damage_multiplier);
-    stats_modifiers["LeftHand"]->set_additive_speed_modifier(hand_shot_speed_adder);
-    stats_modifiers["LeftHand"]->set_multiplicative_speed_modifier(hand_shot_speed_multiplier);
+    stats_modifiers["LeftHand"]->set_damage_multiplier(hand_shot_damage_multiplier);
+    stats_modifiers["LeftHand"]->set_speed_multiplier(hand_shot_speed_multiplier);
+    stats_modifiers["LeftHand"]->set_accuracy_multiplier(hand_shot_accuracy_multiplier);
 
-    stats_modifiers["Head"]->set_additive_damage_modifier(head_shot_damage_adder);
-    stats_modifiers["Head"]->set_multiplicative_damage_modifier(head_shot_damage_multiplier);
-    stats_modifiers["Head"]->set_additive_speed_modifier(head_shot_speed_adder);
-    stats_modifiers["Head"]->set_multiplicative_speed_modifier(head_shot_speed_multiplier);
+    stats_modifiers["Head"]->set_damage_multiplier(head_shot_damage_multiplier);
+    stats_modifiers["Head"]->set_speed_multiplier(head_shot_speed_multiplier);
+    stats_modifiers["Head"]->set_accuracy_multiplier(head_shot_accuracy_multiplier);
 
-    stats_modifiers["RightArm"]->set_additive_damage_modifier(arm_shot_damage_adder);
-    stats_modifiers["RightArm"]->set_multiplicative_damage_modifier(arm_shot_damage_multiplier);
-    stats_modifiers["RightArm"]->set_additive_speed_modifier(arm_shot_speed_adder);
-    stats_modifiers["RightArm"]->set_multiplicative_speed_modifier(arm_shot_speed_multiplier);
+    stats_modifiers["RightArm"]->set_damage_multiplier(arm_shot_damage_multiplier);
+    stats_modifiers["RightArm"]->set_speed_multiplier(arm_shot_speed_multiplier);
+    stats_modifiers["RightArm"]->set_accuracy_multiplier(arm_shot_accuracy_multiplier);
 
-    stats_modifiers["RightHand"]->set_additive_damage_modifier(hand_shot_damage_adder);
-    stats_modifiers["RightHand"]->set_multiplicative_damage_modifier(hand_shot_damage_multiplier);
-    stats_modifiers["RightHand"]->set_additive_speed_modifier(hand_shot_speed_adder);
-    stats_modifiers["RightHand"]->set_multiplicative_speed_modifier(hand_shot_speed_multiplier);
+    stats_modifiers["RightHand"]->set_damage_multiplier(hand_shot_damage_multiplier);
+    stats_modifiers["RightHand"]->set_speed_multiplier(hand_shot_speed_multiplier);
+    stats_modifiers["RightHand"]->set_accuracy_multiplier(hand_shot_accuracy_multiplier);
 
     // Check audio
     if (take_damage_sound == nullptr)
@@ -952,8 +932,7 @@ void AMyCharacter::hit_bone(const FName bone_name)
     UCharacterMovementComponent* movement_component = GetCharacterMovement();
     const float old_movement_speed = movement_component->MaxWalkSpeed;
     
-    movement_component->MaxWalkSpeed += modifier->get_additive_speed_modifier();
-    movement_component->MaxWalkSpeed *= modifier->get_multiplicative_speed_modifier();
+    movement_component->MaxWalkSpeed *= modifier->get_speed_multiplier();
 
     UE_LOG(BoneCollision, Log, LOG_TEXT("Changing player '%s' speed: %f -> %f"), *actor_name, old_movement_speed, movement_component->MaxWalkSpeed);
 }

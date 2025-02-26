@@ -140,9 +140,8 @@ void UAN_WeaponFire::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase*
             const TObjectPtr<UStatsModifier> modifier = *modifier_ptr;
             
             const float old_damage = weapon_damage;
-            weapon_damage += modifier->get_additive_damage_modifier();
-            weapon_damage *= modifier->get_multiplicative_damage_modifier();
-            UE_LOG(BoneCollision, Log, LOG_TEXT("Stats modifiers for '%s' in group '%s': DAMAGE_ADD=%f\tDAMAGE_MUL=%f"), *hit_actor_label, *(trace_result.BoneName.ToString()), modifier->get_additive_damage_modifier(), modifier->get_multiplicative_damage_modifier());
+            weapon_damage *= modifier->get_damage_multiplier();
+            UE_LOG(BoneCollision, Log, LOG_TEXT("Stats modifiers for '%s' in group '%s': DAMAGE_MUL=%f"), *hit_actor_label, *(trace_result.BoneName.ToString()), modifier->get_damage_multiplier());
             UE_LOG(BoneCollision, Log, LOG_TEXT("Damage for '%s' modified from %f -> %f"), *hit_actor_label, old_damage, weapon_damage);
 
             // Pass the bone info to the actor that was hit so they can adjust their stats
