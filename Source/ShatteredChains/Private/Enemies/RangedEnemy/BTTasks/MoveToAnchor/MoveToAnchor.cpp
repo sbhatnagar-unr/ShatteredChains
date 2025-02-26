@@ -59,7 +59,7 @@ EBTNodeResult::Type UMoveToAnchor::ExecuteTask(UBehaviorTreeComponent& OwnerComp
     const FVector anchor_location = enemy_actor->get_location_to_go_to();
 
     // The enemy's name, for logging purposes
-    const FString enemy_name = *(enemy_actor->Tags.Num() > 0 ? enemy_actor->Tags[0].ToString() : FString(TEXT("UNTAGGED")));
+    const FString enemy_name = enemy_actor->get_actor_name();
 
     // Get locations of enemy
     const FVector enemy_location = enemy_actor->GetActorLocation();
@@ -69,7 +69,7 @@ EBTNodeResult::Type UMoveToAnchor::ExecuteTask(UBehaviorTreeComponent& OwnerComp
 
     if (distance <= enemy_actor->get_anchor_tolerance())
     {
-        UE_LOG(Enemy, Log, LOG_TEXT("%s has reached anchor point %s"), *enemy_name, *(anchor_point->Tags.Num() > 0 ? anchor_point->Tags[0].ToString() : FString(TEXT("UNTAGGED"))));
+        UE_LOG(Enemy, Log, LOG_TEXT("%s has reached anchor point %s"), *enemy_name, *(anchor_point->get_actor_name()));
         ai_controller->StopMovement();
         blackboard->SetValueAsBool(near_anchor_field, true);
     }

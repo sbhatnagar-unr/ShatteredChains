@@ -4,8 +4,6 @@
 #include "AnchorPoint.h"
 #include "ShatteredChains/Logging.h"
 
-DEFINE_LOG_CATEGORY(UtilityActor);
-
 
 // Sets default values
 AAnchorPoint::AAnchorPoint()
@@ -26,22 +24,29 @@ AAnchorPoint::AAnchorPoint()
 void AAnchorPoint::BeginPlay()
 {
     Super::BeginPlay();
+
     SetActorHiddenInGame(true);
 
-    UE_LOG(UtilityActor, Verbose, LOG_TEXT("Anchor location HELLO (%s) is %s"), *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED"))), *GetActorLocation().ToString());
+    UE_LOG(UtilityActor, Verbose, LOG_TEXT("Anchor location HELLO (%s) is %s"), *actor_name, *GetActorLocation().ToString());
     if (anchor_radius == 0)
     {
-        UE_LOG(UtilityActor, Error, LOG_TEXT("Anchor radius (%s) was never set"), *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED"))));
+        UE_LOG(UtilityActor, Error, LOG_TEXT("Anchor radius (%s) was never set"), *actor_name);
     }
     else
     {
-        UE_LOG(UtilityActor, VeryVerbose, LOG_TEXT("Anchor point (%s) radius %f"), *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED"))), anchor_radius);
+        UE_LOG(UtilityActor, VeryVerbose, LOG_TEXT("Anchor point (%s) radius %f"), *actor_name, anchor_radius);
     }
 }
 
 float AAnchorPoint::get_anchor_radius() const
 {
     return anchor_radius;    
+}
+
+
+FString AAnchorPoint::get_default_actor_name() const
+{
+    return actor_name;
 }
 
 

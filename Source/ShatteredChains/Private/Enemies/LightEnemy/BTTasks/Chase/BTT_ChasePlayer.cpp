@@ -27,13 +27,13 @@ EBTNodeResult::Type UBTT_ChasePlayer::ExecuteTask(UBehaviorTreeComponent& OwnerC
     }
 
     // Enemy Actor
-    const ALightEnemy* enemy_actor = Cast<ALightEnemy>(ai_controller->GetPawn());
+    ALightEnemy* enemy_actor = Cast<ALightEnemy>(ai_controller->GetPawn());
     if (enemy_actor == nullptr)
     {
-        UE_LOG(Enemy, Error, LOG_TEXT("Could not get enemy actor belonging to this AI"));
+        UE_LOG(Enemy, Error, LOG_TEXT("Could not get enemy actor from task"));
         return EBTNodeResult::Aborted;
     }
-    const FString enemy_actor_name = (enemy_actor->Tags.Num() > 0) ? enemy_actor->Tags[0].ToString() : FString(TEXT("UNTAGGED"));
+    const FString enemy_actor_name = enemy_actor->get_actor_name();
 
     // Enemy AI Blackboard
     UBlackboardComponent* blackboard = ai_controller->GetBlackboardComponent();
@@ -61,18 +61,26 @@ EBTNodeResult::Type UBTT_ChasePlayer::ExecuteTask(UBehaviorTreeComponent& OwnerC
 
     // If we are withing attacking range
     const float attack_range = enemy_actor->get_attack_range();
-    UE_LOG(Enemy, VeryVerbose, LOG_TEXT("Enemy distance to target %f (attack range: %f)"), distance, attack_range);
+    const float sensing_radius = enemy_actor->get_pawn_sensing_component()->SightRadius;
+    UE_LOG(Enemy, VeryVerbose, LOG_TEXT("Enemy '%s' distance to target %f (attack range=%f, sensing_radius=%f, should_chase_target=%d)"), *enemy_actor_name, distance, attack_range, sensing_radius, enemy_actor->get_should_chase_target());
     if (distance <= attack_range)
     {
         UE_LOG(Enemy, Verbose, LOG_TEXT("Target is in attacking range"));
         ai_controller->StopMovement();
         blackboard->SetValueAsBool(in_attacking_range_field, true);
     }
+    // If target moved outside the sensing radius
+    else if (distance > sensing_radius)
+    {
+        enemy_actor->set_should_chase_target(false);
+        ai_controller->StopMovement();
+        UE_LOG(Enemy, VeryVerbose, LOG_TEXT("Enemy '%s' stopped chasing target, it has moved outside of detection range (detection_range=%f, distance_to_target=%f)"), *enemy_actor_name, sensing_radius, distance);
+    }
     // Otherwise
     else
     {
         // Chase the player
-        UE_LOG(Enemy, VeryVerbose, LOG_TEXT("Enemy AI chasing player"));
+        UE_LOG(Enemy, VeryVerbose, LOG_TEXT("Enemy '%s"" chasing target"), *enemy_actor_name);
         ai_controller->MoveToActor(target_actor);
     }
 

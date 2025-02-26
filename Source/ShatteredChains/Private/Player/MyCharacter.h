@@ -4,9 +4,15 @@
 #include "CoreMinimal.h"
 #include "InputActionValue.h"
 #include "GameFramework/Character.h"
+#include "Components/HealthComponent/HealthComponent.h"
+#include "Components/InventoryComponent/InventoryComponent.h"
+#include "Interfaces/HasBoneCollider/HasBoneCollider.h"
+#include "Interfaces/HasBoneCollider/StatsModifier/StatsModifier.h"
 #include "Interfaces/HasHealth/HasHealth.h"
+#include "Interfaces/HasInventory/HasInventory.h"
 #include "Interfaces/WeaponUser/WeaponUser.h"
 #include "EnhancedInputComponent.h"  // Include enhanced input system
+#include "Interfaces/NamedActor/NamedActor.h"
 #include "MyCharacter.generated.h"   // Must be the last include
 
 /**
@@ -19,7 +25,7 @@
 class AWeapon;
 
 UCLASS()
-class SHATTEREDCHAINS_API AMyCharacter : public ACharacter, public IHasHealth, public IWeaponUser
+class SHATTEREDCHAINS_API AMyCharacter : public ACharacter, public IHasHealth, public IWeaponUser, public IHasInventory, public INamedActor, public IHasBoneCollider
 {
     GENERATED_BODY()
 
@@ -38,6 +44,7 @@ public:
     virtual void on_death(AActor* killed_by) override final;
 
     virtual UHealthComponent* get_health_component() const override final;
+    virtual TObjectPtr<UInventoryComponent> get_inventory_component() const override final;
 
     void EquipWeapon(AWeapon* Weapon);
     void PickUpWeapon(AWeapon* Weapon);
@@ -47,6 +54,15 @@ public:
 
     // This should return a Vector in the direction to fire
     virtual FVector get_hitscan_direction() const override final;
+
+    virtual FString get_default_actor_name() const override final;
+
+    // IHasBoneCollider
+    virtual void hit_bone(const FName bone_name) override final;
+    virtual const TMap<FName, TObjectPtr<UStatsModifier>>* get_bone_collider_stats_modifiers() const override final;
+
+
+    virtual USoundBase* get_damage_sound() const override final;
 
 protected:
 
@@ -308,6 +324,16 @@ protected:
     // Function to detect ledge presence for grabbing
     bool DetectLedge();
 
+    // inventory is open
+    bool bIsInventoryOpen = false;
+
+    // toggle inventory input action
+    UFUNCTION()
+    void ToggleInventory(const FInputActionValue& Value);
+
+    //inventory log
+    UFUNCTION()
+    void LogInventory(const FInputActionValue& Value);
 
     // Animation montages for each movement type
     UPROPERTY(EditDefaultsOnly, Category = "Animation")
@@ -349,4 +375,83 @@ protected:
 
     UPROPERTY(VisibleAnywhere)
     UHealthComponent* HealthComponent;
+
+    UPROPERTY(VisibleAnywhere)
+    UInventoryComponent* InventoryComponent;
+
+    // inventory toggle
+    UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+    UInputAction* IA_ToggleInventory;
+
+    // log inventory 
+    UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+    UInputAction* IA_LogInventory;    
+
+    // Sound effects
+    UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
+    TObjectPtr<USoundBase> jump_sound;
+
+    UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
+    TObjectPtr<USoundBase> take_damage_sound;
+    
+    // Bone Collision
+    // Stats modifiers map
+    UPROPERTY()
+    TMap<FName, TObjectPtr<UStatsModifier>> stats_modifiers;
+
+    // Adders/Multipliers
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for damage whenever a leg shot is hit"))
+    float leg_shot_damage_multiplier;
+    
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for speed whenever a leg shot is hit"))
+    float leg_shot_speed_multiplier;
+
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for accuracy whenever a leg shot is hit"))
+    float leg_shot_accuracy_multiplier;
+
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for damage whenever a foot shot is hit"))
+    float foot_shot_damage_multiplier;
+    
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for speed whenever a foot shot is hit"))
+    float foot_shot_speed_multiplier;
+
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for accuracy whenever a foot shot is hit"))
+    float foot_shot_accuracy_multiplier;
+    
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for damage whenever a arm shot is hit"))
+    float arm_shot_damage_multiplier;
+    
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for speed whenever a arm shot is hit"))
+    float arm_shot_speed_multiplier;
+
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for accuracy whenever a arm shot is hit"))
+    float arm_shot_accuracy_multiplier;
+
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for damage whenever a hand shot is hit"))
+    float hand_shot_damage_multiplier;
+    
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for speed whenever a hand shot is hit"))
+    float hand_shot_speed_multiplier;
+
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for accuracy whenever a hand shot is hit"))
+    float hand_shot_accuracy_multiplier;
+    
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for damage whenever a torso shot is hit"))
+    float torso_shot_damage_multiplier;
+    
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for speed whenever a torso shot is hit"))
+    float torso_shot_speed_multiplier;
+
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for accuracy whenever a torso shot is hit"))
+    float torso_shot_accuracy_multiplier;
+    
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for damage whenever a head shot is hit"))
+    float head_shot_damage_multiplier;
+    
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for speed whenever a head shot is hit"))
+    float head_shot_speed_multiplier;
+
+    UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for accuracy whenever a head shot is hit"))
+    float head_shot_accuracy_multiplier;
+
 };

@@ -37,7 +37,7 @@ EBTNodeResult::Type UShootPlayer::ExecuteTask(UBehaviorTreeComponent& OwnerComp,
         return EBTNodeResult::Aborted;
     }
 
-    const FString enemy_name = (enemy_actor->Tags.Num() > 0) ? enemy_actor->Tags[0].ToString() : FString(TEXT("UNTAGGED"));
+    const FString enemy_name = enemy_actor->get_actor_name();
     
     // Enemy AI Blackboard
     UBlackboardComponent* blackboard = ai_controller->GetBlackboardComponent();
@@ -64,19 +64,17 @@ EBTNodeResult::Type UShootPlayer::ExecuteTask(UBehaviorTreeComponent& OwnerComp,
     }
 
     // Enemy's anchor point
-    AAnchorPoint* anchor_point = enemy_actor->get_anchor_point();
+    const AAnchorPoint* anchor_point = enemy_actor->get_anchor_point();
     if (anchor_point == nullptr)
     {
         UE_LOG(Enemy, Error, LOG_TEXT("Enemy AI (%s) doesn't have an anchor point"), *enemy_name);
         return EBTNodeResult::Aborted;
     }
-
-
-    
     
     // Rotate to face the player
     const FRotator rotation_to_player = UKismetMathLibrary::FindLookAtRotation(enemy_actor->GetActorLocation(), target_actor->GetTargetLocation());
     enemy_actor->SetActorRotation(rotation_to_player);
+
 
     // Get locations of enemy and anchor point
     const FVector enemy_location = enemy_actor->GetActorLocation();
@@ -86,14 +84,18 @@ EBTNodeResult::Type UShootPlayer::ExecuteTask(UBehaviorTreeComponent& OwnerComp,
 
     if (distance > anchor_point->get_anchor_radius() + enemy_actor->get_anchor_tolerance())
     {
-        UE_LOG(Enemy, Verbose, LOG_TEXT("Enemy %s has moved away from anchor point %s"), *enemy_name, *(anchor_point->Tags.Num() > 0 ? anchor_point->Tags[0].ToString() : FString(TEXT("UNTAGGED"))));
+        UE_LOG(Enemy, Verbose, LOG_TEXT("Enemy %s has moved away from anchor point %s"), *enemy_name, *(anchor_point->get_actor_name()));
         blackboard->SetValueAsBool(near_anchor_field, false);
         return EBTNodeResult::Succeeded;
     }
     
     if (weapon->get_current_magazine_ammo_count() > 0)
     {
-        weapon->fire();
+        // Only shoot if we can see the player
+        if (ai_controller->LineOfSightTo(target_actor))
+        {
+            weapon->fire();
+        }
     }
     else
     {

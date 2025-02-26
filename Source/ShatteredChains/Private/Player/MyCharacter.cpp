@@ -11,8 +11,6 @@
 #include "Camera/CameraComponent.h"
 #include "Kismet/GameplayStatics.h"
 
-DEFINE_LOG_CATEGORY(Player);
-
 // Sets default values
 AMyCharacter::AMyCharacter()
 {
@@ -33,6 +31,29 @@ AMyCharacter::AMyCharacter()
     Camera->bUsePawnControlRotation = true;
 
     HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("Health Component"));
+    InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory Component"));
+
+    actor_name = "Player";
+
+
+    leg_shot_damage_multiplier = 1;
+    leg_shot_speed_multiplier = 1;
+    leg_shot_accuracy_multiplier = 1;
+    foot_shot_damage_multiplier = 1;
+    foot_shot_speed_multiplier = 1;
+    foot_shot_accuracy_multiplier = 1;
+    arm_shot_damage_multiplier = 1;
+    arm_shot_speed_multiplier = 1;
+    arm_shot_accuracy_multiplier = 1;
+    hand_shot_damage_multiplier = 1;
+    hand_shot_speed_multiplier = 1;
+    hand_shot_accuracy_multiplier = 1;
+    torso_shot_damage_multiplier = 1;
+    torso_shot_speed_multiplier = 1;
+    torso_shot_accuracy_multiplier = 1;
+    head_shot_damage_multiplier = 1;
+    head_shot_speed_multiplier = 1;
+    head_shot_accuracy_multiplier = 1;
 
 }
 
@@ -40,7 +61,74 @@ AMyCharacter::AMyCharacter()
 void AMyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+    add_stats_modifiers(GetMesh()->GetPhysicsAsset(), &stats_modifiers);
+
+    stats_modifiers["Hips"]->set_damage_multiplier(torso_shot_damage_multiplier);
+    stats_modifiers["Hips"]->set_speed_multiplier(torso_shot_speed_multiplier);
+    stats_modifiers["Hips"]->set_accuracy_multiplier(torso_shot_accuracy_multiplier);
+
+    stats_modifiers["LeftUpLeg"]->set_damage_multiplier(leg_shot_damage_multiplier);
+    stats_modifiers["LeftUpLeg"]->set_speed_multiplier(leg_shot_speed_multiplier);
+    stats_modifiers["LeftUpLeg"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
+
+    stats_modifiers["LeftLeg"]->set_damage_multiplier(leg_shot_damage_multiplier);
+    stats_modifiers["LeftLeg"]->set_speed_multiplier(leg_shot_speed_multiplier);
+    stats_modifiers["LeftLeg"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
+    
+    stats_modifiers["LeftFoot"]->set_damage_multiplier(foot_shot_damage_multiplier);
+    stats_modifiers["LeftFoot"]->set_speed_multiplier(foot_shot_speed_multiplier);
+    stats_modifiers["LeftFoot"]->set_accuracy_multiplier(foot_shot_accuracy_multiplier);
+
+    stats_modifiers["RightUpLeg"]->set_damage_multiplier(leg_shot_damage_multiplier);
+    stats_modifiers["RightUpLeg"]->set_speed_multiplier(leg_shot_speed_multiplier);
+    stats_modifiers["RightUpLeg"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
+
+    stats_modifiers["RightLeg"]->set_damage_multiplier(leg_shot_damage_multiplier);
+    stats_modifiers["RightLeg"]->set_speed_multiplier(leg_shot_speed_multiplier);
+    stats_modifiers["RightLeg"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
+    
+    stats_modifiers["RightFoot"]->set_damage_multiplier(foot_shot_damage_multiplier);
+    stats_modifiers["RightFoot"]->set_speed_multiplier(foot_shot_speed_multiplier);
+    stats_modifiers["RightFoot"]->set_accuracy_multiplier(foot_shot_accuracy_multiplier);
+
+    stats_modifiers["Spine1"]->set_damage_multiplier(torso_shot_damage_multiplier);
+    stats_modifiers["Spine1"]->set_speed_multiplier(torso_shot_speed_multiplier);
+    stats_modifiers["Spine1"]->set_accuracy_multiplier(torso_shot_accuracy_multiplier);
+    
+    stats_modifiers["Spine2"]->set_damage_multiplier(torso_shot_damage_multiplier);
+    stats_modifiers["Spine2"]->set_speed_multiplier(torso_shot_speed_multiplier);
+    stats_modifiers["Spine2"]->set_accuracy_multiplier(torso_shot_accuracy_multiplier);
+
+    stats_modifiers["LeftArm"]->set_damage_multiplier(arm_shot_damage_multiplier);
+    stats_modifiers["LeftArm"]->set_speed_multiplier(arm_shot_speed_multiplier);
+    stats_modifiers["LeftArm"]->set_accuracy_multiplier(arm_shot_accuracy_multiplier);
+    
+    stats_modifiers["LeftHand"]->set_damage_multiplier(hand_shot_damage_multiplier);
+    stats_modifiers["LeftHand"]->set_speed_multiplier(hand_shot_speed_multiplier);
+    stats_modifiers["LeftHand"]->set_accuracy_multiplier(hand_shot_accuracy_multiplier);
+
+    stats_modifiers["Head"]->set_damage_multiplier(head_shot_damage_multiplier);
+    stats_modifiers["Head"]->set_speed_multiplier(head_shot_speed_multiplier);
+    stats_modifiers["Head"]->set_accuracy_multiplier(head_shot_accuracy_multiplier);
+
+    stats_modifiers["RightArm"]->set_damage_multiplier(arm_shot_damage_multiplier);
+    stats_modifiers["RightArm"]->set_speed_multiplier(arm_shot_speed_multiplier);
+    stats_modifiers["RightArm"]->set_accuracy_multiplier(arm_shot_accuracy_multiplier);
+
+    stats_modifiers["RightHand"]->set_damage_multiplier(hand_shot_damage_multiplier);
+    stats_modifiers["RightHand"]->set_speed_multiplier(hand_shot_speed_multiplier);
+    stats_modifiers["RightHand"]->set_accuracy_multiplier(hand_shot_accuracy_multiplier);
+
+    // Check audio
+    if (take_damage_sound == nullptr)
+    {
+        UE_LOG(Player, Warning, LOG_TEXT("No take damage sound effect for player %s"), *actor_name);
+    }
+    if (jump_sound == nullptr)
+    {
+        UE_LOG(Player, Warning, LOG_TEXT("No jump sound effect for player %s"), *actor_name);
+    }
 }
 
 // Player Input bindings
@@ -91,11 +179,18 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
         // Bind sprint start
         Input->BindAction(SprintAction, ETriggerEvent::Started, this, &AMyCharacter::StartSprint);
 
-        // Bind sprint stop
+        // Bind sprint stop 
         Input->BindAction(SprintAction, ETriggerEvent::Completed, this, &AMyCharacter::StopSprint);
 
-        // Bind roll action
+        // Bind roll action "alt"
         Input->BindAction(RollAction, ETriggerEvent::Started, this, &AMyCharacter::StartRoll);
+
+        //bind toggle inventory ui "i"
+        Input->BindAction(IA_ToggleInventory, ETriggerEvent::Triggered, this, &AMyCharacter::ToggleInventory);
+
+        //bind log invetory "o"
+        Input->BindAction(IA_LogInventory, ETriggerEvent::Triggered, this, &AMyCharacter::LogInventory);
+
     }
 
     // Bind axis mappings for movement
@@ -579,8 +674,45 @@ void AMyCharacter::EnableRolling()
     UE_LOG(Player, Log, TEXT("Rolling re-enabled"));
 }
 
+// Toggle Inventory UI (placeholder, can be linked to an actual UI)
+void AMyCharacter::ToggleInventory(const FInputActionValue& Value)
+{
+    if (!Value.Get<bool>()) return; // Ensure input is valid
 
+    bIsInventoryOpen = !bIsInventoryOpen;
 
+    if (bIsInventoryOpen)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Inventory Opened"));
+        // TODO: Show Inventory UI
+    }
+    else
+    {
+        UE_LOG(LogTemp, Log, TEXT("Inventory Closed"));
+        // TODO: Hide Inventory UI
+    }
+}
+
+// Logs current inventory items when "O" is pressed
+void AMyCharacter::LogInventory(const FInputActionValue& Value)
+{
+    if (!Value.Get<bool>()) return; // Ensure input is valid
+
+    if (!InventoryComponent)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("No Inventory Component Found!"));
+        return;
+    }
+
+    TMap<FName, FInventoryItem> InventoryItems = InventoryComponent->GetInventory();
+    
+    UE_LOG(Player, Log, LOG_TEXT("---- Current Inventory ----"));
+    for (const auto &ItemPair : InventoryItems)
+    {
+        FInventoryItem Item = ItemPair.Value;
+        UE_LOG(Player, Log, LOG_TEXT("Item: %s, Quantity: %d"), *Item.ItemID.ToString(), Item.Quantity);
+    }
+}
 
 void AMyCharacter::Mantle()
 {
@@ -770,6 +902,46 @@ FVector AMyCharacter::get_hitscan_direction() const
     return Camera->GetForwardVector();
 }
 
+
+TObjectPtr<UInventoryComponent> AMyCharacter::get_inventory_component() const
+{
+    return InventoryComponent;
+}
+
+
+FString AMyCharacter::get_default_actor_name() const
+{
+    return FString("Player");
+}
+
+
+const TMap<FName, TObjectPtr<UStatsModifier>>* AMyCharacter::get_bone_collider_stats_modifiers() const
+{
+    return &stats_modifiers;
+}
+
+
+
+void AMyCharacter::hit_bone(const FName bone_name)
+{
+    const TObjectPtr<UStatsModifier> modifier = stats_modifiers[bone_name];
+    
+    UE_LOG(BoneCollision, Log, LOG_TEXT("Player '%s' hit in bone '%s'"), *actor_name, *(bone_name.ToString()));
+
+    // Apply other modifier stats, like speed, accuracy, etc.
+    UCharacterMovementComponent* movement_component = GetCharacterMovement();
+    const float old_movement_speed = movement_component->MaxWalkSpeed;
+    
+    movement_component->MaxWalkSpeed *= modifier->get_speed_multiplier();
+
+    UE_LOG(BoneCollision, Log, LOG_TEXT("Changing player '%s' speed: %f -> %f"), *actor_name, old_movement_speed, movement_component->MaxWalkSpeed);
+}
+
+
+USoundBase* AMyCharacter::get_damage_sound() const
+{
+    return take_damage_sound;    
+}
 
 
 

@@ -23,8 +23,6 @@ void ARangedEnemy::BeginPlay()
 {
     Super::BeginPlay();
 
-    const FString actor_name = *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED")));
-    
     // Get the world
     UWorld* world = GetWorld();
     if (world == nullptr)
@@ -69,7 +67,7 @@ void ARangedEnemy::BeginPlay()
         UE_LOG(Enemy, Error, LOG_TEXT("Anchor tolerance is unset for %s"), *actor_name);
         return;
     }
-    UE_LOG(Enemy, VeryVerbose, LOG_TEXT("Anchor tolerance for %s is %f"), *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED"))), anchor_tolerance);
+    UE_LOG(Enemy, VeryVerbose, LOG_TEXT("Anchor tolerance for %s is %f"), *actor_name, anchor_tolerance);
 
 
     // Spawn the weapon for the Enemy
@@ -79,22 +77,22 @@ void ARangedEnemy::BeginPlay()
     weapon = world->SpawnActor<AWeapon>(weapon_class, GetActorTransform(), spawn_parameters);
     if (weapon == nullptr)
     {
-        UE_LOG(Enemy, Error, LOG_TEXT("Could not spawn weapon for %s"), *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED"))));
+        UE_LOG(Enemy, Error, LOG_TEXT("Could not spawn weapon for %s"), *actor_name);
         return;
     }
     // Set weapon name
-    weapon->Tags.Add(FName((Tags.Num() > 0 ? Tags[0].ToString() : FString("UNKNOWN")) + FString(TEXT("'s weapon"))));
+    weapon->set_actor_name(actor_name + FString(TEXT("'s ")) + weapon->GetName());
 
-    UE_LOG(Enemy, Verbose, LOG_TEXT("Weapon %s successfully spawned for %s"), *(weapon->Tags.Num() > 0 ? weapon->Tags[0].ToString() : FString(TEXT("UNTAGGED"))), *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED"))));
+    UE_LOG(Enemy, Verbose, LOG_TEXT("Weapon %s successfully spawned for %s"), *(weapon->get_actor_name()), *actor_name);
     
     // Attach it to the enemy
     const bool successfully_attached = weapon->AttachToComponent(skeletal_mesh_component, FAttachmentTransformRules::SnapToTargetIncludingScale, FName(TEXT("GunSocket")));
     if (!successfully_attached)
     {
-        UE_LOG(Enemy, Error, LOG_TEXT("Could not attach %s to %s"), *(weapon->Tags.Num() > 0 ? weapon->Tags[0].ToString() : FString(TEXT("UNTAGGED"))), *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED"))));
+        UE_LOG(Enemy, Error, LOG_TEXT("Could not attach %s to %s"), *(weapon->get_actor_name()), *actor_name);
         return;
     }
-    UE_LOG(Enemy, Verbose, LOG_TEXT("Successfully attached %s to %s"), *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED"))), *weapon_class->GetName());
+    UE_LOG(Enemy, Verbose, LOG_TEXT("Successfully attached %s to %s"), *actor_name, *weapon_class->GetName());
 
     // https://forums.unrealengine.com/t/getrandomreachablepointinradius/380662
     // So this function is apparently bugged for who knows what reason.  To combat this, we will just run it a bunch of times
@@ -111,15 +109,66 @@ void ARangedEnemy::BeginPlay()
         {
             location_to_go_to = nav_location.Location;
             found_location = true;
-            UE_LOG(Enemy, Verbose, LOG_TEXT("Location to go to in anchor for %s is %s"), *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED"))), *location_to_go_to.ToString());
+            UE_LOG(Enemy, Verbose, LOG_TEXT("Location to go to in anchor for %s is %s"), *actor_name, *location_to_go_to.ToString());
             break;
         }
     }
     if (!found_location)
     {
-        UE_LOG(Enemy, Warning, LOG_TEXT("Could not find reachable point near anchor \"%s\" (radius=%f).  Defaulting to anchor location (%s)"), *(anchor_point->Tags.Num() > 0 ? anchor_point->Tags[0].ToString() : FString(TEXT("UNTAGGED"))), anchor_point->get_anchor_radius(), *anchor_point->GetActorLocation().ToString());
+        UE_LOG(Enemy, Warning, LOG_TEXT("Could not find reachable point near anchor \"%s\" (radius=%f).  Defaulting to anchor location (%s)"), *(anchor_point->get_actor_name()), anchor_point->get_anchor_radius(), *anchor_point->GetActorLocation().ToString());
         location_to_go_to = anchor_point->GetActorLocation();
     }
+
+
+    // Here we set all the bone collision modifier values
+    stats_modifiers["head"]->set_damage_multiplier(head_shot_damage_multiplier);
+    stats_modifiers["head"]->set_speed_multiplier(head_shot_speed_multiplier);
+    stats_modifiers["head"]->set_accuracy_multiplier(head_shot_accuracy_multiplier);
+
+    stats_modifiers["pelvis"]->set_damage_multiplier(torso_shot_damage_multiplier);
+    stats_modifiers["pelvis"]->set_speed_multiplier(torso_shot_speed_multiplier);
+    stats_modifiers["pelvis"]->set_accuracy_multiplier(torso_shot_accuracy_multiplier);
+
+    stats_modifiers["spine_01"]->set_damage_multiplier(torso_shot_damage_multiplier);
+    stats_modifiers["spine_01"]->set_speed_multiplier(torso_shot_speed_multiplier);
+    stats_modifiers["spine_01"]->set_accuracy_multiplier(torso_shot_accuracy_multiplier);
+
+    stats_modifiers["spine_03"]->set_damage_multiplier(torso_shot_damage_multiplier);
+    stats_modifiers["spine_03"]->set_speed_multiplier(torso_shot_speed_multiplier);
+    stats_modifiers["spine_03"]->set_accuracy_multiplier(torso_shot_accuracy_multiplier);
+    
+    stats_modifiers["upperarm_l"]->set_damage_multiplier(arm_shot_damage_multiplier);
+    stats_modifiers["upperarm_l"]->set_speed_multiplier(arm_shot_speed_multiplier);
+    stats_modifiers["upperarm_l"]->set_accuracy_multiplier(arm_shot_accuracy_multiplier);
+    
+    stats_modifiers["hand_l"]->set_damage_multiplier(hand_shot_damage_multiplier);
+    stats_modifiers["hand_l"]->set_speed_multiplier(hand_shot_speed_multiplier);
+    stats_modifiers["hand_l"]->set_accuracy_multiplier(hand_shot_accuracy_multiplier);
+    
+    stats_modifiers["upperarm_r"]->set_damage_multiplier(arm_shot_damage_multiplier);
+    stats_modifiers["upperarm_r"]->set_speed_multiplier(arm_shot_speed_multiplier);
+    stats_modifiers["upperarm_r"]->set_accuracy_multiplier(arm_shot_accuracy_multiplier);
+    
+    stats_modifiers["hand_r"]->set_damage_multiplier(hand_shot_damage_multiplier);
+    stats_modifiers["hand_r"]->set_speed_multiplier(hand_shot_speed_multiplier);
+    stats_modifiers["hand_r"]->set_accuracy_multiplier(hand_shot_accuracy_multiplier);
+    
+    stats_modifiers["thigh_l"]->set_damage_multiplier(leg_shot_damage_multiplier);
+    stats_modifiers["thigh_l"]->set_speed_multiplier(leg_shot_speed_multiplier);
+    stats_modifiers["thigh_l"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
+    
+    stats_modifiers["calf_l"]->set_damage_multiplier(leg_shot_damage_multiplier);
+    stats_modifiers["calf_l"]->set_speed_multiplier(leg_shot_speed_multiplier);
+    stats_modifiers["calf_l"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
+    
+    stats_modifiers["thigh_r"]->set_damage_multiplier(leg_shot_damage_multiplier);
+    stats_modifiers["thigh_r"]->set_speed_multiplier(leg_shot_speed_multiplier);
+    stats_modifiers["thigh_r"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
+    
+    stats_modifiers["calf_r"]->set_damage_multiplier(leg_shot_damage_multiplier);
+    stats_modifiers["calf_r"]->set_speed_multiplier(leg_shot_speed_multiplier);
+    stats_modifiers["calf_r"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
+    
 }
 
 
@@ -173,4 +222,19 @@ FVector ARangedEnemy::get_hitscan_direction() const
     const FVector direction = accuracy_change.RotateVector(GetActorForwardVector());
     
     return direction;
+}
+
+void ARangedEnemy::hit_bone(const FName bone_name)
+{
+    Super::hit_bone(bone_name);
+
+    const UStatsModifier* const stats_modifier = stats_modifiers[bone_name];
+
+    const float old_pitch_offset = max_pitch_offset;
+    const float old_yaw_offset = max_yaw_offset;
+    
+    max_pitch_offset *= stats_modifier->get_accuracy_multiplier();
+    max_yaw_offset *= stats_modifier->get_accuracy_multiplier();
+
+    UE_LOG(Enemy, Log, LOG_TEXT("Enemy '%s' accuracy adjusted (max_pitch_offset: %f -> %f, max_yaw_offset: %f -> %f)"), *actor_name, old_pitch_offset, max_pitch_offset, old_yaw_offset, max_yaw_offset);
 }

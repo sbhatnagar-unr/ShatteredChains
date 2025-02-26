@@ -5,10 +5,11 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/SphereComponent.h"
+#include "Interfaces/NamedActor/NamedActor.h"
 #include "Weapon.generated.h"
 
 UCLASS()
-class AWeapon : public AActor
+class AWeapon : public AActor, public INamedActor
 {
     GENERATED_BODY()
 
@@ -32,6 +33,9 @@ public:
     float get_weapon_damage() const;
 
     virtual void refill_magazine();
+
+    virtual FString get_default_actor_name() const override final;
+
     
 protected:
     // Called when the game starts or when spawned
@@ -78,4 +82,18 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category = "Animations")
     TObjectPtr<UAnimMontage> reload_animation_montage;
     bool has_reload_animation_montage;
+
+
+private:
+    UPROPERTY(EditInstanceOnly)
+    FString default_actor_name;
+
+    UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
+    TObjectPtr<USoundBase> shoot_sound;
+
+    UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
+    TObjectPtr<USoundBase> reload_sound;
+
+    UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
+    TObjectPtr<USoundBase> out_of_ammo_sound;
 };

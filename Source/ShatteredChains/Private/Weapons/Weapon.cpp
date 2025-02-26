@@ -5,8 +5,7 @@
 #include "Player/MyCharacter.h"
 #include "Components/SphereComponent.h"
 #include "ShatteredChains/Logging.h"
-
-DEFINE_LOG_CATEGORY(Weapon);
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AWeapon::AWeapon()
@@ -43,13 +42,12 @@ AWeapon::AWeapon()
 void AWeapon::BeginPlay()
 {
     Super::BeginPlay();
+    
+    actor_name = default_actor_name;
 
     // Bind the overlap event
     InteractionSphere->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::OnOverlapBegin);
 
-    const FString actor_name = *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED")));
-
-    
     // Check for mesh
     if (weapon_skeletal_mesh_component->GetSkeletalMeshAsset() == nullptr)
     {
@@ -90,6 +88,21 @@ void AWeapon::BeginPlay()
     // Set ammo
     current_ammo_stock_pile_count = max_ammo_stock_pile_count;
     refill_magazine();
+
+
+    // Check sound effects
+    if (shoot_sound == nullptr)
+    {
+        UE_LOG(Weapon, Warning, LOG_TEXT("No shoot sound effect for weapon %s"), *actor_name);
+    }
+    if (reload_sound == nullptr)
+    {
+        UE_LOG(Weapon, Warning, LOG_TEXT("No reload sound effect for weapon %s"), *actor_name);
+    }
+    if (out_of_ammo_sound == nullptr)
+    {
+        UE_LOG(Weapon, Warning, LOG_TEXT("No out of ammo sound effect for weapon %s"), *actor_name);
+    }
 }
 
 void AWeapon::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -133,6 +146,9 @@ void AWeapon::fire() const
     if (current_magazine_ammo_count <= 0)
     {
         UE_LOG(Weapon, Verbose, LOG_TEXT("No ammo, skipping fire"));
+        // Play out_of_ammo sound
+        // Function internally handles nullptr audio
+        UGameplayStatics::PlaySound2D(GetWorld(), out_of_ammo_sound, 1, 1, 0, nullptr, this, false);
         return;
     }
 
@@ -174,6 +190,10 @@ void AWeapon::fire() const
     {
         UE_LOG(Weapon, Error, LOG_TEXT("Could not play weapon fire animation montage"));
     }
+
+    // Play fire sound
+    // Function internally handles nullptr audio
+    UGameplayStatics::PlaySound2D(GetWorld(), shoot_sound, 1, 1, 0, nullptr, this, false);
 }
 
 
@@ -235,6 +255,10 @@ void AWeapon::reload() const
     {
         UE_LOG(Weapon, Error, LOG_TEXT("Could not play weapon reload animation montage"));
     }
+
+    // Play reload sound
+    // Function internally handles nullptr audio
+    UGameplayStatics::PlaySound2D(GetWorld(), reload_sound, 1, 1, 0, nullptr, this, false);
 }
 
 
@@ -242,7 +266,7 @@ void AWeapon::decrement_mag_ammo_count()
 {
     if (current_magazine_ammo_count > 0)
     {
-        UE_LOG(Weapon, Verbose, LOG_TEXT("Removed ammo from magazine on %s (%d->%d)"), *(Tags.Num() > 0 ? Tags[0].ToString() : FString(TEXT("UNTAGGED"))), current_magazine_ammo_count, current_magazine_ammo_count-1);
+        UE_LOG(Weapon, Verbose, LOG_TEXT("Removed ammo from magazine on %s (%d->%d)"), *actor_name, current_magazine_ammo_count, current_magazine_ammo_count-1);
         current_magazine_ammo_count--;
     }
     else
@@ -314,3 +338,10 @@ void AWeapon::refill_magazine()
         UE_LOG(Weapon, Verbose, LOG_TEXT("No ammo to refill"));
     }
 }
+
+
+FString AWeapon::get_default_actor_name() const
+{
+    return default_actor_name;
+}
+

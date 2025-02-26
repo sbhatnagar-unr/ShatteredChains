@@ -22,7 +22,10 @@ public:
     float get_attack_animation_exit_blend() const;
     
     virtual void on_death(AActor* killed_by) override final;
-    
+
+    bool get_should_chase_target() const;
+    void set_should_chase_target(const bool chase_target);
+
 private:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
@@ -40,4 +43,9 @@ private:
     
     UPROPERTY(EditAnywhere, Category="Attacking")
     float attack_damage;
+
+    UFUNCTION()
+    void on_see_pawn(APawn* pawn);
+
+    bool should_chase_target;
 };
