@@ -29,6 +29,10 @@ public:
     // Weapon user functions
     virtual FVector get_hitscan_start_location() const override final;
     virtual FVector get_hitscan_direction() const override final;
+
+    // Bone collision functions
+    virtual void hit_bone(const FName bone_name) override final;
+
     
 protected:
     // Called when the game starts or when spawned
