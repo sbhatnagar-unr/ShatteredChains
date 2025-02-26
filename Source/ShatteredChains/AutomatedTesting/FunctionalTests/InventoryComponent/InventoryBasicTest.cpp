@@ -1,5 +1,3 @@
-#include "GraphAStar.h"
-#include "IDetailTreeNode.h"
 #include "Components/InventoryComponent/InventoryComponent.h"
 #include "Misc/AutomationTest.h"
 
