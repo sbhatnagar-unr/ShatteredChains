@@ -10,6 +10,9 @@ bool HealthBasicTest::RunTest(const FString& Parameters)
     UHealthComponent* const test_health_component = NewObject<UHealthComponent>();
 
     AddExpectedError(TEXT("Health component has no owner"), EAutomationExpectedErrorFlags::Contains, 3);
+    AddExpectedMessage(TEXT("Can't set negative health"), ELogVerbosity::Warning, EAutomationExpectedMessageFlags::Contains, 1);
+    AddExpectedMessage(TEXT("Can't heal negative health"), ELogVerbosity::Warning, EAutomationExpectedMessageFlags::Contains, 1);
+    AddExpectedMessage(TEXT("Can't deal negative damage"), ELogVerbosity::Warning, EAutomationExpectedMessageFlags::Contains, 1);
 
     // Helper function
     auto check_health = [this, &test_health_component](const float expected_health) -> bool
@@ -28,26 +31,42 @@ bool HealthBasicTest::RunTest(const FString& Parameters)
 
     AddInfo(TEXT("TESTING SET HEALTH"));
     // Set health
-    test_health_component->set_health(100.f);
     float expected_health = 100.f;
+    test_health_component->set_health(100.f);
+    passed &= check_health(expected_health);
+
+    // expected_health doesn't change, should not heal
+    test_health_component->set_health(-100.f);
     passed &= check_health(expected_health);
 
 
     AddInfo(TEXT("TESTING DAMAGE"));
     // Do damage
-    constexpr float damage = 10.f;
-    test_health_component->deal_damage(nullptr, damage);
+    float damage = 10.f;
     expected_health -= damage;
+    test_health_component->deal_damage(nullptr, damage);
+    passed &= check_health(expected_health);
+
+    // Do damage
+    damage = -10.f;
+    // expected_health doesn't change, should do no damage
+    test_health_component->deal_damage(nullptr, damage);
     passed &= check_health(expected_health);
 
 
     AddInfo(TEXT("TESTING HEAL"));
     // Heal
-    constexpr float heal_amount = 5.f;
+    float heal_amount = 5.f;
     expected_health += heal_amount;
     test_health_component->heal(heal_amount);
     passed &= check_health(expected_health);
 
+    heal_amount = -5.f;
+    // expected_health doesn't change, should not heal
+    test_health_component->heal(heal_amount);
+    passed &= check_health(expected_health);
+
+    
 
     AddInfo(TEXT("TESTING DEATH"));
     expected_health = 0;
