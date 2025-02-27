@@ -77,6 +77,11 @@ void UHealthComponent::heal(const float health)
     /*
     Heals character up to a maximum of max_health
     */
+    if (health < 0)
+    {
+        UE_LOG(Health, Warning, LOG_TEXT("Can't heal negative health (%f) for '%s'"), health, *(GetOwner<INamedActor>() ? GetOwner<INamedActor>()->get_actor_name() : FString(TEXT("NULLPTR"))));
+        return;
+    }
     current_health += health;
     if (current_health > max_health)
     {
@@ -91,6 +96,11 @@ void UHealthComponent::set_health(const float health)
     /*
     Sets health up to a maximum of max_health
     */
+    if (health < 0)
+    {
+        UE_LOG(Health, Warning, LOG_TEXT("Can't set negative health (%f) for '%s'"), health, *(GetOwner<INamedActor>() ? GetOwner<INamedActor>()->get_actor_name() : FString(TEXT("NULLPTR"))));
+        return;
+    }
     current_health = (health > max_health) ? max_health : health;
 }
 
@@ -99,7 +109,19 @@ void UHealthComponent::deal_damage(AActor* dealt_by, const float damage)
 {
     /*
     Applies damage, if health becomes negative, it gets set to 0
+    Death delegate called if dead
     */
+    if (damage < 0)
+    {
+        UE_LOG(Health, Warning, LOG_TEXT("Can't deal negative damage (%f) to '%s'"), damage, *(GetOwner<INamedActor>() ? GetOwner<INamedActor>()->get_actor_name() : FString(TEXT("NULLPTR"))));
+        return;
+    }
+
+    if (is_dead)
+    {
+        UE_LOG(Health, Warning, LOG_TEXT("Health component already dead for '%s'"), *(GetOwner<INamedActor>() ? GetOwner<INamedActor>()->get_actor_name() : FString(TEXT("NULLPTR"))));
+        return;
+    }
     // Do the damage
     current_health = FMath::Max(current_health - (damage * damage_multiplier), 0);
 
@@ -131,7 +153,7 @@ void UHealthComponent::deal_damage(AActor* dealt_by, const float damage)
     UE_LOG(Health, Log, LOG_TEXT("%s received %f damage from %s (%f remaining)"), *owner_name, damage, *dealt_by_name, current_health);
 
     // If we just died
-    if (current_health <= 0 && !is_dead)
+    if (current_health <= 0)
     {
         UE_LOG(Health, Log, LOG_TEXT("%s is dead"), *owner_name);
         current_health = 0;
