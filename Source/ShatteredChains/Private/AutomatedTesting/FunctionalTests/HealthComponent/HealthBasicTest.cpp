@@ -1,7 +1,7 @@
 #include "Misc/AutomationTest.h"
 #include "Components/HealthComponent/HealthComponent.h"
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(HealthBasicTest, "ShatteredChains.ShatteredChains.AutomatedTesting.FunctionalTests.HealthComponent.HealthBasicTest",
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(HealthBasicTest, "ShatteredChains.ShatteredChains.Private.AutomatedTesting.FunctionalTests.HealthComponent.HealthBasicTest",
                                  EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 
 bool HealthBasicTest::RunTest(const FString& Parameters)

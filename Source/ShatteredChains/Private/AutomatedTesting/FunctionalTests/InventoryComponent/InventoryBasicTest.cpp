@@ -1,7 +1,7 @@
 #include "Components/InventoryComponent/InventoryComponent.h"
 #include "Misc/AutomationTest.h"
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(InventoryBasicTest, "ShatteredChains.ShatteredChains.AutomatedTesting.FunctionalTests.InventoryComponent.InventoryBasicTest",
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(InventoryBasicTest, "ShatteredChains.ShatteredChains.Private.AutomatedTesting.FunctionalTests.InventoryComponent.InventoryBasicTest",
                                  EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 
 bool InventoryBasicTest::RunTest(const FString& Parameters)
