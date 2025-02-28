@@ -355,7 +355,7 @@ void AWeapon::set_max_ammo_stock_pile_count(const unsigned int new_max_ammo_stoc
 
 void AWeapon::set_current_ammo_stock_pile_count(const unsigned int new_current_ammo_stock_pile_count)
 {
-    current_ammo_stock_pile_count = new_current_ammo_stock_pile_count;
+    current_ammo_stock_pile_count = FMath::Min(new_current_ammo_stock_pile_count, max_ammo_stock_pile_count);
 }
 
 
