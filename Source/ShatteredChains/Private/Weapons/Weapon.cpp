@@ -192,7 +192,7 @@ void AWeapon::fire() const
     }
 
     // Play fire sound
-    // Function internally handles nullptr audio
+    // Function internally handles nullptr audio case
     UGameplayStatics::PlaySound2D(GetWorld(), shoot_sound, 1, 1, 0, nullptr, this, false);
 }
 
@@ -257,7 +257,7 @@ void AWeapon::reload() const
     }
 
     // Play reload sound
-    // Function internally handles nullptr audio
+    // Function internally handles nullptr audio case
     UGameplayStatics::PlaySound2D(GetWorld(), reload_sound, 1, 1, 0, nullptr, this, false);
 }
 
@@ -344,4 +344,18 @@ FString AWeapon::get_default_actor_name() const
 {
     return default_actor_name;
 }
+
+
+
+void AWeapon::set_max_ammo_stock_pile_count(const unsigned int new_max_ammo_stock_pile_count)
+{
+    max_ammo_stock_pile_count = new_max_ammo_stock_pile_count;
+}
+
+
+void AWeapon::set_current_ammo_stock_pile_count(const unsigned int new_current_ammo_stock_pile_count)
+{
+    current_ammo_stock_pile_count = new_current_ammo_stock_pile_count;
+}
+
 
