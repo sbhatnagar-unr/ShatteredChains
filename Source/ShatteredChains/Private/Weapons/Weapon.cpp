@@ -359,3 +359,7 @@ void AWeapon::set_current_ammo_stock_pile_count(const unsigned int new_current_a
 }
 
 
+void AWeapon::set_magazine_size(const unsigned int new_magazine_size)
+{
+    magazine_size = new_magazine_size;
+}
