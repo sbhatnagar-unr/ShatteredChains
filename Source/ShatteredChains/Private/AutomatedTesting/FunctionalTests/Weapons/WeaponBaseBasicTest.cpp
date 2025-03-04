@@ -9,7 +9,6 @@ bool WeaponBaseBasicTest::RunTest(const FString& Parameters)
     // Make the test pass by returning true, or fail by returning false.
 
     AddExpectedMessage(TEXT("Weapon mag ammo decrement triggered but mag ammo count was 0"), ELogVerbosity::Warning, EAutomationExpectedMessageFlags::Contains, 2);
-    bool passed = true;
 
     AWeapon* weapon = NewObject<AWeapon>();
 
@@ -30,62 +29,58 @@ bool WeaponBaseBasicTest::RunTest(const FString& Parameters)
     int expected_stock_pile_ammo = weapon->get_current_ammo_stock_pile_count();
     int expected_mag_ammo = weapon->get_current_magazine_ammo_count();
 
-    auto check_values = [this, &weapon, &expected_stock_pile_ammo, &expected_mag_ammo]() -> bool
+    auto check_values = [this, &weapon, &expected_stock_pile_ammo, &expected_mag_ammo](const FString &test_description) -> bool
     {
+        bool passed = true;
         if (weapon->get_current_ammo_stock_pile_count() != expected_stock_pile_ammo)
         {
             AddError(FString::Printf(TEXT("Stock pile ammo was %d when expected %d"), weapon->get_current_ammo_stock_pile_count(), expected_stock_pile_ammo));
-            return false;
+            passed = false;
         }
 
         if (weapon->get_current_magazine_ammo_count() != expected_mag_ammo)
         {
             AddError(FString::Printf(TEXT("Magazine ammo was %d when expected %d"), weapon->get_current_magazine_ammo_count(), expected_mag_ammo));
-            return false;
+            passed = false;
         }
 
-        return true;
+        AddInfo(FString::Printf(TEXT("%s: %s"), *test_description, *(passed ? FString("PASSED") : FString("FAILED"))));
+        return passed;
     };
     
-    
+    bool passed = true;    
     // Simulate fire without ammo
-    AddInfo(TEXT("Testing fire without ammo 1"));
     weapon->decrement_mag_ammo_count();
     expected_mag_ammo = 0;
-    passed &= check_values();
+    passed &= check_values(TEXT("Testing fire without ammo 1"));
     
     // Simulate reload
-    AddInfo(TEXT("Testing reload 1"));
     weapon->refill_magazine();
     expected_stock_pile_ammo -= weapon->get_magazine_size() - expected_mag_ammo;
     expected_mag_ammo = weapon->get_magazine_size();
-    passed &= check_values();
+    passed &= check_values(TEXT("Testing reload 1"));
     
     // Simulate fire
-    AddInfo(TEXT("Testing firing weapon 1"));
     weapon->decrement_mag_ammo_count();
     expected_mag_ammo -= 1;
-    passed &= check_values();
+    passed &= check_values(TEXT("Testing firing weapon 1"));
 
     // Simulate fire
-    AddInfo(TEXT("Testing firing weapon 2"));
     weapon->decrement_mag_ammo_count();
     expected_mag_ammo -= 1;
-    passed &= check_values();
+    passed &= check_values(TEXT("Testing firing weapon 2"));
 
     // Simulate fire
-    AddInfo(TEXT("Testing firing weapon 3"));
     weapon->decrement_mag_ammo_count();
     expected_mag_ammo -= 1;
-    passed &= check_values();
+    passed &= check_values(TEXT("Testing firing weapon 3"));
 
 
     // Simulate reload
-    AddInfo(TEXT("Testing reload 2"));
     expected_stock_pile_ammo -= weapon->get_magazine_size() - expected_mag_ammo;
     expected_mag_ammo = weapon->get_magazine_size();
     weapon->refill_magazine();
-    passed &= check_values();
+    passed &= check_values(TEXT("Testing reload 2"));
 
 
     // Empty out gun
@@ -93,23 +88,20 @@ bool WeaponBaseBasicTest::RunTest(const FString& Parameters)
     expected_stock_pile_ammo = 0;
     for (int i = weapon->get_current_magazine_ammo_count(); i > 0; i--)
     {
-        AddInfo(FString::Printf(TEXT("Emptying gun (%d) ammo remaining"), weapon->get_current_magazine_ammo_count()));
         weapon->decrement_mag_ammo_count();
         expected_mag_ammo -= 1;
-        passed &= check_values();
+        passed &= check_values(FString::Printf(TEXT("Emptying gun (%d) ammo remaining"), weapon->get_current_magazine_ammo_count()));
     }
     
     // Simulate fire without ammo
-    AddInfo(TEXT("Testing fire without ammo 2"));
     weapon->decrement_mag_ammo_count();
     expected_mag_ammo = 0;
-    passed &= check_values();
+    passed &= check_values(TEXT("Testing fire without ammo 2"));
     
     // Simulate reloading without ammo
-    AddInfo(TEXT("Testing reload without ammo"));
     weapon->refill_magazine();
     expected_mag_ammo = 0;
-    passed &= check_values();
+    passed &= check_values(TEXT("Testing reload without ammo"));
 
     return passed;
 }

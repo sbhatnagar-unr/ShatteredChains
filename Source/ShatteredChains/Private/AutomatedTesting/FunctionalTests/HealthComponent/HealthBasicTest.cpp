@@ -15,71 +15,66 @@ bool HealthBasicTest::RunTest(const FString& Parameters)
     AddExpectedMessage(TEXT("Can't deal negative damage"), ELogVerbosity::Warning, EAutomationExpectedMessageFlags::Contains, 1);
 
     // Helper function
-    auto check_health = [this, &test_health_component](const float expected_health) -> bool
+    auto check_health = [this, &test_health_component](const float expected_health, const FString &test_description) -> bool
     {
+        bool passed = true;
         if (test_health_component->get_health() != expected_health)
         {
             AddError(FString::Printf(TEXT("Expected health was %f but actual health was %f"), expected_health, test_health_component->get_health()));
-            return false;
+            passed = false;
         }
-        return true;
+        
+        AddInfo(FString::Printf(TEXT("%s: %s"), *test_description, *(passed ? FString("PASSED") : FString("FAILED"))));
+        return passed;
     };
     
 
     bool passed = true;
     
 
-    AddInfo(TEXT("TESTING SET HEALTH"));
     // Set health
     float expected_health = 100.f;
     test_health_component->set_health(100.f);
-    passed &= check_health(expected_health);
+    passed &= check_health(expected_health, TEXT("TESTING SET HEALTH POSITIVE"));
 
     // expected_health doesn't change, should not heal
     test_health_component->set_health(-100.f);
-    passed &= check_health(expected_health);
+    passed &= check_health(expected_health, TEXT("TESTING SET HEALTH NEGATIVE"));
 
 
-    AddInfo(TEXT("TESTING DAMAGE"));
     // Do damage
     float damage = 10.f;
     expected_health -= damage;
     test_health_component->deal_damage(nullptr, damage);
-    passed &= check_health(expected_health);
+    passed &= check_health(expected_health, TEXT("TESTING DAMAGE POSITIVE"));
 
     // Do damage
     damage = -10.f;
     // expected_health doesn't change, should do no damage
     test_health_component->deal_damage(nullptr, damage);
-    passed &= check_health(expected_health);
+    passed &= check_health(expected_health, TEXT("TESTING DAMAGE NEGATIVE"));
 
 
-    AddInfo(TEXT("TESTING HEAL"));
     // Heal
     float heal_amount = 5.f;
     expected_health += heal_amount;
     test_health_component->heal(heal_amount);
-    passed &= check_health(expected_health);
+    passed &= check_health(expected_health, TEXT("TESTING HEAL POSITIVE"));
 
     heal_amount = -5.f;
     // expected_health doesn't change, should not heal
     test_health_component->heal(heal_amount);
-    passed &= check_health(expected_health);
+    passed &= check_health(expected_health, TEXT("TESTING HEAL NEGATIVE"));
 
     
-
-    AddInfo(TEXT("TESTING DEATH"));
     expected_health = 0;
     // Deal damage
     test_health_component->deal_damage(nullptr, 10000000);
-    passed &= check_health(expected_health);
-
+    passed &= check_health(expected_health, TEXT("TESTING DEATH"));
 
     // Deal damage to dead component again
     test_health_component->deal_damage(nullptr, 10000000);
-    passed &= check_health(expected_health);
-
-
+    passed &= check_health(expected_health, TEXT("TESTING DEAL DAMAGE TO DEAD COMPONENT"));
 
     return passed;
 }
