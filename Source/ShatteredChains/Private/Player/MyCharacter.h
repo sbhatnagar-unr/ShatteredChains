@@ -1,5 +1,4 @@
 #pragma once
-#pragma once
 
 #include "CoreMinimal.h"
 #include "InputActionValue.h"
@@ -12,6 +11,7 @@
 #include "Interfaces/HasInventory/HasInventory.h"
 #include "Interfaces/WeaponUser/WeaponUser.h"
 #include "EnhancedInputComponent.h"  // Include enhanced input system
+#include "Components/TimelineComponent.h"
 #include "Interfaces/NamedActor/NamedActor.h"
 #include "MyCharacter.generated.h"   // Must be the last include
 
@@ -471,5 +471,25 @@ protected:
     TArray<TObjectPtr<USoundBase>> head_shot_sounds;
 
     TMap<FName, TArray<TObjectPtr<USoundBase>>> sound_map;
+
+
+private:
+    void restart_current_level() const;
+
+    FVector player_death_camera_start_location;
+    FVector player_death_camera_end_location;
+    FRotator player_death_camera_start_rotation;
+    FRotator player_death_camera_end_rotation;
+    // Function to update the camera position
+    UFUNCTION()
+    void UpdateCameraPosition(float value);
+
+    // Timeline component to handle interpolation
+    TObjectPtr<UTimelineComponent> camera_timeline;
+
+    // Curve to define the interpolation
+    UPROPERTY(EditDefaultsOnly, Category="Camera")
+    UCurveFloat* camera_curve;
+    
     
 };

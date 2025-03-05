@@ -4,12 +4,14 @@
 #include "Weapons/Weapon.h"
 #include "GameFramework/CharacterMovementComponent.h" 
 #include "InputMappingContext.h"
+#include "PhysicsEngine/PhysicsAsset.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "ShatteredChains/Logging.h"
 #include "Components/CapsuleComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "ShatteredChains/CustomTraceChannels.h"
 
 // Sets default values
 AMyCharacter::AMyCharacter()
@@ -30,6 +32,8 @@ AMyCharacter::AMyCharacter()
     Camera->SetupAttachment(RootComponent);
     Camera->bUsePawnControlRotation = true;
 
+    camera_timeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("Camera Timeline"));
+    
     HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("Health Component"));
     InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory Component"));
 
@@ -62,7 +66,8 @@ void AMyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-    add_stats_modifiers(GetMesh()->GetPhysicsAsset(), &stats_modifiers);
+    const TObjectPtr<UPhysicsAsset> physics_asset = GetMesh()->GetPhysicsAsset();
+    add_stats_modifiers(physics_asset, &stats_modifiers);
 
     stats_modifiers["Hips"]->set_damage_multiplier(torso_shot_damage_multiplier);
     stats_modifiers["Hips"]->set_speed_multiplier(torso_shot_speed_multiplier);
@@ -150,22 +155,13 @@ void AMyCharacter::BeginPlay()
         UE_LOG(Enemy, Warning, LOG_TEXT("No sound effects for head shot in '%s'"), *actor_name);
     }
     
-    
+    // Add bones to sound map 
+    for (int32 i = 0; i < physics_asset->SkeletalBodySetups.Num(); i++)
+    {
+        sound_map.Add(physics_asset->SkeletalBodySetups[i]->BoneName);
+    }
     sound_map.Add("dead");
-    sound_map.Add("Hips");
-    sound_map.Add("LeftUpLeg");
-    sound_map.Add("LeftLeg");
-    sound_map.Add("LeftFoot");
-    sound_map.Add("RightUpLeg");
-    sound_map.Add("RightLeg");
-    sound_map.Add("RightFoot");
-    sound_map.Add("Spine1");
-    sound_map.Add("Spine2");
-    sound_map.Add("LeftArm");
-    sound_map.Add("LeftHand");
-    sound_map.Add("Head");
-    sound_map.Add("RightArm");
-    sound_map.Add("RightHand");
+    
     sound_map["dead"] = death_sounds;
     sound_map["Hips"] = torso_shot_sounds;
     sound_map["LeftUpLeg"] = leg_shot_sounds;
@@ -181,7 +177,6 @@ void AMyCharacter::BeginPlay()
     sound_map["Head"] = head_shot_sounds;
     sound_map["RightArm"] = arm_shot_sounds;
     sound_map["RightHand"] = hand_shot_sounds;
-
 }
 
 // Player Input bindings
@@ -423,7 +418,7 @@ void AMyCharacter::Look(const FInputActionValue& InputValue)
 void AMyCharacter::Jump()
 {
     ACharacter::Jump();
-    UE_LOG(Player, Log, TEXT("Jump triggered"));
+    UE_LOG(Player, VeryVerbose, TEXT("Jump triggered"));
 }
 
 // Forward and Backwards functions
@@ -919,6 +914,33 @@ void AMyCharacter::Tick(float DeltaTime)
 }
 
 
+void AMyCharacter::restart_current_level() const
+{
+    const UWorld* world = GetWorld();
+
+    if (world == nullptr)
+    {
+        UE_LOG(Player, Error, LOG_TEXT("Could not get world to start reset timer"));
+        return;
+    }
+    
+    const ULevel* current_level = world->GetCurrentLevel();
+    const FName current_level_name = *current_level->GetPackage()->GetName();
+    UGameplayStatics::OpenLevel(this, current_level_name);
+    UE_LOG(Player, Log, LOG_TEXT("Restarting level"));
+}
+
+
+void AMyCharacter::UpdateCameraPosition(const float value)
+{
+    const FVector new_camera_location = FMath::Lerp(player_death_camera_start_location, player_death_camera_end_location, value); 
+    const FRotator new_camera_rotation = FMath::Lerp(player_death_camera_start_rotation, player_death_camera_end_rotation, value); 
+    UE_LOG(Player, VeryVerbose, LOG_TEXT("Updating camera position for dead player '%s' (value=%f, position=%s, rotation=%s)"), *actor_name, value, *(new_camera_location.ToString()), *(new_camera_rotation.ToString()));
+    Camera->SetRelativeLocationAndRotation(new_camera_location, new_camera_rotation);
+}
+
+
+
 void AMyCharacter::on_death(const AActor* killed_by)
 {
     // Play random death sound
@@ -935,21 +957,86 @@ void AMyCharacter::on_death(const AActor* killed_by)
         UGameplayStatics::PlaySound2D(GetWorld(), sound, 1, 1, 0, nullptr, this, false);
         UE_LOG(Enemy, Log, LOG_TEXT("Playing death sound '%s' for enemy '%s'"), *(sound->GetPathName()), *actor_name);
     }
-    
-    UE_LOG(Player, Log, LOG_TEXT("Player dead.... restarting level"));
+
+    UE_LOG(Player, Log, LOG_TEXT("Player dead"));
 
     const UWorld* world = GetWorld();
 
     if (world == nullptr)
     {
-        UE_LOG(Player, Error, LOG_TEXT("Could not get world to restart level"));
+        UE_LOG(Player, Error, LOG_TEXT("Could not get world to start reset timer"));
         return;
     }
+    
+    // Start level reset timer
+    FTimerHandle restart_level_timer_handle;
+    world->GetTimerManager().SetTimer(restart_level_timer_handle, this, &AMyCharacter::restart_current_level, 5, false);
 
-    const ULevel* current_level = world->GetCurrentLevel();
-    const FName current_level_name = *current_level->GetPackage()->GetName();
-    UGameplayStatics::OpenLevel(this, current_level_name);
-    UE_LOG(Player, Log, LOG_TEXT("Level restarted"));
+
+    // Move camera up to look down at player
+    player_death_camera_start_location = Camera->GetRelativeLocation();
+    player_death_camera_end_location = player_death_camera_start_location + FVector(0, 0, 300);
+
+    player_death_camera_start_rotation = Camera->GetRelativeRotation();
+    player_death_camera_end_rotation = FRotator(-90, 0, 0);
+
+    // Disable player input when they are dead
+    if (APlayerController* player_controller = GetWorld()->GetFirstPlayerController())
+    {
+        UE_LOG(Player, Log, LOG_TEXT("Disabling input for dead player '%s'"), *actor_name);
+        this->DisableInput(player_controller);    
+    } else
+    {
+        UE_LOG(Player, Error, LOG_TEXT("No player controller for player '%s'"), *actor_name);
+    }
+    
+    if (camera_curve)
+    {
+        FOnTimelineFloat timeline_callback;
+        timeline_callback.BindUFunction(this, FName("UpdateCameraPosition"));
+        camera_timeline->AddInterpFloat(camera_curve, timeline_callback);
+
+        UE_LOG(Player, Log, LOG_TEXT("Beginning camera transition for dead player '%s'"), *actor_name);
+        // Set this to false so that the camera can rotate
+        Camera->bUsePawnControlRotation = false;
+        camera_timeline->PlayFromStart();
+    } else
+    {
+        UE_LOG(Player, Warning, LOG_TEXT("No camera curve for player '%s'"), *actor_name);
+    }
+    
+
+    // Make player "dead"
+    USkeletalMeshComponent* mesh = GetMesh();
+
+    if (mesh == nullptr)
+    {
+        UE_LOG(Player, Error, LOG_TEXT("Player '%s' has no USkeletalMeshComponent"), *actor_name);
+    }
+    else
+    {
+        // Make it un-shootable
+        GetMesh()->SetCollisionResponseToChannel(ShootableChannel, ECollisionResponse::ECR_Ignore);
+        UE_LOG(Player, Verbose, LOG_TEXT("Player '%s' is no longer shootable"), *actor_name);
+
+        // Stop all animations
+        UAnimInstance *anim_instance = GetMesh()->GetAnimInstance();
+        if (anim_instance == nullptr)
+        {
+            UE_LOG(Player, Warning, LOG_TEXT("Player '%s' has no animation instance"), *actor_name);
+        }
+        else
+        {
+            anim_instance->StopAllMontages(0);
+        }
+        
+        UE_LOG(Player, Verbose, LOG_TEXT("Stopped all animation montages for '%s'"), *actor_name);
+
+        // Ragdoll player
+        mesh->SetCollisionProfileName(FName(TEXT("Ragdoll")));
+        mesh->SetSimulatePhysics(true);
+        UE_LOG(Player, Log, LOG_TEXT("Player '%s' made ragdoll"), *actor_name);
+    }
 }
 
 

@@ -74,7 +74,7 @@ void AEnemy::BeginPlay()
 
     // Get all collision physics assets and create stats modifiers for them
     add_stats_modifiers(physics_asset, &stats_modifiers);
-
+    
     if (death_sounds.Num() == 0)
     {
         UE_LOG(Enemy, Warning, LOG_TEXT("No sound effects for death in '%s'"), *default_actor_name);
@@ -100,6 +100,13 @@ void AEnemy::BeginPlay()
         UE_LOG(Enemy, Warning, LOG_TEXT("No sound effects for head shot in '%s'"), *default_actor_name);
     }
 
+    // Add physics assets to sound map
+    for (int32 i = 0; i < physics_asset->SkeletalBodySetups.Num(); i++)
+    {
+        sound_map.Add(physics_asset->SkeletalBodySetups[i]->BoneName);
+    }
+
+    // Add dead sound
     sound_map.Add("dead");
     sound_map["dead"] = death_sounds;    
 }

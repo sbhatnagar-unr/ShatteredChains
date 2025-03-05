@@ -168,19 +168,7 @@ void ARangedEnemy::BeginPlay()
     stats_modifiers["calf_r"]->set_damage_multiplier(leg_shot_damage_multiplier);
     stats_modifiers["calf_r"]->set_speed_multiplier(leg_shot_speed_multiplier);
     stats_modifiers["calf_r"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
-
-    sound_map.Add("head");
-    sound_map.Add("pelvis");
-    sound_map.Add("spine_01");
-    sound_map.Add("spine_03");
-    sound_map.Add("upperarm_l");
-    sound_map.Add("hand_l");
-    sound_map.Add("upperarm_r");
-    sound_map.Add("hand_r");
-    sound_map.Add("thigh_l");
-    sound_map.Add("calf_l");
-    sound_map.Add("thigh_r");
-    sound_map.Add("calf_r");
+    
     sound_map["head"] = head_shot_sounds;
     sound_map["pelvis"] = torso_shot_sounds;
     sound_map["spine_01"] = torso_shot_sounds;
