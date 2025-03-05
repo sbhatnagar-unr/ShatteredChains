@@ -99,6 +99,9 @@ void AEnemy::BeginPlay()
     {
         UE_LOG(Enemy, Warning, LOG_TEXT("No sound effects for head shot in '%s'"), *default_actor_name);
     }
+
+    sound_map.Add("dead");
+    sound_map["dead"] = death_sounds;    
 }
 
 
@@ -116,11 +119,23 @@ UHealthComponent* AEnemy::get_health_component() const
 
 void AEnemy::on_death(const AActor* killed_by)
 {
+    // Play random death sound
+    const TArray<TObjectPtr<USoundBase>> *sounds = sound_map.Find("dead");
+    // Don't have to worry about nullptr in second condition because of short circuit evaluation
+    if (sounds == nullptr || sounds->Num() == 0)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("No death sounds for '%s'"), *actor_name);
+    } else
+    {
+        const int num_sounds = sounds->Num();
+        const int sound_to_play = FMath::RandHelper(num_sounds);
+        USoundBase* sound = (*sounds)[sound_to_play];
+        UGameplayStatics::PlaySound2D(GetWorld(), sound, 1, 1, 0, nullptr, this, false);
+        UE_LOG(Enemy, Log, LOG_TEXT("Playing death sound '%s' for enemy '%s'"), *(sound->GetPathName()), *actor_name);
+    }
+    
     const INamedActor* const killed_by_na = Cast<INamedActor>(killed_by);
 
-    // UGameplayStatics::PlaySound2D(GetWorld(), death_sound, 1, 1, 0, nullptr, this, false);
-
-    
     if (killed_by_na != nullptr)
     {
         UE_LOG(Enemy, Log, LOG_TEXT("%s was just killed by %s"), *actor_name, *(killed_by_na->get_actor_name()));
@@ -223,6 +238,28 @@ void AEnemy::hit_bone(const AActor *hit_by, const FName bone_name, float weapon_
     UE_LOG(BoneCollision, Log, LOG_TEXT("Damage for '%s' modified from %f -> %f"), *actor_name, old_damage, weapon_damage);
     UE_LOG(Health, Warning, LOG_TEXT("'%s' is_dead=%d"), *actor_name, health_component->dead());
     health_component->deal_damage(hit_by, weapon_damage);
+    
+    // Here play audio
+    // We only play audio if we are not dead, because then there will be two audio effects
+    // This one and the dead one
+    if (!health_component->dead())
+    {
+        // Play random sound depending on where we were hit
+        const TArray<TObjectPtr<USoundBase>> *sounds = sound_map.Find(bone_name);
+        // Don't have to worry about nullptr in second condition because of short circuit evaluation
+        if (sounds == nullptr || sounds->Num() == 0)
+        {
+            UE_LOG(Enemy, Error, LOG_TEXT("No damage sounds for bone '%s' on enemy '%s'"), *(bone_name.ToString()), *actor_name);
+        } else
+        {
+            const int num_sounds = sounds->Num();
+            const int sound_to_play = FMath::RandHelper(num_sounds);
+            USoundBase* sound = (*sounds)[sound_to_play];
+            UGameplayStatics::PlaySound2D(GetWorld(), sound, 1, 1, 0, nullptr, this, false);
+            UE_LOG(Enemy, Verbose, LOG_TEXT("Playing damage sound '%s' for bone '%s' on enemy '%s'"), *(sound->GetPathName()), *(bone_name.ToString()), *actor_name);
+        }
+    }
+    
 
 }
 

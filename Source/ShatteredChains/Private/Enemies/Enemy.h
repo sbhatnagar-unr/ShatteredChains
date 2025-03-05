@@ -121,6 +121,6 @@ protected:
     
     UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
     TArray<TObjectPtr<USoundBase>> head_shot_sounds;
-    
 
+    TMap<FName, TArray<TObjectPtr<USoundBase>>> sound_map;
 };
