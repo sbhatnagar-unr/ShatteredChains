@@ -9,11 +9,12 @@ bool HealthBasicTest::RunTest(const FString& Parameters)
     // Make the test pass by returning true, or fail by returning false.
     UHealthComponent* const test_health_component = NewObject<UHealthComponent>();
 
-    AddExpectedError(TEXT("Health component has no owner"), EAutomationExpectedErrorFlags::Contains, 3);
+    AddExpectedError(TEXT("Health component has no owner"), EAutomationExpectedErrorFlags::Contains, 2);
     AddExpectedMessage(TEXT("Can't set negative health"), ELogVerbosity::Warning, EAutomationExpectedMessageFlags::Contains, 1);
     AddExpectedMessage(TEXT("Can't heal negative health"), ELogVerbosity::Warning, EAutomationExpectedMessageFlags::Contains, 1);
     AddExpectedMessage(TEXT("Can't deal negative damage"), ELogVerbosity::Warning, EAutomationExpectedMessageFlags::Contains, 1);
-
+    AddExpectedMessage(TEXT("Health component already dead"), ELogVerbosity::Warning, EAutomationExpectedMessageFlags::Contains, 1);
+    
     // Helper function
     auto check_health = [this, &test_health_component](const float expected_health, const FString &test_description) -> bool
     {
