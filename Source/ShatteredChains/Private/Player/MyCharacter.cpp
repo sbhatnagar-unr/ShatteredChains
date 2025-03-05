@@ -32,6 +32,8 @@ AMyCharacter::AMyCharacter()
     Camera->SetupAttachment(RootComponent);
     Camera->bUsePawnControlRotation = true;
 
+    camera_timeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("Camera Timeline"));
+    
     HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("Health Component"));
     InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory Component"));
 
@@ -175,7 +177,6 @@ void AMyCharacter::BeginPlay()
     sound_map["Head"] = head_shot_sounds;
     sound_map["RightArm"] = arm_shot_sounds;
     sound_map["RightHand"] = hand_shot_sounds;
-
 }
 
 // Player Input bindings
@@ -417,7 +418,7 @@ void AMyCharacter::Look(const FInputActionValue& InputValue)
 void AMyCharacter::Jump()
 {
     ACharacter::Jump();
-    UE_LOG(Player, Log, TEXT("Jump triggered"));
+    UE_LOG(Player, VeryVerbose, TEXT("Jump triggered"));
 }
 
 // Forward and Backwards functions
@@ -930,6 +931,15 @@ void AMyCharacter::restart_current_level() const
 }
 
 
+void AMyCharacter::UpdateCameraPosition(const float value)
+{
+    const FVector new_camera_location = FMath::Lerp(player_death_camera_start_location, player_death_camera_end_location, value); 
+    const FRotator new_camera_rotation = FMath::Lerp(player_death_camera_start_rotation, player_death_camera_end_rotation, value); 
+    UE_LOG(Player, VeryVerbose, LOG_TEXT("Updating camera position for dead player '%s' (value=%f, position=%s, rotation=%s)"), *actor_name, value, *(new_camera_location.ToString()), *(new_camera_rotation.ToString()));
+    Camera->SetRelativeLocationAndRotation(new_camera_location, new_camera_rotation);
+}
+
+
 
 void AMyCharacter::on_death(const AActor* killed_by)
 {
@@ -963,6 +973,39 @@ void AMyCharacter::on_death(const AActor* killed_by)
     world->GetTimerManager().SetTimer(restart_level_timer_handle, this, &AMyCharacter::restart_current_level, 5, false);
 
 
+    // Move camera up to look down at player
+    player_death_camera_start_location = Camera->GetRelativeLocation();
+    player_death_camera_end_location = player_death_camera_start_location + FVector(0, 0, 300);
+
+    player_death_camera_start_rotation = Camera->GetRelativeRotation();
+    player_death_camera_end_rotation = FRotator(-90, 0, 0);
+
+    // Disable player input when they are dead
+    if (APlayerController* player_controller = GetWorld()->GetFirstPlayerController())
+    {
+        UE_LOG(Player, Log, LOG_TEXT("Disabling input for dead player '%s'"), *actor_name);
+        this->DisableInput(player_controller);    
+    } else
+    {
+        UE_LOG(Player, Error, LOG_TEXT("No player controller for player '%s'"), *actor_name);
+    }
+    
+    if (camera_curve)
+    {
+        FOnTimelineFloat timeline_callback;
+        timeline_callback.BindUFunction(this, FName("UpdateCameraPosition"));
+        camera_timeline->AddInterpFloat(camera_curve, timeline_callback);
+
+        UE_LOG(Player, Log, LOG_TEXT("Beginning camera transition for dead player '%s'"), *actor_name);
+        // Set this to false so that the camera can rotate
+        Camera->bUsePawnControlRotation = false;
+        camera_timeline->PlayFromStart();
+    } else
+    {
+        UE_LOG(Player, Warning, LOG_TEXT("No camera curve for player '%s'"), *actor_name);
+    }
+    
+
     // Make player "dead"
     USkeletalMeshComponent* mesh = GetMesh();
 
@@ -994,9 +1037,6 @@ void AMyCharacter::on_death(const AActor* killed_by)
         mesh->SetSimulatePhysics(true);
         UE_LOG(Player, Log, LOG_TEXT("Player '%s' made ragdoll"), *actor_name);
     }
-    
-    // Move camera up to look down at player
-    Camera->AddRelativeLocation(FVector(0, 0, 300), true);
 }
 
 
