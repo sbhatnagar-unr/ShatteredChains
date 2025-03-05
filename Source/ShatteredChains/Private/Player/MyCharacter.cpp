@@ -4,6 +4,7 @@
 #include "Weapons/Weapon.h"
 #include "GameFramework/CharacterMovementComponent.h" 
 #include "InputMappingContext.h"
+#include "PhysicsEngine/PhysicsAsset.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "ShatteredChains/Logging.h"
@@ -62,7 +63,8 @@ void AMyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-    add_stats_modifiers(GetMesh()->GetPhysicsAsset(), &stats_modifiers);
+    const TObjectPtr<UPhysicsAsset> physics_asset = GetMesh()->GetPhysicsAsset();
+    add_stats_modifiers(physics_asset, &stats_modifiers);
 
     stats_modifiers["Hips"]->set_damage_multiplier(torso_shot_damage_multiplier);
     stats_modifiers["Hips"]->set_speed_multiplier(torso_shot_speed_multiplier);
@@ -150,22 +152,13 @@ void AMyCharacter::BeginPlay()
         UE_LOG(Enemy, Warning, LOG_TEXT("No sound effects for head shot in '%s'"), *actor_name);
     }
     
-    
+    // Add bones to sound map 
+    for (int32 i = 0; i < physics_asset->SkeletalBodySetups.Num(); i++)
+    {
+        sound_map.Add(physics_asset->SkeletalBodySetups[i]->BoneName);
+    }
     sound_map.Add("dead");
-    sound_map.Add("Hips");
-    sound_map.Add("LeftUpLeg");
-    sound_map.Add("LeftLeg");
-    sound_map.Add("LeftFoot");
-    sound_map.Add("RightUpLeg");
-    sound_map.Add("RightLeg");
-    sound_map.Add("RightFoot");
-    sound_map.Add("Spine1");
-    sound_map.Add("Spine2");
-    sound_map.Add("LeftArm");
-    sound_map.Add("LeftHand");
-    sound_map.Add("Head");
-    sound_map.Add("RightArm");
-    sound_map.Add("RightHand");
+    
     sound_map["dead"] = death_sounds;
     sound_map["Hips"] = torso_shot_sounds;
     sound_map["LeftUpLeg"] = leg_shot_sounds;
