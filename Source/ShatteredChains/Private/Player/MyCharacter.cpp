@@ -912,6 +912,24 @@ void AMyCharacter::Tick(float DeltaTime)
 }
 
 
+void AMyCharacter::restart_current_level() const
+{
+    const UWorld* world = GetWorld();
+
+    if (world == nullptr)
+    {
+        UE_LOG(Player, Error, LOG_TEXT("Could not get world to start reset timer"));
+        return;
+    }
+    
+    const ULevel* current_level = world->GetCurrentLevel();
+    const FName current_level_name = *current_level->GetPackage()->GetName();
+    UGameplayStatics::OpenLevel(this, current_level_name);
+    UE_LOG(Player, Log, LOG_TEXT("Restarting level"));
+}
+
+
+
 void AMyCharacter::on_death(const AActor* killed_by)
 {
     // Play random death sound
@@ -928,21 +946,21 @@ void AMyCharacter::on_death(const AActor* killed_by)
         UGameplayStatics::PlaySound2D(GetWorld(), sound, 1, 1, 0, nullptr, this, false);
         UE_LOG(Enemy, Log, LOG_TEXT("Playing death sound '%s' for enemy '%s'"), *(sound->GetPathName()), *actor_name);
     }
-    
-    UE_LOG(Player, Log, LOG_TEXT("Player dead.... restarting level"));
+
+    UE_LOG(Player, Log, LOG_TEXT("Player dead"));
 
     const UWorld* world = GetWorld();
 
     if (world == nullptr)
     {
-        UE_LOG(Player, Error, LOG_TEXT("Could not get world to restart level"));
+        UE_LOG(Player, Error, LOG_TEXT("Could not get world to start reset timer"));
         return;
     }
-
-    const ULevel* current_level = world->GetCurrentLevel();
-    const FName current_level_name = *current_level->GetPackage()->GetName();
-    UGameplayStatics::OpenLevel(this, current_level_name);
-    UE_LOG(Player, Log, LOG_TEXT("Level restarted"));
+    
+    // Start level reset timer
+    FTimerHandle restart_level_timer_handle;
+    world->GetTimerManager().SetTimer(restart_level_timer_handle, this, &AMyCharacter::restart_current_level, 5, false);
+    
 }
 
 

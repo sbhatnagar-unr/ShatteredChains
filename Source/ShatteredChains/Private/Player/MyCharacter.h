@@ -471,5 +471,8 @@ protected:
     TArray<TObjectPtr<USoundBase>> head_shot_sounds;
 
     TMap<FName, TArray<TObjectPtr<USoundBase>>> sound_map;
-    
+
+
+private:
+    void restart_current_level() const;
 };
