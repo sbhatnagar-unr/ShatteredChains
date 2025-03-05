@@ -866,7 +866,7 @@ void AMyCharacter::Tick(float DeltaTime)
 }
 
 
-void AMyCharacter::on_death(AActor* killed_by)
+void AMyCharacter::on_death(const AActor* killed_by)
 {
     UE_LOG(Player, Log, LOG_TEXT("Player dead.... restarting level"));
 

@@ -7,7 +7,7 @@
 #include "HealthComponent.generated.h"
 
 // Make on dead delegate
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDeathDelegate, AActor*, killed_by);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDeathDelegate, const AActor*, killed_by);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class UHealthComponent : public UActorComponent
@@ -20,9 +20,10 @@ public:
 
     float get_health() const;
     float get_max_health() const;
+    bool dead() const;
     virtual void heal(float health);
     virtual void set_health(float health);
-    virtual void deal_damage(AActor* dealt_by, float damage);
+    virtual void deal_damage(const AActor* dealt_by, float damage);
 
 protected:
     // Called when the game starts
@@ -35,9 +36,6 @@ private:
     
     UPROPERTY(EditAnywhere, Category="Health", meta=(ToolTip="Max health the actor can have"))
     float max_health;
-
-    UPROPERTY(EditAnywhere, Category="Health", meta=(ToolTip="Damage received will be multiplied by this value before its applied"))
-    float damage_multiplier;
     
     float current_health;
     bool is_dead;

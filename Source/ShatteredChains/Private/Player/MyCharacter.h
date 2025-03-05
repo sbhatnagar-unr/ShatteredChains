@@ -41,7 +41,7 @@ public:
     // Called every frame
     virtual void Tick(float DeltaTime) override;
 
-    virtual void on_death(AActor* killed_by) override final;
+    virtual void on_death(const AActor* killed_by) override final;
 
     virtual UHealthComponent* get_health_component() const override final;
     virtual TObjectPtr<UInventoryComponent> get_inventory_component() const override final;

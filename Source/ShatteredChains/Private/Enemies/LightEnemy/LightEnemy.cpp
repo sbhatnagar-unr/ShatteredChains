@@ -82,7 +82,7 @@ void ALightEnemy::BeginPlay()
 
 
     pawn_sensing_component->OnSeePawn.AddDynamic(this, &ALightEnemy::on_see_pawn);
-    
+
 }
 
 // IDE says that parameter "pawn" should be const, but it can't be because the delegate's function signatures DOES NOT have const parameter
@@ -119,7 +119,7 @@ float ALightEnemy::get_attack_animation_exit_blend() const
 }
 
 
-void ALightEnemy::on_death(AActor* killed_by)
+void ALightEnemy::on_death(const AActor* killed_by)
 {
     AEnemy::on_death(killed_by);
 }
