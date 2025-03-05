@@ -5,7 +5,6 @@
 #include "Interfaces/HasHealth/HasHealth.h"
 #include "Interfaces/NamedActor/NamedActor.h"
 #include "ShatteredChains/Logging.h"
-#include "Kismet/GameplayStatics.h"
 
 // Sets default values for this component's properties
 UHealthComponent::UHealthComponent()
@@ -16,7 +15,6 @@ UHealthComponent::UHealthComponent()
 
     max_health = 100.f;
     current_health = 0.f;
-    damage_multiplier = 1.f;
     is_dead = false;
 }
 
@@ -72,6 +70,13 @@ float UHealthComponent::get_max_health() const
 }
 
 
+bool UHealthComponent::dead() const
+{
+    return is_dead;
+}
+
+
+
 void UHealthComponent::heal(const float health)
 {
     /*
@@ -105,26 +110,32 @@ void UHealthComponent::set_health(const float health)
 }
 
 
-void UHealthComponent::deal_damage(AActor* dealt_by, const float damage)
+void UHealthComponent::deal_damage(const AActor* dealt_by, const float damage)
 {
     /*
     Applies damage, if health becomes negative, it gets set to 0
     Death delegate called if dead
     */
+
     if (damage < 0)
     {
         UE_LOG(Health, Warning, LOG_TEXT("Can't deal negative damage (%f) to '%s'"), damage, *(GetOwner<INamedActor>() ? GetOwner<INamedActor>()->get_actor_name() : FString(TEXT("NULLPTR"))));
         return;
     }
 
+    // If we are already dead
     if (is_dead)
     {
         UE_LOG(Health, Warning, LOG_TEXT("Health component already dead for '%s'"), *(GetOwner<INamedActor>() ? GetOwner<INamedActor>()->get_actor_name() : FString(TEXT("NULLPTR"))));
         return;
     }
+    
     // Do the damage
-    current_health = FMath::Max(current_health - (damage * damage_multiplier), 0);
+    current_health = FMath::Max(current_health - damage, 0);
+    is_dead = current_health <= 0;
 
+    UE_LOG(Health, Log, LOG_TEXT("'%s' received %f damage and has %f health remaining (is_dead=%d)"), *(GetOwner<INamedActor>() ? GetOwner<INamedActor>()->get_actor_name() : FString(TEXT("NULLPTR"))), damage, current_health, is_dead);
+    
     // Get owner name
     const INamedActor* owner = GetOwner<INamedActor>();
     if (owner == nullptr)
@@ -146,18 +157,15 @@ void UHealthComponent::deal_damage(AActor* dealt_by, const float damage)
         dealt_by_name = Cast<INamedActor>(dealt_by)->get_actor_name();
     }
 
-    // Play the damage sound
-    UGameplayStatics::PlaySound2D(GetWorld(), GetOwner<IHasHealth>()->get_damage_sound(), 1, 1, 0, nullptr, GetOwner(), false);
 
     // Log the damage
     UE_LOG(Health, Log, LOG_TEXT("%s received %f damage from %s (%f remaining)"), *owner_name, damage, *dealt_by_name, current_health);
 
     // If we just died
-    if (current_health <= 0)
+    if (is_dead)
     {
         UE_LOG(Health, Log, LOG_TEXT("%s is dead"), *owner_name);
         current_health = 0;
-        is_dead = true;
 
         if (on_death_delegate.IsBound())
         {
