@@ -47,7 +47,7 @@ void UAN_DealDamage::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase*
 
     if (player_health > 0)
     {
-        UE_LOG(Enemy, Log, LOG_TEXT("Enemy %s dealing %f damage to player (player has %f health remaining)"), *enemy_actor_name, attack_damage, player_health);
+        UE_LOG(Enemy, Log, LOG_TEXT("Enemy '%s' dealing %f damage to target (player has %f health remaining)"), *enemy_actor_name, attack_damage, player_health);
         target_health_component->deal_damage(Cast<AActor>(enemy_actor), attack_damage);
     }
     else

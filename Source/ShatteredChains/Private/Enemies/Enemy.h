@@ -28,16 +28,14 @@ public:
 
     // IHasHealth functions
     virtual UHealthComponent* get_health_component() const override final;
-    virtual void on_death(AActor* killed_by) override;
+    virtual void on_death(const AActor* killed_by) override;
 
     // INamedActor functions
     virtual FString get_default_actor_name() const override final;
 
     // IHasBoneCollider functions
     virtual const TMap<FName, TObjectPtr<UStatsModifier>>* get_bone_collider_stats_modifiers() const override final;
-    virtual void hit_bone(const FName bone_name) override;
-
-    virtual USoundBase* get_damage_sound() const override final;
+    virtual void hit_bone(const AActor *hit_by, const FName bone_name, float weapon_damage) override;
 
     UPawnSensingComponent* get_pawn_sensing_component() const;
 
@@ -99,17 +97,30 @@ protected:
     UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for accuracy whenever a head shot is hit"))
     float head_shot_accuracy_multiplier;
 
-    
-private:
     UPROPERTY(EditAnywhere)
     TObjectPtr<UHealthComponent> health_component;
 
     UPROPERTY(EditInstanceOnly)
     FString default_actor_name;
 
-    UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
-    TObjectPtr<USoundBase> take_damage_sound;
 
     UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
-    TObjectPtr<USoundBase> death_sound;
+    TArray<TObjectPtr<USoundBase>> death_sounds;
+    
+    UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
+    TArray<TObjectPtr<USoundBase>> leg_shot_sounds;
+    
+    UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
+    TArray<TObjectPtr<USoundBase>> arm_shot_sounds;
+    
+    UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
+    TArray<TObjectPtr<USoundBase>> hand_shot_sounds;
+    
+    UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
+    TArray<TObjectPtr<USoundBase>> torso_shot_sounds;
+    
+    UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
+    TArray<TObjectPtr<USoundBase>> head_shot_sounds;
+
+    TMap<FName, TArray<TObjectPtr<USoundBase>>> sound_map;
 };

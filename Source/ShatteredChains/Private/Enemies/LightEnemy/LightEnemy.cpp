@@ -80,9 +80,33 @@ void ALightEnemy::BeginPlay()
     stats_modifiers["calf_r"]->set_speed_multiplier(leg_shot_speed_multiplier);
     stats_modifiers["calf_r"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
 
+    sound_map.Add("head");
+    sound_map.Add("pelvis");
+    sound_map.Add("cc_base_pelvis");
+    sound_map.Add("spine_03");
+    sound_map.Add("upperarm_l");
+    sound_map.Add("hand_l");
+    sound_map.Add("upperarm_r");
+    sound_map.Add("hand_r");
+    sound_map.Add("thigh_l");
+    sound_map.Add("calf_l");
+    sound_map.Add("thigh_r");
+    sound_map.Add("calf_r");
+    sound_map["head"] = head_shot_sounds;
+    sound_map["pelvis"] = torso_shot_sounds;
+    sound_map["cc_base_pelvis"] = torso_shot_sounds;
+    sound_map["spine_03"] = torso_shot_sounds;
+    sound_map["upperarm_l"] = arm_shot_sounds;
+    sound_map["hand_l"] = hand_shot_sounds;
+    sound_map["upperarm_r"] = arm_shot_sounds;
+    sound_map["hand_r"] = hand_shot_sounds;
+    sound_map["thigh_l"] = leg_shot_sounds;
+    sound_map["calf_l"] = leg_shot_sounds;
+    sound_map["thigh_r"] = leg_shot_sounds;
+    sound_map["calf_r"] = leg_shot_sounds;
 
     pawn_sensing_component->OnSeePawn.AddDynamic(this, &ALightEnemy::on_see_pawn);
-    
+
 }
 
 // IDE says that parameter "pawn" should be const, but it can't be because the delegate's function signatures DOES NOT have const parameter
@@ -119,7 +143,7 @@ float ALightEnemy::get_attack_animation_exit_blend() const
 }
 
 
-void ALightEnemy::on_death(AActor* killed_by)
+void ALightEnemy::on_death(const AActor* killed_by)
 {
     AEnemy::on_death(killed_by);
 }

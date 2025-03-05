@@ -75,16 +75,33 @@ void AEnemy::BeginPlay()
     // Get all collision physics assets and create stats modifiers for them
     add_stats_modifiers(physics_asset, &stats_modifiers);
 
-    // Check audio
-    if (take_damage_sound == nullptr)
+    if (death_sounds.Num() == 0)
     {
-        UE_LOG(Enemy, Warning, LOG_TEXT("No take damage sound effect for enemy %s"), *actor_name);
+        UE_LOG(Enemy, Warning, LOG_TEXT("No sound effects for death in '%s'"), *default_actor_name);
+    }
+    if (leg_shot_sounds.Num() == 0)
+    {
+        UE_LOG(Enemy, Warning, LOG_TEXT("No sound effects for leg shot in '%s'"), *default_actor_name);
+    }
+    if (arm_shot_sounds.Num() == 0)
+    {
+        UE_LOG(Enemy, Warning, LOG_TEXT("No sound effects for arm shot in '%s'"), *default_actor_name);
+    }
+    if (hand_shot_sounds.Num() == 0)
+    {
+        UE_LOG(Enemy, Warning, LOG_TEXT("No sound effects for hand shot in '%s'"), *default_actor_name);
+    }
+    if (torso_shot_sounds.Num() == 0)
+    {
+        UE_LOG(Enemy, Warning, LOG_TEXT("No sound effects for torso shot in '%s'"), *default_actor_name);
+    }
+    if (head_shot_sounds.Num() == 0)
+    {
+        UE_LOG(Enemy, Warning, LOG_TEXT("No sound effects for head shot in '%s'"), *default_actor_name);
     }
 
-    if (death_sound == nullptr)
-    {
-        UE_LOG(Enemy, Warning, LOG_TEXT("No death sound effect for enemy %s"), *actor_name);
-    }
+    sound_map.Add("dead");
+    sound_map["dead"] = death_sounds;    
 }
 
 
@@ -100,13 +117,25 @@ UHealthComponent* AEnemy::get_health_component() const
 }
 
 
-void AEnemy::on_death(AActor* killed_by)
+void AEnemy::on_death(const AActor* killed_by)
 {
+    // Play random death sound
+    const TArray<TObjectPtr<USoundBase>> *sounds = sound_map.Find("dead");
+    // Don't have to worry about nullptr in second condition because of short circuit evaluation
+    if (sounds == nullptr || sounds->Num() == 0)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("No death sounds for '%s'"), *actor_name);
+    } else
+    {
+        const int num_sounds = sounds->Num();
+        const int sound_to_play = FMath::RandHelper(num_sounds);
+        USoundBase* sound = (*sounds)[sound_to_play];
+        UGameplayStatics::PlaySound2D(GetWorld(), sound, 1, 1, 0, nullptr, this, false);
+        UE_LOG(Enemy, Log, LOG_TEXT("Playing death sound '%s' for enemy '%s'"), *(sound->GetPathName()), *actor_name);
+    }
+    
     const INamedActor* const killed_by_na = Cast<INamedActor>(killed_by);
 
-    UGameplayStatics::PlaySound2D(GetWorld(), death_sound, 1, 1, 0, nullptr, this, false);
-
-    
     if (killed_by_na != nullptr)
     {
         UE_LOG(Enemy, Log, LOG_TEXT("%s was just killed by %s"), *actor_name, *(killed_by_na->get_actor_name()));
@@ -182,12 +211,14 @@ const TMap<FName, TObjectPtr<UStatsModifier>>* AEnemy::get_bone_collider_stats_m
 }
 
 
-void AEnemy::hit_bone(const FName bone_name)
+void AEnemy::hit_bone(const AActor *hit_by, const FName bone_name, float weapon_damage)
 {
-    /*
-    Apply speed modifier
-    Further modifier use can be defined in subclasses
-    */
+    if (!stats_modifiers.Contains(bone_name))
+    {
+        UE_LOG(BoneCollision, Error, LOG_TEXT("Enemy '%s' does not have modifier for bone '%s'.  Its possible its capsule component is blocking the shot, set trace channel Shootable to Ignore on the capsule component."), *actor_name, *(bone_name.ToString()));
+        return;
+    }
+    
     // Get the modifier
     const TObjectPtr<UStatsModifier> modifier = stats_modifiers[bone_name];
 
@@ -198,14 +229,38 @@ void AEnemy::hit_bone(const FName bone_name)
     const float old_movement_speed = movement_component->MaxWalkSpeed;
     
     movement_component->MaxWalkSpeed *= modifier->get_speed_multiplier();
-
+    
     UE_LOG(BoneCollision, Log, LOG_TEXT("Changing enemy '%s' speed: %f -> %f"), *actor_name, old_movement_speed, movement_component->MaxWalkSpeed);
-}
 
+    const float old_damage = weapon_damage;
+    weapon_damage *= modifier->get_damage_multiplier();
+    UE_LOG(BoneCollision, Log, LOG_TEXT("Stats modifiers for '%s' in group '%s': DAMAGE_MUL=%f"), *actor_name, *(bone_name.ToString()), modifier->get_damage_multiplier());
+    UE_LOG(BoneCollision, Log, LOG_TEXT("Damage for '%s' modified from %f -> %f"), *actor_name, old_damage, weapon_damage);
+    UE_LOG(Health, Warning, LOG_TEXT("'%s' is_dead=%d"), *actor_name, health_component->dead());
+    health_component->deal_damage(hit_by, weapon_damage);
+    
+    // Here play audio
+    // We only play audio if we are not dead, because then there will be two audio effects
+    // This one and the dead one
+    if (!health_component->dead())
+    {
+        // Play random sound depending on where we were hit
+        const TArray<TObjectPtr<USoundBase>> *sounds = sound_map.Find(bone_name);
+        // Don't have to worry about nullptr in second condition because of short circuit evaluation
+        if (sounds == nullptr || sounds->Num() == 0)
+        {
+            UE_LOG(Enemy, Error, LOG_TEXT("No damage sounds for bone '%s' on enemy '%s'"), *(bone_name.ToString()), *actor_name);
+        } else
+        {
+            const int num_sounds = sounds->Num();
+            const int sound_to_play = FMath::RandHelper(num_sounds);
+            USoundBase* sound = (*sounds)[sound_to_play];
+            UGameplayStatics::PlaySound2D(GetWorld(), sound, 1, 1, 0, nullptr, this, false);
+            UE_LOG(Enemy, Verbose, LOG_TEXT("Playing damage sound '%s' for bone '%s' on enemy '%s'"), *(sound->GetPathName()), *(bone_name.ToString()), *actor_name);
+        }
+    }
+    
 
-USoundBase* AEnemy::get_damage_sound() const
-{
-    return take_damage_sound;
 }
 
 UPawnSensingComponent* AEnemy::get_pawn_sensing_component() const

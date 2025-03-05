@@ -168,6 +168,32 @@ void ARangedEnemy::BeginPlay()
     stats_modifiers["calf_r"]->set_damage_multiplier(leg_shot_damage_multiplier);
     stats_modifiers["calf_r"]->set_speed_multiplier(leg_shot_speed_multiplier);
     stats_modifiers["calf_r"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
+
+    sound_map.Add("head");
+    sound_map.Add("pelvis");
+    sound_map.Add("spine_01");
+    sound_map.Add("spine_03");
+    sound_map.Add("upperarm_l");
+    sound_map.Add("hand_l");
+    sound_map.Add("upperarm_r");
+    sound_map.Add("hand_r");
+    sound_map.Add("thigh_l");
+    sound_map.Add("calf_l");
+    sound_map.Add("thigh_r");
+    sound_map.Add("calf_r");
+    sound_map["head"] = head_shot_sounds;
+    sound_map["pelvis"] = torso_shot_sounds;
+    sound_map["spine_01"] = torso_shot_sounds;
+    sound_map["spine_03"] = torso_shot_sounds;
+    sound_map["upperarm_l"] = arm_shot_sounds;
+    sound_map["hand_l"] = hand_shot_sounds;
+    sound_map["upperarm_r"] = arm_shot_sounds;
+    sound_map["hand_r"] = hand_shot_sounds;
+    sound_map["thigh_l"] = leg_shot_sounds;
+    sound_map["calf_l"] = leg_shot_sounds;
+    sound_map["thigh_r"] = leg_shot_sounds;
+    sound_map["calf_r"] = leg_shot_sounds;
+
     
 }
 
@@ -224,9 +250,9 @@ FVector ARangedEnemy::get_hitscan_direction() const
     return direction;
 }
 
-void ARangedEnemy::hit_bone(const FName bone_name)
+void ARangedEnemy::hit_bone(const AActor* hit_by, const FName bone_name, const float weapon_damage)
 {
-    Super::hit_bone(bone_name);
+    Super::hit_bone(hit_by, bone_name, weapon_damage);
 
     const UStatsModifier* const stats_modifier = stats_modifiers[bone_name];
 

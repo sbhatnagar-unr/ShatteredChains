@@ -128,33 +128,21 @@ void UAN_WeaponFire::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase*
         float weapon_damage = weapon->get_weapon_damage();
         
         // Bone collision
-        // If the actor has a bone collider
+        // If the actor has a bone collider, let them handle the damage
         if (IHasBoneCollider* hit_bone_actor = Cast<IHasBoneCollider>(a))
         {
-            const TObjectPtr<UStatsModifier>* modifier_ptr = hit_bone_actor->get_bone_collider_stats_modifiers()->Find(trace_result.BoneName);
-            if (modifier_ptr == nullptr)
-            {
-                UE_LOG(BoneCollision, Error, LOG_TEXT("Actor '%s' does not have modifier for bone %s.  Its possible its capsule component is blocking the shot, set trace channel Shootable to Ignore on the capsule component."), *hit_actor_label, *(trace_result.BoneName.ToString()));
-                return;
-            }
-            const TObjectPtr<UStatsModifier> modifier = *modifier_ptr;
-            
-            const float old_damage = weapon_damage;
-            weapon_damage *= modifier->get_damage_multiplier();
-            UE_LOG(BoneCollision, Log, LOG_TEXT("Stats modifiers for '%s' in group '%s': DAMAGE_MUL=%f"), *hit_actor_label, *(trace_result.BoneName.ToString()), modifier->get_damage_multiplier());
-            UE_LOG(BoneCollision, Log, LOG_TEXT("Damage for '%s' modified from %f -> %f"), *hit_actor_label, old_damage, weapon_damage);
-
             // Pass the bone info to the actor that was hit so they can adjust their stats
-            hit_bone_actor->hit_bone(trace_result.BoneName);
+            UE_LOG(BoneCollision, Log, LOG_TEXT("Passing bone collision info to '%s' (bone_name=%s, weapon_damage=%f)"), *hit_actor_label, *(trace_result.BoneName.ToString()), weapon_damage);
+            UE_LOG(Health, Warning, LOG_TEXT("'%s' is_dead=%d"), *hit_actor_label, hit_health_actor->get_health_component()->dead());
+            hit_bone_actor->hit_bone(Cast<AActor>(weapon_holder), trace_result.BoneName, weapon_damage);
         }
         // Otherwise
         else
         {
-            UE_LOG(Weapon, Verbose, LOG_TEXT("Trace hit target (%s), no bone collider"), *hit_actor_label);
+            hit_health_actor->get_health_component()->deal_damage(Cast<AActor>(weapon_holder), weapon_damage);
+            UE_LOG(Weapon, Log, LOG_TEXT("Trace hit target '%s' (no bone collider), %f damage dealt"), *hit_actor_label, weapon_damage);
         }
         
-        hit_health_actor->get_health_component()->deal_damage(Cast<AActor>(weapon_holder), weapon_damage);
-        UE_LOG(Weapon, Log, LOG_TEXT("Trace hit target (%s), %f damage dealt"), *hit_actor_label, weapon_damage);
     }
     else
     {

@@ -34,6 +34,10 @@ public:
 
     virtual void refill_magazine();
 
+    void set_magazine_size(const unsigned int new_magazine_size);
+    void set_max_ammo_stock_pile_count(const unsigned int new_max_ammo_stock_pile_count);
+    void set_current_ammo_stock_pile_count(const unsigned int new_current_ammo_stock_pile_count);
+
     virtual FString get_default_actor_name() const override final;
 
     
