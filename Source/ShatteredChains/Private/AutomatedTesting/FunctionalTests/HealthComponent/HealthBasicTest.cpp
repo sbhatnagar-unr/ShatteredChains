@@ -30,7 +30,6 @@ bool HealthBasicTest::RunTest(const FString& Parameters)
     
 
     bool passed = true;
-    
 
     // Set health
     float expected_health = 100.f;
@@ -76,5 +75,9 @@ bool HealthBasicTest::RunTest(const FString& Parameters)
     test_health_component->deal_damage(nullptr, 10000000);
     passed &= check_health(expected_health, TEXT("TESTING DEAL DAMAGE TO DEAD COMPONENT"));
 
+    passed &= test_health_component->dead();
+    AddInfo(FString::Printf(TEXT("CHECKING IF DEAD: %s"), *(passed ? FString("PASSED") : FString("FAILED"))));
+
+    
     return passed;
 }
