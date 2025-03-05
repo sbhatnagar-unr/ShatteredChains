@@ -120,15 +120,68 @@ void AMyCharacter::BeginPlay()
     stats_modifiers["RightHand"]->set_speed_multiplier(hand_shot_speed_multiplier);
     stats_modifiers["RightHand"]->set_accuracy_multiplier(hand_shot_accuracy_multiplier);
 
-    // Check audio
-    if (take_damage_sound == nullptr)
+    if (death_sounds.Num() == 0)
     {
-        UE_LOG(Player, Warning, LOG_TEXT("No take damage sound effect for player %s"), *actor_name);
+        UE_LOG(Enemy, Warning, LOG_TEXT("No sound effects for death in '%s'"), *actor_name);
     }
-    if (jump_sound == nullptr)
+    if (leg_shot_sounds.Num() == 0)
     {
-        UE_LOG(Player, Warning, LOG_TEXT("No jump sound effect for player %s"), *actor_name);
+        UE_LOG(Enemy, Warning, LOG_TEXT("No sound effects for leg shot in '%s'"), *actor_name);
     }
+    if (arm_shot_sounds.Num() == 0)
+    {
+        UE_LOG(Enemy, Warning, LOG_TEXT("No sound effects for arm shot in '%s'"), *actor_name);
+    }
+    if (hand_shot_sounds.Num() == 0)
+    {
+        UE_LOG(Enemy, Warning, LOG_TEXT("No sound effects for hand shot in '%s'"), *actor_name);
+    }
+    if (torso_shot_sounds.Num() == 0)
+    {
+        UE_LOG(Enemy, Warning, LOG_TEXT("No sound effects for torso shot in '%s'"), *actor_name);
+    }
+    if (head_shot_sounds.Num() == 0)
+    {
+        UE_LOG(Enemy, Warning, LOG_TEXT("No sound effects for head shot in '%s'"), *actor_name);
+    }
+
+    if (foot_shot_sounds.Num() == 0)
+    {
+        UE_LOG(Enemy, Warning, LOG_TEXT("No sound effects for head shot in '%s'"), *actor_name);
+    }
+    
+    
+    sound_map.Add("dead");
+    sound_map.Add("Hips");
+    sound_map.Add("LeftUpLeg");
+    sound_map.Add("LeftLeg");
+    sound_map.Add("LeftFoot");
+    sound_map.Add("RightUpLeg");
+    sound_map.Add("RightLeg");
+    sound_map.Add("RightFoot");
+    sound_map.Add("Spine1");
+    sound_map.Add("Spine2");
+    sound_map.Add("LeftArm");
+    sound_map.Add("LeftHand");
+    sound_map.Add("Head");
+    sound_map.Add("RightArm");
+    sound_map.Add("RightHand");
+    sound_map["dead"] = death_sounds;
+    sound_map["Hips"] = torso_shot_sounds;
+    sound_map["LeftUpLeg"] = leg_shot_sounds;
+    sound_map["LeftLeg"] = leg_shot_sounds;
+    sound_map["LeftFoot"] = foot_shot_sounds;
+    sound_map["RightUpLeg"] = leg_shot_sounds;
+    sound_map["RightLeg"] = leg_shot_sounds;
+    sound_map["RightFoot"] = foot_shot_sounds;
+    sound_map["Spine1"] = torso_shot_sounds;
+    sound_map["Spine2"] = torso_shot_sounds;
+    sound_map["LeftArm"] = arm_shot_sounds;
+    sound_map["LeftHand"] = hand_shot_sounds;
+    sound_map["Head"] = head_shot_sounds;
+    sound_map["RightArm"] = arm_shot_sounds;
+    sound_map["RightHand"] = hand_shot_sounds;
+
 }
 
 // Player Input bindings
@@ -868,6 +921,21 @@ void AMyCharacter::Tick(float DeltaTime)
 
 void AMyCharacter::on_death(const AActor* killed_by)
 {
+    // Play random death sound
+    const TArray<TObjectPtr<USoundBase>> *sounds = sound_map.Find("dead");
+    // Don't have to worry about nullptr in second condition because of short circuit evaluation
+    if (sounds == nullptr || sounds->Num() == 0)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("No death sounds for '%s'"), *actor_name);
+    } else
+    {
+        const int num_sounds = sounds->Num();
+        const int sound_to_play = FMath::RandHelper(num_sounds);
+        USoundBase* sound = (*sounds)[sound_to_play];
+        UGameplayStatics::PlaySound2D(GetWorld(), sound, 1, 1, 0, nullptr, this, false);
+        UE_LOG(Enemy, Log, LOG_TEXT("Playing death sound '%s' for enemy '%s'"), *(sound->GetPathName()), *actor_name);
+    }
+    
     UE_LOG(Player, Log, LOG_TEXT("Player dead.... restarting level"));
 
     const UWorld* world = GetWorld();
@@ -948,6 +1016,27 @@ void AMyCharacter::hit_bone(const AActor* hit_by, const FName bone_name, float w
     UE_LOG(BoneCollision, Log, LOG_TEXT("Stats modifiers for '%s' in group '%s': DAMAGE_MUL=%f"), *actor_name, *(bone_name.ToString()), modifier->get_damage_multiplier());
     UE_LOG(BoneCollision, Log, LOG_TEXT("Damage for '%s' modified from %f -> %f"), *actor_name, old_damage, weapon_damage);
     HealthComponent->deal_damage(hit_by, weapon_damage);
+
+    // Here play audio
+    // We only play audio if we are not dead, because then there will be two audio effects
+    // This one and the dead one
+    if (!HealthComponent->dead())
+    {
+        // Play random sound depending on where we were hit
+        const TArray<TObjectPtr<USoundBase>> *sounds = sound_map.Find(bone_name);
+        // Don't have to worry about nullptr in second condition because of short circuit evaluation
+        if (sounds == nullptr || sounds->Num() == 0)
+        {
+            UE_LOG(Enemy, Error, LOG_TEXT("No damage sounds for bone '%s' on player '%s'"), *(bone_name.ToString()), *actor_name);
+        } else
+        {
+            const int num_sounds = sounds->Num();
+            const int sound_to_play = FMath::RandHelper(num_sounds);
+            USoundBase* sound = (*sounds)[sound_to_play];
+            UGameplayStatics::PlaySound2D(GetWorld(), sound, 1, 1, 0, nullptr, this, false);
+            UE_LOG(Enemy, Verbose, LOG_TEXT("Playing damage sound '%s' for bone '%s' on player '%s'"), *(sound->GetPathName()), *(bone_name.ToString()), *actor_name);
+        }
+    }
     
 }
 
