@@ -388,9 +388,6 @@ protected:
     // Sound effects
     UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
     TObjectPtr<USoundBase> jump_sound;
-
-    UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
-    TObjectPtr<USoundBase> take_damage_sound;
     
     // Bone Collision
     // Stats modifiers map
@@ -452,4 +449,27 @@ protected:
     UPROPERTY(EditAnywhere, Category="StatsModifiers", meta=(Tooltip = "Multiplier for accuracy whenever a head shot is hit"))
     float head_shot_accuracy_multiplier;
 
+    UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
+    TArray<TObjectPtr<USoundBase>> death_sounds;
+    
+    UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
+    TArray<TObjectPtr<USoundBase>> leg_shot_sounds;
+
+    UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
+    TArray<TObjectPtr<USoundBase>> foot_shot_sounds;
+    
+    UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
+    TArray<TObjectPtr<USoundBase>> arm_shot_sounds;
+    
+    UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
+    TArray<TObjectPtr<USoundBase>> hand_shot_sounds;
+    
+    UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
+    TArray<TObjectPtr<USoundBase>> torso_shot_sounds;
+    
+    UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
+    TArray<TObjectPtr<USoundBase>> head_shot_sounds;
+
+    TMap<FName, TArray<TObjectPtr<USoundBase>>> sound_map;
+    
 };
