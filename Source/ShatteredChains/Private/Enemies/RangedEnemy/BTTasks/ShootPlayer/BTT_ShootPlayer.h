@@ -4,18 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTTaskNode.h"
-#include "MoveToAnchor.generated.h"
+#include "BTT_ShootPlayer.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class SHATTEREDCHAINS_API UMoveToAnchor : public UBTTaskNode
+class SHATTEREDCHAINS_API UShootPlayer : public UBTTaskNode
 {
     GENERATED_BODY()
 
 public:
-    UMoveToAnchor();
-
+    UShootPlayer();
     virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override final;
 };

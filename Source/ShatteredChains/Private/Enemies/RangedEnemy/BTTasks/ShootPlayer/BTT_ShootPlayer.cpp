@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "ShootPlayer.h"
+#include "BTT_ShootPlayer.h"
 #include "Enemies/RangedEnemy/RangedEnemy.h"
 #include "UtilityActors/AnchorPoint/AnchorPoint.h"
 #include "AIController.h"
