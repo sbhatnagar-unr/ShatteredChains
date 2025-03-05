@@ -70,6 +70,17 @@ EBTNodeResult::Type UShootPlayer::ExecuteTask(UBehaviorTreeComponent& OwnerComp,
         UE_LOG(Enemy, Error, LOG_TEXT("Enemy AI (%s) doesn't have an anchor point"), *enemy_name);
         return EBTNodeResult::Aborted;
     }
+
+    // Don't shoot dead things
+    if (const IHasHealth* target_health = Cast<IHasHealth>(target_actor))
+    {
+        if (target_health->get_health_component()->dead())
+        {
+            UE_LOG(Enemy, Log, LOG_TEXT("Ranged enemy '%s' target is already dead"), *enemy_name);
+            return EBTNodeResult::Succeeded;
+        }
+    }
+
     
     // Rotate to face the player
     const FRotator rotation_to_player = UKismetMathLibrary::FindLookAtRotation(enemy_actor->GetActorLocation(), target_actor->GetTargetLocation());
