@@ -75,15 +75,29 @@ void AEnemy::BeginPlay()
     // Get all collision physics assets and create stats modifiers for them
     add_stats_modifiers(physics_asset, &stats_modifiers);
 
-    // Check audio
-    if (take_damage_sound == nullptr)
+    if (death_sounds.Num() == 0)
     {
-        UE_LOG(Enemy, Warning, LOG_TEXT("No take damage sound effect for enemy %s"), *actor_name);
+        UE_LOG(Enemy, Warning, LOG_TEXT("No sound effects for death in '%s'"), *default_actor_name);
     }
-
-    if (death_sound == nullptr)
+    if (leg_shot_sounds.Num() == 0)
     {
-        UE_LOG(Enemy, Warning, LOG_TEXT("No death sound effect for enemy %s"), *actor_name);
+        UE_LOG(Enemy, Warning, LOG_TEXT("No sound effects for leg shot in '%s'"), *default_actor_name);
+    }
+    if (arm_shot_sounds.Num() == 0)
+    {
+        UE_LOG(Enemy, Warning, LOG_TEXT("No sound effects for arm shot in '%s'"), *default_actor_name);
+    }
+    if (hand_shot_sounds.Num() == 0)
+    {
+        UE_LOG(Enemy, Warning, LOG_TEXT("No sound effects for hand shot in '%s'"), *default_actor_name);
+    }
+    if (torso_shot_sounds.Num() == 0)
+    {
+        UE_LOG(Enemy, Warning, LOG_TEXT("No sound effects for torso shot in '%s'"), *default_actor_name);
+    }
+    if (head_shot_sounds.Num() == 0)
+    {
+        UE_LOG(Enemy, Warning, LOG_TEXT("No sound effects for head shot in '%s'"), *default_actor_name);
     }
 }
 
@@ -100,11 +114,11 @@ UHealthComponent* AEnemy::get_health_component() const
 }
 
 
-void AEnemy::on_death(AActor* killed_by)
+void AEnemy::on_death(const AActor* killed_by)
 {
     const INamedActor* const killed_by_na = Cast<INamedActor>(killed_by);
 
-    UGameplayStatics::PlaySound2D(GetWorld(), death_sound, 1, 1, 0, nullptr, this, false);
+    // UGameplayStatics::PlaySound2D(GetWorld(), death_sound, 1, 1, 0, nullptr, this, false);
 
     
     if (killed_by_na != nullptr)
