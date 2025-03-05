@@ -103,7 +103,7 @@ void ALightEnemy::on_see_pawn(APawn* pawn)
     if (pawn == target.Get())
     {
         should_chase_target = true;
-        UE_LOG(Enemy, Log, LOG_TEXT("Enemy '%s' sees target"), *actor_name);
+        UE_LOG(Enemy, VeryVerbose, LOG_TEXT("Enemy '%s' sees target"), *actor_name);
     }
 }
 
