@@ -11,6 +11,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "ShatteredChains/CustomTraceChannels.h"
 
 // Sets default values
 AMyCharacter::AMyCharacter()
@@ -960,7 +961,42 @@ void AMyCharacter::on_death(const AActor* killed_by)
     // Start level reset timer
     FTimerHandle restart_level_timer_handle;
     world->GetTimerManager().SetTimer(restart_level_timer_handle, this, &AMyCharacter::restart_current_level, 5, false);
+
+
+    // Make player "dead"
+    USkeletalMeshComponent* mesh = GetMesh();
+
+    if (mesh == nullptr)
+    {
+        UE_LOG(Player, Error, LOG_TEXT("Player '%s' has no USkeletalMeshComponent"), *actor_name);
+    }
+    else
+    {
+        // Make it un-shootable
+        GetMesh()->SetCollisionResponseToChannel(ShootableChannel, ECollisionResponse::ECR_Ignore);
+        UE_LOG(Player, Verbose, LOG_TEXT("Player '%s' is no longer shootable"), *actor_name);
+
+        // Stop all animations
+        UAnimInstance *anim_instance = GetMesh()->GetAnimInstance();
+        if (anim_instance == nullptr)
+        {
+            UE_LOG(Player, Warning, LOG_TEXT("Player '%s' has no animation instance"), *actor_name);
+        }
+        else
+        {
+            anim_instance->StopAllMontages(0);
+        }
+        
+        UE_LOG(Player, Verbose, LOG_TEXT("Stopped all animation montages for '%s'"), *actor_name);
+
+        // Ragdoll player
+        mesh->SetCollisionProfileName(FName(TEXT("Ragdoll")));
+        mesh->SetSimulatePhysics(true);
+        UE_LOG(Player, Log, LOG_TEXT("Player '%s' made ragdoll"), *actor_name);
+    }
     
+    // Move camera up to look down at player
+    Camera->AddRelativeLocation(FVector(0, 0, 300), true);
 }
 
 
