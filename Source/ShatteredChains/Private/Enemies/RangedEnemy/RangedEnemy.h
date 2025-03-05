@@ -31,7 +31,7 @@ public:
     virtual FVector get_hitscan_direction() const override final;
 
     // Bone collision functions
-    virtual void hit_bone(const FName bone_name) override final;
+    virtual void hit_bone(const AActor* hit_by, const FName bone_name, float weapon_damage) override final;
 
     
 protected:

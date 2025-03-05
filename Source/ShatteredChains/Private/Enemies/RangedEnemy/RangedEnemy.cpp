@@ -224,9 +224,9 @@ FVector ARangedEnemy::get_hitscan_direction() const
     return direction;
 }
 
-void ARangedEnemy::hit_bone(const FName bone_name)
+void ARangedEnemy::hit_bone(const AActor* hit_by, const FName bone_name, const float weapon_damage)
 {
-    Super::hit_bone(bone_name);
+    Super::hit_bone(hit_by, bone_name, weapon_damage);
 
     const UStatsModifier* const stats_modifier = stats_modifiers[bone_name];
 

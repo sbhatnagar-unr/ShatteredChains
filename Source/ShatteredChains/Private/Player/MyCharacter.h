@@ -58,11 +58,9 @@ public:
     virtual FString get_default_actor_name() const override final;
 
     // IHasBoneCollider
-    virtual void hit_bone(const FName bone_name) override final;
+    virtual void hit_bone(const AActor* hit_by, const FName bone_name, float weapon_damage) override final;
     virtual const TMap<FName, TObjectPtr<UStatsModifier>>* get_bone_collider_stats_modifiers() const override final;
 
-
-    virtual USoundBase* get_damage_sound() const override final;
 
 protected:
 

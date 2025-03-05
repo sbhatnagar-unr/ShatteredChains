@@ -196,12 +196,14 @@ const TMap<FName, TObjectPtr<UStatsModifier>>* AEnemy::get_bone_collider_stats_m
 }
 
 
-void AEnemy::hit_bone(const FName bone_name)
+void AEnemy::hit_bone(const AActor *hit_by, const FName bone_name, float weapon_damage)
 {
-    /*
-    Apply speed modifier
-    Further modifier use can be defined in subclasses
-    */
+    if (!stats_modifiers.Contains(bone_name))
+    {
+        UE_LOG(BoneCollision, Error, LOG_TEXT("Enemy '%s' does not have modifier for bone '%s'.  Its possible its capsule component is blocking the shot, set trace channel Shootable to Ignore on the capsule component."), *actor_name, *(bone_name.ToString()));
+        return;
+    }
+    
     // Get the modifier
     const TObjectPtr<UStatsModifier> modifier = stats_modifiers[bone_name];
 
@@ -212,14 +214,16 @@ void AEnemy::hit_bone(const FName bone_name)
     const float old_movement_speed = movement_component->MaxWalkSpeed;
     
     movement_component->MaxWalkSpeed *= modifier->get_speed_multiplier();
-
+    
     UE_LOG(BoneCollision, Log, LOG_TEXT("Changing enemy '%s' speed: %f -> %f"), *actor_name, old_movement_speed, movement_component->MaxWalkSpeed);
-}
 
+    const float old_damage = weapon_damage;
+    weapon_damage *= modifier->get_damage_multiplier();
+    UE_LOG(BoneCollision, Log, LOG_TEXT("Stats modifiers for '%s' in group '%s': DAMAGE_MUL=%f"), *actor_name, *(bone_name.ToString()), modifier->get_damage_multiplier());
+    UE_LOG(BoneCollision, Log, LOG_TEXT("Damage for '%s' modified from %f -> %f"), *actor_name, old_damage, weapon_damage);
+    UE_LOG(Health, Warning, LOG_TEXT("'%s' is_dead=%d"), *actor_name, health_component->dead());
+    health_component->deal_damage(hit_by, weapon_damage);
 
-USoundBase* AEnemy::get_damage_sound() const
-{
-    return take_damage_sound;
 }
 
 UPawnSensingComponent* AEnemy::get_pawn_sensing_component() const
