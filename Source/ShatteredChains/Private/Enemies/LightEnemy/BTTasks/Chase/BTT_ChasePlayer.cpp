@@ -79,9 +79,17 @@ EBTNodeResult::Type UBTT_ChasePlayer::ExecuteTask(UBehaviorTreeComponent& OwnerC
     // Otherwise
     else
     {
-        // Chase the player
-        UE_LOG(Enemy, VeryVerbose, LOG_TEXT("Enemy '%s"" chasing target"), *enemy_actor_name);
-        ai_controller->MoveToActor(target_actor);
+        // Chase the player, if we have LOS
+        // Only shoot if we can see the player
+        if (ai_controller->LineOfSightTo(target_actor))
+        {
+            UE_LOG(Enemy, VeryVerbose, LOG_TEXT("Enemy '%s' chasing target"), *enemy_actor_name);
+            ai_controller->MoveToActor(target_actor);
+        }
+        else
+        {
+            UE_LOG(Enemy, VeryVerbose, LOG_TEXT("Enemy '%s' cannot see target"), *enemy_actor_name);
+        }
     }
 
     return EBTNodeResult::Type::Succeeded;
