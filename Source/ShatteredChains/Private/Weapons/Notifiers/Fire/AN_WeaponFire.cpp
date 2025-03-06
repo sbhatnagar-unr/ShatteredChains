@@ -133,7 +133,6 @@ void UAN_WeaponFire::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase*
         {
             // Pass the bone info to the actor that was hit so they can adjust their stats
             UE_LOG(BoneCollision, Log, LOG_TEXT("Passing bone collision info to '%s' (bone_name=%s, weapon_damage=%f)"), *hit_actor_label, *(trace_result.BoneName.ToString()), weapon_damage);
-            UE_LOG(Health, Warning, LOG_TEXT("'%s' is_dead=%d"), *hit_actor_label, hit_health_actor->get_health_component()->dead());
             hit_bone_actor->hit_bone(Cast<AActor>(weapon_holder), trace_result.BoneName, weapon_damage);
         }
         // Otherwise

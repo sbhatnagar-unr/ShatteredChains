@@ -87,6 +87,17 @@ EBTNodeResult::Type UBTT_AttackPlayer::ExecuteTask(UBehaviorTreeComponent& Owner
     const float attack_range = enemy_actor->get_attack_range();
     UE_LOG(Enemy, VeryVerbose, LOG_TEXT("Enemy distance to target %f (attack range: %f)"), distance, attack_range);
 
+
+    // Don't shoot dead things
+    if (const IHasHealth* target_health = Cast<IHasHealth>(target_actor))
+    {
+        if (target_health->get_health_component()->dead())
+        {
+            UE_LOG(Enemy, Log, LOG_TEXT("Light enemy '%s' target is already dead"), *enemy_actor_name);
+            return EBTNodeResult::Succeeded;
+        }
+    }
+    
     if (distance <= attack_range)
     {
         UE_LOG(Enemy, VeryVerbose, LOG_TEXT("Enemy is attacking"));
