@@ -209,7 +209,7 @@ protected:
 
     // Slide speed
     UPROPERTY(EditAnywhere, Category = "Slide")
-    float SlideSpeed = 1000.0f;
+    float SlideSpeed = 900.0f;
 
     // Slide duration
     UPROPERTY(EditAnywhere, Category = "Slide")
@@ -229,7 +229,7 @@ protected:
 
     // Base movement speed when walking
     UPROPERTY(EditAnywhere, Category = "Movement")
-    float WalkSpeed = 300.0f;
+    float WalkSpeed = 400.0f;
 
     // Sprinting speed 
     UPROPERTY(EditAnywhere, Category = "Movement")

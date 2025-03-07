@@ -375,9 +375,12 @@ void AMyCharacter::Move(const FInputActionValue& Value)
     FVector2D MovementInput = Value.Get<FVector2D>();
     if (Controller && MovementInput.SizeSquared() > 0.0f)
     {
-        // Convert 2D input to a 3D direction vector
-        FVector ForwardDirection = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::X);
-        FVector RightDirection = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::Y);
+        // Get the control rotation, but zero out the pitch (X rotation) to prevent movement being affected by looking up/down
+        FRotator ControlRotation = Controller->GetControlRotation();
+        ControlRotation.Pitch = 0.0f; // This ensures movement only considers yaw (left/right rotation)
+
+        FVector ForwardDirection = FRotationMatrix(ControlRotation).GetScaledAxis(EAxis::X);
+        FVector RightDirection = FRotationMatrix(ControlRotation).GetScaledAxis(EAxis::Y);
 
         FVector CurrentInputDirection = ForwardDirection * MovementInput.Y + RightDirection * MovementInput.X;
 
@@ -385,7 +388,7 @@ void AMyCharacter::Move(const FInputActionValue& Value)
         CurrentInputDirection.Normalize();
 
         // Log only if the direction changes significantly
-        if (!CurrentInputDirection.Equals(LastInputDirection, 0.01f)) 
+        if (!CurrentInputDirection.Equals(LastInputDirection, 0.01f))
         {
             UE_LOG(Player, VeryVerbose, TEXT("Moving in direction: %s"), *CurrentInputDirection.ToString());
             LastInputDirection = CurrentInputDirection;
@@ -401,6 +404,7 @@ void AMyCharacter::Move(const FInputActionValue& Value)
         LastInputDirection = FVector::ZeroVector;
     }
 }
+
 
 
 void AMyCharacter::Look(const FInputActionValue& InputValue)
