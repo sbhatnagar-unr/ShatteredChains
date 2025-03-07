@@ -421,9 +421,28 @@ void AMyCharacter::Look(const FInputActionValue& InputValue)
 // Jump Function
 void AMyCharacter::Jump()
 {
-    ACharacter::Jump();
-    UE_LOG(Player, VeryVerbose, TEXT("Jump triggered"));
+    if (bIsSliding)
+    {
+        SlideJump(); // Perform slide jump
+    }
+    else
+    {
+        ACharacter::Jump(); // Perform Unreal's default jump logic
+
+        if (JumpAnimMontage)
+        {
+            float Duration = PlayAnimMontage(JumpAnimMontage, 1.0f);
+            UE_LOG(Player, Log, TEXT("Jump animation montage triggered, duration: %f"), Duration);
+        }
+        else
+        {
+            UE_LOG(Player, Warning, TEXT("JumpAnimMontage is missing!"));
+        }
+    }
 }
+
+
+
 
 // Forward and Backwards functions
 void AMyCharacter::MoveForward(float Value)
@@ -456,18 +475,30 @@ void AMyCharacter::StartJump()
     {
         bPressedJump = true;
         JumpCount++;
-        UE_LOG(Player, Log, TEXT("StartJump triggered: JumpCount = %d"), JumpCount);
-    }
-    else
-    {
-        UE_LOG(Player, Warning, TEXT("StartJump failed: MaxJumpCount reached"));
+
+        ACharacter::Jump(); // Perform Unreal's jump logic
+
+        if (JumpAnimMontage)
+        {
+            PlayAnimMontage(JumpAnimMontage);
+            UE_LOG(Player, Log, TEXT("StartJump triggered: Jump animation playing"));
+        }
     }
 }
+
+
 
 // Stop Jump Function
 void AMyCharacter::StopJump()
 {
     bPressedJump = false;
+
+    // Stop jump animation (if necessary, adjust based on behavior)
+    if (JumpAnimMontage)
+    {
+        StopAnimMontage(JumpAnimMontage);
+    }
+
     UE_LOG(Player, Log, TEXT("StopJump triggered"));
 }
 
@@ -476,8 +507,10 @@ void AMyCharacter::Landed(const FHitResult& Hit)
 {
     Super::Landed(Hit);
     JumpCount = 0; // Reset jump count on landing
-    UE_LOG(Player, Log, TEXT("Landed: JumpCount reset to %d"), JumpCount);
+
+    UE_LOG(Player, Log, TEXT("Landed: JumpCount reset, ensuring no animation override"));
 }
+
 
 // Start Sprint Function with Stamina Management
 void AMyCharacter::StartSprint()
