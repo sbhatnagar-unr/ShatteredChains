@@ -573,7 +573,7 @@ void AMyCharacter::ToggleProne()
         bIsProne = true;
 
         // Adjust collision and movement speed
-        GetCapsuleComponent()->SetCapsuleHalfHeight(22.0f); // Reduced height for prone
+        GetCapsuleComponent()->SetCapsuleHalfHeight(0.0f); // Reduced height for prone
         GetCharacterMovement()->MaxWalkSpeed = CrouchSpeed / 2; // Half crouch speed for prone
 
         UE_LOG(Player, Log, TEXT("ToggleProne: Entered prone mode"));

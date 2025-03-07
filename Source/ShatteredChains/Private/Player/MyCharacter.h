@@ -209,7 +209,7 @@ protected:
 
     // Slide speed
     UPROPERTY(EditAnywhere, Category = "Slide")
-    float SlideSpeed = 1500.0f;
+    float SlideSpeed = 1000.0f;
 
     // Slide duration
     UPROPERTY(EditAnywhere, Category = "Slide")
@@ -229,15 +229,15 @@ protected:
 
     // Base movement speed when walking
     UPROPERTY(EditAnywhere, Category = "Movement")
-    float WalkSpeed = 600.0f;
+    float WalkSpeed = 300.0f;
 
     // Sprinting speed 
     UPROPERTY(EditAnywhere, Category = "Movement")
-    float SprintSpeed = 1200.0f;
+    float SprintSpeed = 600.0f;
 
     // Speed while crouched
     UPROPERTY(EditAnywhere, Category = "Movement")
-    float CrouchSpeed = 300.0f;
+    float CrouchSpeed = 200.0f;
 
 
     /*--------------------- Jump Mechanics ---------------------*/
