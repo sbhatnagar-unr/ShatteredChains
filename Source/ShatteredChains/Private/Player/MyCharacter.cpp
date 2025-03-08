@@ -323,17 +323,22 @@ void AMyCharacter::PickUpWeapon(AWeapon* PickedUpWeapon)
     {
         FName WeaponID = FName(*PickedUpWeapon->GetName());
 
+        // Try to add weapon to inventory
         if (InventoryComponent->AddWeapon(WeaponID))
         {
-            PickedUpWeapon->Destroy();
             UE_LOG(LogTemp, Log, TEXT("Picked up weapon: %s"), *WeaponID.ToString());
+
+            // Equip weapon if it's the first one picked up or switch to it
+            EquipWeapon(PickedUpWeapon);
+            UE_LOG(LogTemp, Log, TEXT("Equipped weapon: %s"), *WeaponID.ToString());
         }
         else
         {
-            UE_LOG(LogTemp, Warning, TEXT("Weapon slots full!"));
+            UE_LOG(LogTemp, Warning, TEXT("Weapon slots full! Cannot pick up %s"), *WeaponID.ToString());
         }
     }
 }
+
 
 
 
