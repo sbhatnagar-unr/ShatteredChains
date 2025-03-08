@@ -8,12 +8,38 @@
 UInventoryComponent::UInventoryComponent()
 {
     PrimaryComponentTick.bCanEverTick = false;
+    WeaponSlots.SetNum(3); // Initialize inventory with 3 slots
 }
 
 // Called when the game starts
 void UInventoryComponent::BeginPlay()
 {
     Super::BeginPlay();
+}
+
+bool UInventoryComponent::AddWeapon(FName WeaponID)
+{
+    for (int32 i = 0; i < WeaponSlots.Num(); ++i)
+    {
+        if (WeaponSlots[i].IsNone()) // Find first empty slot
+        {
+            WeaponSlots[i] = WeaponID;
+            UE_LOG(LogTemp, Log, TEXT("Added %s to Weapon Slot %d"), *WeaponID.ToString(), i + 1);
+            return true;
+        }
+    }
+    UE_LOG(LogTemp, Warning, TEXT("Weapon inventory full!"));
+    return false;
+}
+
+void UInventoryComponent::LogInventory() const
+{
+    UE_LOG(LogTemp, Log, TEXT("Inventory:"));
+    for (int32 i = 0; i < WeaponSlots.Num(); ++i)
+    {
+        FString WeaponName = WeaponSlots[i].IsNone() ? TEXT("Empty") : WeaponSlots[i].ToString();
+        UE_LOG(LogTemp, Log, TEXT("Weapon Slot %d: %s"), i + 1, *WeaponName);
+    }
 }
 
 // Add an item to the inventory

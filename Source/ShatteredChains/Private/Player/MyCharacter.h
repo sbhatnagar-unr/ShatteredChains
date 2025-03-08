@@ -49,6 +49,8 @@ public:
     void EquipWeapon(AWeapon* Weapon);
     void PickUpWeapon(AWeapon* Weapon);
 
+
+
     // This should return a location to start a hitscan from
     virtual FVector get_hitscan_start_location() const override final;
 
@@ -277,6 +279,28 @@ protected:
     // Animation montage for sliding action
     UPROPERTY(EditDefaultsOnly, Category = "Animation")
     UAnimMontage* SlideMontage;
+
+    // Crouch Animations
+    UPROPERTY(EditDefaultsOnly, Category = "Animation")
+    UAnimMontage* CrouchEnterMontage; // Animation for entering crouch
+
+    UPROPERTY(EditDefaultsOnly, Category = "Animation")
+    UAnimMontage* CrouchIdleMontage;  // Animation for crouch idle
+
+    UPROPERTY(EditDefaultsOnly, Category = "Animation")
+    UAnimMontage* CrouchWalkMontage;  // Animation for crouch walking
+
+    UPROPERTY(EditDefaultsOnly, Category = "Animation")
+    UAnimMontage* StandUpMontage;     // Animation for standing up
+
+    UPROPERTY(BlueprintReadOnly, Category = "Animation")
+    float Speed;
+
+    UPROPERTY(BlueprintReadOnly, Category = "Animation")
+    bool bIsCrouching;
+
+    UPROPERTY(BlueprintReadOnly, Category = "Animation")
+    bool bIsInAir;
 
 
     /*--------------------- Timer Handles ---------------------*/

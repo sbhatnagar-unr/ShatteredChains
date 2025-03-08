@@ -76,6 +76,8 @@ private:
 
     TMap<FName, FInventoryItem> Items;  // The player's inventory
     TArray<FName> EquippedWeapons; // Equipped weapons
+    TArray<FName> WeaponSlots;
+
 
 public:
     UFUNCTION(BlueprintCallable, Category = "Inventory")
@@ -95,4 +97,8 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "Inventory")
     FName GetEquippedWeapon() const;
+
+    bool AddWeapon(FName WeaponID);
+    void LogInventory() const;
+
 };

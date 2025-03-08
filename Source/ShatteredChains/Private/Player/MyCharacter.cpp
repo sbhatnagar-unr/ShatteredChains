@@ -297,10 +297,26 @@ void AMyCharacter::ReloadWeapon()
     }
 }
 
-void AMyCharacter::PickUpWeapon(AWeapon* weapon)
+void AMyCharacter::PickUpWeapon(AWeapon* PickedUpWeapon)
 {
-    EquipWeapon(weapon);
+    if (PickedUpWeapon && InventoryComponent)
+    {
+        FName WeaponID = FName(*PickedUpWeapon->GetName());
+
+        if (InventoryComponent->AddWeapon(WeaponID))
+        {
+            PickedUpWeapon->Destroy();
+            UE_LOG(LogTemp, Log, TEXT("Picked up weapon: %s"), *WeaponID.ToString());
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Weapon slots full!"));
+        }
+    }
 }
+
+
+
 
 
 // Interact Function
@@ -373,37 +389,46 @@ void AMyCharacter::EquipWeapon(AWeapon* weapon)
 void AMyCharacter::Move(const FInputActionValue& Value)
 {
     FVector2D MovementInput = Value.Get<FVector2D>();
+
     if (Controller && MovementInput.SizeSquared() > 0.0f)
     {
-        // Get the control rotation, but zero out the pitch (X rotation) to prevent movement being affected by looking up/down
         FRotator ControlRotation = Controller->GetControlRotation();
-        ControlRotation.Pitch = 0.0f; // This ensures movement only considers yaw (left/right rotation)
+        ControlRotation.Pitch = 0.0f; // Ignore pitch for movement direction
 
         FVector ForwardDirection = FRotationMatrix(ControlRotation).GetScaledAxis(EAxis::X);
         FVector RightDirection = FRotationMatrix(ControlRotation).GetScaledAxis(EAxis::Y);
 
-        FVector CurrentInputDirection = ForwardDirection * MovementInput.Y + RightDirection * MovementInput.X;
-
-        // Normalize the direction
-        CurrentInputDirection.Normalize();
-
-        // Log only if the direction changes significantly
-        if (!CurrentInputDirection.Equals(LastInputDirection, 0.01f))
-        {
-            UE_LOG(Player, VeryVerbose, TEXT("Moving in direction: %s"), *CurrentInputDirection.ToString());
-            LastInputDirection = CurrentInputDirection;
-        }
-
-        // Apply the movement
+        // Apply movement
         AddMovementInput(ForwardDirection, MovementInput.Y);
         AddMovementInput(RightDirection, MovementInput.X);
+
+        // Play crouch walk animation if moving while crouched
+        if (bIsCrouched)
+        {
+            if (CrouchWalkMontage && !GetMesh()->GetAnimInstance()->Montage_IsPlaying(CrouchWalkMontage))
+            {
+                PlayAnimMontage(CrouchWalkMontage);
+            }
+        }
+        else if (bIsSprinting)
+        {
+            // Ensure sprinting animations play correctly
+            if (SprintAnimMontage && !GetMesh()->GetAnimInstance()->Montage_IsPlaying(SprintAnimMontage))
+            {
+                PlayAnimMontage(SprintAnimMontage);
+            }
+        }
     }
     else
     {
-        // Reset the last direction if no movement input is provided
-        LastInputDirection = FVector::ZeroVector;
+        // If crouched and not moving, play crouch idle animation
+        if (bIsCrouched && CrouchIdleMontage && !GetMesh()->GetAnimInstance()->Montage_IsPlaying(CrouchIdleMontage))
+        {
+            PlayAnimMontage(CrouchIdleMontage);
+        }
     }
 }
+
 
 
 
@@ -556,11 +581,18 @@ void AMyCharacter::UpdateStamina(float DeltaTime)
 // Crouch Toggle Function
 void AMyCharacter::ToggleCrouch()
 {
-    // Get the capsule component for modifying its height
     UCapsuleComponent* Capsule = GetCapsuleComponent();
+
+    UCharacterMovementComponent* MovementComponent = Cast<UCharacterMovementComponent>(GetCharacterMovement());
 
     if (bIsCrouched)
     {
+        // Play stand-up animation before transitioning to standing state
+        if (StandUpMontage)
+        {
+            PlayAnimMontage(StandUpMontage);
+        }
+
         // Restore original height and speed when uncrouching
         Capsule->SetCapsuleHalfHeight(88.0f); // Default height
         UnCrouch();
@@ -571,7 +603,13 @@ void AMyCharacter::ToggleCrouch()
     }
     else
     {
-        // Halve the height and reduce movement speed when crouching
+        // Play crouch enter animation
+        if (CrouchEnterMontage)
+        {
+            PlayAnimMontage(CrouchEnterMontage);
+        }
+
+        // Reduce height and speed when crouching
         Capsule->SetCapsuleHalfHeight(44.0f); // Half of the default height
         Crouch();
         bIsCrouched = true;
@@ -580,6 +618,8 @@ void AMyCharacter::ToggleCrouch()
         UE_LOG(Player, Log, TEXT("Crouch: Height reduced to %f"), Capsule->GetUnscaledCapsuleHalfHeight());
     }
 }
+
+
 
 
 // Toggle Prone Function
