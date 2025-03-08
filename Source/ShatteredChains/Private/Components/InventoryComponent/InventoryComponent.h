@@ -62,6 +62,9 @@ protected:
     virtual void BeginPlay() override;
 
 private:
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
+    UInventoryComponent* InventoryComponent;
+
     UPROPERTY(EditAnywhere, Category = "Inventory", meta = (Tooltip = "Maximum number of items allowed in inventory"))
     int32 MaxInventorySize = 10;
 
@@ -97,6 +100,12 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "Inventory")
     FName GetEquippedWeapon() const;
+    
+    UFUNCTION(BlueprintCallable, Category = "Inventory")
+    const TArray<FName>& GetWeaponSlots() const;
+    
+    UFUNCTION(BlueprintCallable, Category = "Inventory")
+    void ToggleInventory();
 
     bool AddWeapon(FName WeaponID);
     void LogInventory() const;

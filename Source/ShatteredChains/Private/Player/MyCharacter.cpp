@@ -18,7 +18,7 @@ AMyCharacter::AMyCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
+    InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 
 	// Initialize movement states and stamina
 	bIsCrouched = false;
@@ -183,14 +183,22 @@ void AMyCharacter::BeginPlay()
 void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
+    UE_LOG(LogTemp, Warning, TEXT("SetupPlayerInputComponent called!"));
 
     // Add input mapping Context
     if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
     {
+
+
         // Get Local Player Subsystem
-        if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-            // Add input context
+        UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer());
+
+        if (Subsystem)
+        {
+            Subsystem->ClearAllMappings();
             Subsystem->AddMappingContext(InputMapping, 0);
+            UE_LOG(LogTemp, Warning, TEXT("Enhanced Input Mapping Applied!"));
+        }
     }
 
     if (UEnhancedInputComponent* Input = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
@@ -235,10 +243,16 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
         //bind toggle inventory ui "i"
         Input->BindAction(IA_ToggleInventory, ETriggerEvent::Triggered, this, &AMyCharacter::ToggleInventory);
+        UE_LOG(LogTemp, Warning, TEXT("ToggleInventory binding successful!"));
 
         //bind log invetory "o"
         Input->BindAction(IA_LogInventory, ETriggerEvent::Triggered, this, &AMyCharacter::LogInventory);
 
+
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("EnhancedInputComponent NOT found!"));
     }
 
     // Bind axis mappings for movement
@@ -268,6 +282,12 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
     // Slide Jump
     //PlayerInputComponent->BindAction("SlideJump", IE_Pressed, this, &AMyCharacter::SlideJump);
 
+}
+
+
+UInventoryComponent* AMyCharacter::GetInventoryComponent() const
+{
+    return InventoryComponent;
 }
 
 void AMyCharacter::FireWeapon()
@@ -802,21 +822,27 @@ void AMyCharacter::EnableRolling()
 // Toggle Inventory UI (placeholder, can be linked to an actual UI)
 void AMyCharacter::ToggleInventory(const FInputActionValue& Value)
 {
+    UE_LOG(LogTemp, Warning, TEXT("ToggleInventory function triggered!"));
+
     if (!Value.Get<bool>()) return; // Ensure input is valid
 
     bIsInventoryOpen = !bIsInventoryOpen;
+    UE_LOG(LogTemp, Log, TEXT("========Inventory %s========="), bIsInventoryOpen ? TEXT("Opened") : TEXT("Closed"));
 
-    if (bIsInventoryOpen)
+    if (bIsInventoryOpen && InventoryComponent)
     {
-        UE_LOG(LogTemp, Log, TEXT("Inventory Opened"));
-        // TODO: Show Inventory UI
-    }
-    else
-    {
-        UE_LOG(LogTemp, Log, TEXT("Inventory Closed"));
-        // TODO: Hide Inventory UI
+        const TArray<FName>& WeaponSlots = InventoryComponent->GetWeaponSlots();
+
+        for (int32 i = 0; i < 3; ++i)
+        {
+            FString WeaponName = (i < WeaponSlots.Num() && !WeaponSlots[i].IsNone()) ? WeaponSlots[i].ToString() : TEXT("Empty");
+            UE_LOG(LogTemp, Log, TEXT("Weapon Slot %d: %s"), i + 1, *WeaponName);
+        }
     }
 }
+
+
+
 
 // Logs current inventory items when "O" is pressed
 void AMyCharacter::LogInventory(const FInputActionValue& Value)

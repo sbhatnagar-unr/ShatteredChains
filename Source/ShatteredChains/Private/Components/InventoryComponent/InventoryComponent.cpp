@@ -32,9 +32,27 @@ bool UInventoryComponent::AddWeapon(FName WeaponID)
     return false;
 }
 
+const TArray<FName>& UInventoryComponent::GetWeaponSlots() const
+{
+    return WeaponSlots;
+}
+
 void UInventoryComponent::LogInventory() const
 {
     UE_LOG(LogTemp, Log, TEXT("Inventory:"));
+    for (int32 i = 0; i < WeaponSlots.Num(); ++i)
+    {
+        FString WeaponName = WeaponSlots[i].IsNone() ? TEXT("Empty") : WeaponSlots[i].ToString();
+        UE_LOG(LogTemp, Log, TEXT("Weapon Slot %d: %s"), i + 1, *WeaponName);
+    }
+}
+
+void UInventoryComponent::ToggleInventory()
+{
+    UE_LOG(LogTemp, Warning, TEXT("ToggleInventory function triggered!"));
+
+    UE_LOG(LogTemp, Log, TEXT("========Inventory Opened========="));
+
     for (int32 i = 0; i < WeaponSlots.Num(); ++i)
     {
         FString WeaponName = WeaponSlots[i].IsNone() ? TEXT("Empty") : WeaponSlots[i].ToString();

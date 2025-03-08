@@ -50,7 +50,6 @@ public:
     void PickUpWeapon(AWeapon* Weapon);
 
 
-
     // This should return a location to start a hitscan from
     virtual FVector get_hitscan_start_location() const override final;
 
@@ -356,6 +355,9 @@ protected:
     //inventory log
     UFUNCTION()
     void LogInventory(const FInputActionValue& Value);
+
+    UFUNCTION(BlueprintCallable, Category = "Inventory")
+    UInventoryComponent* GetInventoryComponent() const;
 
     // Animation montages for each movement type
     UPROPERTY(EditDefaultsOnly, Category = "Animation")
