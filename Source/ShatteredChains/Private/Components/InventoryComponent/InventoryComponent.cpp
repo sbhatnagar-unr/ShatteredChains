@@ -19,6 +19,7 @@ void UInventoryComponent::BeginPlay()
 
 bool UInventoryComponent::AddWeapon(FName WeaponID)
 {
+    // Check if there's an empty slot before adding a weapon
     for (int32 i = 0; i < WeaponSlots.Num(); ++i)
     {
         if (WeaponSlots[i].IsNone()) // Find first empty slot
@@ -28,7 +29,9 @@ bool UInventoryComponent::AddWeapon(FName WeaponID)
             return true;
         }
     }
-    UE_LOG(LogTemp, Warning, TEXT("Weapon inventory full!"));
+
+    // If all slots are occupied, prevent adding another weapon
+    UE_LOG(LogTemp, Warning, TEXT("Cannot pick up %s, weapon inventory is full!"), *WeaponID.ToString());
     return false;
 }
 

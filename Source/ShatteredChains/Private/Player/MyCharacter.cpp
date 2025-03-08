@@ -323,14 +323,21 @@ void AMyCharacter::PickUpWeapon(AWeapon* PickedUpWeapon)
     {
         FName WeaponID = FName(*PickedUpWeapon->GetName());
 
-        // Try to add weapon to inventory
+        // Check if we have space for the weapon before picking it up
         if (InventoryComponent->AddWeapon(WeaponID))
         {
             UE_LOG(LogTemp, Log, TEXT("Picked up weapon: %s"), *WeaponID.ToString());
 
-            // Equip weapon if it's the first one picked up or switch to it
-            EquipWeapon(PickedUpWeapon);
-            UE_LOG(LogTemp, Log, TEXT("Equipped weapon: %s"), *WeaponID.ToString());
+            // Equip weapon if it's the first one picked up
+            if (!CurrentWeapon)
+            {
+                EquipWeapon(PickedUpWeapon);
+                UE_LOG(LogTemp, Log, TEXT("Equipped weapon: %s"), *WeaponID.ToString());
+            }
+
+            // Hide weapon from the world
+            PickedUpWeapon->SetActorHiddenInGame(true);
+            PickedUpWeapon->SetActorEnableCollision(false);
         }
         else
         {
@@ -338,7 +345,6 @@ void AMyCharacter::PickUpWeapon(AWeapon* PickedUpWeapon)
         }
     }
 }
-
 
 
 
