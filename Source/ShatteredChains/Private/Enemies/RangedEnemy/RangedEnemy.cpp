@@ -23,6 +23,10 @@ void ARangedEnemy::BeginPlay()
 {
     Super::BeginPlay();
 
+    // If we spawn as dead we don't need to do any of the other things
+    if (health_component->get_health() == 0) return;
+    
+    
     // Get the world
     UWorld* world = GetWorld();
     if (world == nullptr)
