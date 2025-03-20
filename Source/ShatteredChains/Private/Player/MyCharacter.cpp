@@ -248,7 +248,17 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
         //bind log invetory "o"
         Input->BindAction(IA_LogInventory, ETriggerEvent::Triggered, this, &AMyCharacter::LogInventory);
 
+        //weapon slots
+        Input->BindAction(IA_WeaponSlot1, ETriggerEvent::Triggered, this, &AMyCharacter::HandleWeaponSlotInput, 1);
 
+        Input->BindAction(IA_WeaponSlot2, ETriggerEvent::Triggered, this, &AMyCharacter::HandleWeaponSlotInput, 2);
+
+        Input->BindAction(IA_WeaponSlot3, ETriggerEvent::Triggered, this, &AMyCharacter::HandleWeaponSlotInput, 3);
+
+        Input->BindAction(IA_DropWeapon, ETriggerEvent::Triggered, this, &AMyCharacter::DropWeapon);
+
+        //drop weapon
+        Input->BindAction(IA_DropWeapon, ETriggerEvent::Triggered, this, &AMyCharacter::DropWeapon);
     }
     else
     {
@@ -346,7 +356,61 @@ void AMyCharacter::PickUpWeapon(AWeapon* PickedUpWeapon)
     }
 }
 
+// handle weapon equipping slot 1-3
+void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
+{
+    if (!InventoryComponent)
+        return;
 
+    const TArray<FName>& WeaponSlots = InventoryComponent->GetWeaponSlots();
+    if (Slot < 1 || Slot > WeaponSlots.Num())
+        return;
+
+    int32 SlotIndex = Slot - 1;
+    FName WeaponID = WeaponSlots[SlotIndex];
+
+    if (WeaponID.IsNone())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("No weapon in Slot %d"), Slot);
+        return;
+    }
+
+    if (EquippedSlot == SlotIndex)  // Unequip if already equipped
+    {
+        UE_LOG(LogTemp, Log, TEXT("[Slot %d][%s][UNEQUIPPED]"), Slot, *WeaponID.ToString());
+        CurrentWeapon = nullptr;
+        EquippedSlot = -1;
+        return;
+    }
+
+    // Equip new weapon
+    EquippedSlot = SlotIndex;
+    CurrentWeapon = Cast<AWeapon>(UGameplayStatics::GetActorOfClass(GetWorld(), AWeapon::StaticClass()));
+
+    if (CurrentWeapon)
+    {
+        UE_LOG(LogTemp, Log, TEXT("[Slot %d][%s][EQUIPPED]"), Slot, *WeaponID.ToString());
+    }
+}
+
+//drop weapon
+void AMyCharacter::DropWeapon()
+{
+    if (!CurrentWeapon || EquippedSlot == -1)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("No weapon equipped to drop."));
+        return;
+    }
+
+    UE_LOG(LogTemp, Log, TEXT("[Slot %d][%s][DROPPED]"), EquippedSlot + 1, *CurrentWeapon->GetName());
+
+    // Drop logic (e.g., spawn the weapon in the world)
+    CurrentWeapon->SetActorHiddenInGame(false);
+    CurrentWeapon->SetActorEnableCollision(true);
+    CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+    CurrentWeapon = nullptr;
+    EquippedSlot = -1;
+}
 
 
 

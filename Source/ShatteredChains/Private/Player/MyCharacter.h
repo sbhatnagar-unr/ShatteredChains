@@ -301,6 +301,19 @@ protected:
     UPROPERTY(BlueprintReadOnly, Category = "Animation")
     bool bIsInAir;
 
+    /*--------------------- Weapon Handling ---------------------*/
+
+    UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+    UInputAction* IA_WeaponSlot1;
+
+    UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+    UInputAction* IA_WeaponSlot2;
+
+    UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+    UInputAction* IA_WeaponSlot3;
+
+    UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+    UInputAction* IA_DropWeapon;
 
     /*--------------------- Timer Handles ---------------------*/
 
@@ -518,4 +531,9 @@ private:
     UCurveFloat* camera_curve;
     
     
+    void HandleWeaponSlotInput(int32 Slot);
+    void DropWeapon();
+
+    UPROPERTY()
+    int32 EquippedSlot = -1; // -1 means no weapon equipped
 };
