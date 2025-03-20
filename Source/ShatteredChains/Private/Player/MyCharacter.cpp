@@ -360,22 +360,29 @@ void AMyCharacter::PickUpWeapon(AWeapon* PickedUpWeapon)
 void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
 {
     if (!InventoryComponent)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("InventoryComponent is NULL!"));
         return;
+    }
 
     const TArray<FName>& WeaponSlots = InventoryComponent->GetWeaponSlots();
     if (Slot < 1 || Slot > WeaponSlots.Num())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Invalid weapon slot: %d"), Slot);
         return;
+    }
 
     int32 SlotIndex = Slot - 1;
     FName WeaponID = WeaponSlots[SlotIndex];
 
     if (WeaponID.IsNone())
     {
-        UE_LOG(LogTemp, Warning, TEXT("No weapon in Slot %d"), Slot);
+        UE_LOG(LogTemp, Warning, TEXT("Slot %d is empty"), Slot);
         return;
     }
 
-    if (EquippedSlot == SlotIndex)  // Unequip if already equipped
+    // Toggle equip/unequip
+    if (EquippedSlot == SlotIndex)
     {
         UE_LOG(LogTemp, Log, TEXT("[Slot %d][%s][UNEQUIPPED]"), Slot, *WeaponID.ToString());
         CurrentWeapon = nullptr;
@@ -383,13 +390,16 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
         return;
     }
 
-    // Equip new weapon
-    EquippedSlot = SlotIndex;
+     EquippedSlot = SlotIndex;
     CurrentWeapon = Cast<AWeapon>(UGameplayStatics::GetActorOfClass(GetWorld(), AWeapon::StaticClass()));
 
     if (CurrentWeapon)
     {
         UE_LOG(LogTemp, Log, TEXT("[Slot %d][%s][EQUIPPED]"), Slot, *WeaponID.ToString());
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Weapon not found in world!"));
     }
 }
 
@@ -404,13 +414,14 @@ void AMyCharacter::DropWeapon()
 
     UE_LOG(LogTemp, Log, TEXT("[Slot %d][%s][DROPPED]"), EquippedSlot + 1, *CurrentWeapon->GetName());
 
-    // Drop logic (e.g., spawn the weapon in the world)
+    // Drop logic
     CurrentWeapon->SetActorHiddenInGame(false);
     CurrentWeapon->SetActorEnableCollision(true);
     CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
     CurrentWeapon = nullptr;
     EquippedSlot = -1;
 }
+
 
 
 
@@ -1081,6 +1092,14 @@ void AMyCharacter::WallJump()
     {
         UE_LOG(Player, Warning, TEXT("WallJump failed: No wall detected"));
     }
+}
+
+// reset movement debuffs
+void AMyCharacter::ResetMovementDebuffs()
+{
+    leg_shot_speed_multiplier = 1.0f;
+    foot_shot_speed_multiplier = 1.0f;
+    UE_LOG(LogTemp, Log, TEXT("Movement debuffs reset."));
 }
 
 

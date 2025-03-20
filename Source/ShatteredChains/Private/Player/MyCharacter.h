@@ -62,6 +62,11 @@ public:
     virtual void hit_bone(const AActor* hit_by, const FName bone_name, float weapon_damage) override final;
     virtual const TMap<FName, TObjectPtr<UStatsModifier>>* get_bone_collider_stats_modifiers() const override final;
 
+    
+    //movement reset for medkit
+    void ResetMovementDebuffs();
+
+
 
 protected:
 
