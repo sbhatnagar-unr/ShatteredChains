@@ -259,6 +259,10 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
         //drop weapon
         Input->BindAction(IA_DropWeapon, ETriggerEvent::Triggered, this, &AMyCharacter::DropWeapon);
+
+        //use healthkit/take out
+        Input->BindAction(IA_UseHealthKit, ETriggerEvent::Triggered, this, &AMyCharacter::ToggleMedKit);
+
     }
     else
     {
@@ -302,6 +306,23 @@ UInventoryComponent* AMyCharacter::GetInventoryComponent() const
 
 void AMyCharacter::FireWeapon()
 {
+    if (bIsHoldingMedKit)
+    {
+        if (InventoryComponent && InventoryComponent->HasItem("MedKit", 1))
+        {
+            InventoryComponent->RemoveItem("MedKit", 1);
+            HealthComponent->set_health(HealthComponent->get_max_health());
+            GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+            ResetMovementDebuffs();
+            bIsHoldingMedKit = false;
+
+            UE_LOG(LogTemp, Log, TEXT("Used MedKit and restored health."));
+            return;
+        }
+
+        UE_LOG(LogTemp, Warning, TEXT("Tried to use MedKit but none left."));
+        return;
+    }
     if (CurrentWeapon)
     {
         CurrentWeapon->fire(); // Calls the fire function in Weapon.cpp
@@ -312,6 +333,32 @@ void AMyCharacter::FireWeapon()
         UE_LOG(Player, Warning, TEXT("No weapon equipped to fire."));
     }
 }
+
+//Toggle medkit
+void AMyCharacter::ToggleMedKit(const FInputActionValue& Value)
+{
+    if (!InventoryComponent) return;
+
+    // If already holding the medkit, put it back
+    if (bIsHoldingMedKit)
+    {
+        bIsHoldingMedKit = false;
+        UE_LOG(LogTemp, Log, TEXT("MedKit unequipped."));
+        return;
+    }
+
+    // Check if we have one in inventory
+    if (InventoryComponent->HasItem("MedKit", 1))
+    {
+        bIsHoldingMedKit = true;
+        UE_LOG(LogTemp, Log, TEXT("MedKit equipped."));
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("No MedKit in inventory."));
+    }
+}
+
 
 
 void AMyCharacter::ReloadWeapon()

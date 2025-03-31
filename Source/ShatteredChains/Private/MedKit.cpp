@@ -68,7 +68,18 @@ void AMedKit::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* O
     AMyCharacter* Character = Cast<AMyCharacter>(OtherActor);
     if (Character)
     {
-        UE_LOG(LogTemp, Log, TEXT("Medkit picked up by player"));
-        Use(Character);
+        if (UInventoryComponent* Inv = Character->get_inventory_component())
+        {
+            if (Inv->AddItem("MedKit", EItemType::HealthKit, 1))
+            {
+                UE_LOG(LogTemp, Log, TEXT("Picked up MedKit and added to inventory"));
+                Destroy(); // Remove from world
+            }
+            else
+            {
+                UE_LOG(LogTemp, Warning, TEXT("Could not add MedKit to inventory"));
+            }
+        }
     }
 }
+

@@ -199,6 +199,8 @@ protected:
     // Determines if the character is eligible to roll
     bool bCanRoll = true;
 
+    // Tracks whether the player has a medkit equipped (slot 4)
+    bool bIsHoldingMedKit = false;
 
     /*--------------------- Input Actions ---------------------*/
 
@@ -432,6 +434,13 @@ protected:
     // Sound effects
     UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
     TObjectPtr<USoundBase> jump_sound;
+
+    //declare medkit input
+    UFUNCTION()
+    void ToggleMedKit(const FInputActionValue& Value);
+
+    UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+    UInputAction* IA_UseHealthKit; // Bound to "4"
     
     // Bone Collision
     // Stats modifiers map
