@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "InventoryComponent.h"
@@ -53,15 +53,38 @@ void UInventoryComponent::LogInventory() const
 void UInventoryComponent::ToggleInventory()
 {
     UE_LOG(LogTemp, Warning, TEXT("ToggleInventory function triggered!"));
-
     UE_LOG(LogTemp, Log, TEXT("========Inventory Opened========="));
 
+    // Log weapon slots
     for (int32 i = 0; i < WeaponSlots.Num(); ++i)
     {
         FString WeaponName = WeaponSlots[i].IsNone() ? TEXT("Empty") : WeaponSlots[i].ToString();
         UE_LOG(LogTemp, Log, TEXT("Weapon Slot %d: %s"), i + 1, *WeaponName);
     }
+
+    // ✅ Always log Medkit slot
+    bool bHasMedkit = HasItem("MedKit", 1);
+    FString MedkitStatus = bHasMedkit ? TEXT("Full") : TEXT("Empty");
+    UE_LOG(LogTemp, Log, TEXT("Medkit Slot: %s"), *MedkitStatus);
+
+    // Optional: log other inventory items
+    for (const auto& Item : Items)
+    {
+        FString ItemName = Item.Key.ToString();
+        const FInventoryItem& Data = Item.Value;
+
+        // Skip MedKit since it's already printed above
+        if (Item.Key == "MedKit")
+            continue;
+
+        UE_LOG(LogTemp, Log, TEXT("Item: %s, Quantity: %d, Type: %s"),
+            *ItemName,
+            Data.Quantity,
+            *UEnum::GetValueAsString(Data.ItemType));
+    }
 }
+
+
 
 // Add an item to the inventory
 bool UInventoryComponent::AddItem(const FName &ItemID, const EItemType ItemType, const int32 Quantity, const int32 MaxQuantity)

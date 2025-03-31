@@ -956,23 +956,29 @@ void AMyCharacter::EnableRolling()
 void AMyCharacter::ToggleInventory(const FInputActionValue& Value)
 {
     UE_LOG(LogTemp, Warning, TEXT("ToggleInventory function triggered!"));
-
-    if (!Value.Get<bool>()) return; // Ensure input is valid
+    if (!Value.Get<bool>()) return;
 
     bIsInventoryOpen = !bIsInventoryOpen;
     UE_LOG(LogTemp, Log, TEXT("========Inventory %s========="), bIsInventoryOpen ? TEXT("Opened") : TEXT("Closed"));
 
     if (bIsInventoryOpen && InventoryComponent)
     {
+        // Log weapon slots
         const TArray<FName>& WeaponSlots = InventoryComponent->GetWeaponSlots();
-
         for (int32 i = 0; i < 3; ++i)
         {
             FString WeaponName = (i < WeaponSlots.Num() && !WeaponSlots[i].IsNone()) ? WeaponSlots[i].ToString() : TEXT("Empty");
             UE_LOG(LogTemp, Log, TEXT("Weapon Slot %d: %s"), i + 1, *WeaponName);
         }
+
+        // Always show Medkit slot
+        bool bHasMedkit = InventoryComponent->HasItem("MedKit", 1);
+        FString MedkitStatus = bHasMedkit ? TEXT("Full") : TEXT("Empty");
+        FString EquippedStatus = (bIsHoldingMedKit && bHasMedkit) ? TEXT(" (Equipped)") : TEXT("");
+        UE_LOG(LogTemp, Log, TEXT("Medkit Slot: %s%s"), *MedkitStatus, *EquippedStatus);
     }
 }
+
 
 
 
