@@ -13,6 +13,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "ShatteredChains/CustomTraceChannels.h"
 #include "MedKit.h"
+#include "EngineUtils.h"
 
 
 
@@ -264,7 +265,8 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
         Input->BindAction(IA_DropWeapon, ETriggerEvent::Triggered, this, &AMyCharacter::DropWeapon);
 
         //use healthkit/take out
-        Input->BindAction(IA_UseHealthKit, ETriggerEvent::Triggered, this, &AMyCharacter::ToggleMedKit);
+        Input->BindAction(IA_UseHealthKit, ETriggerEvent::Started, this, &AMyCharacter::ToggleMedKit);
+
 
     }
     else
@@ -342,24 +344,57 @@ void AMyCharacter::ToggleMedKit(const FInputActionValue& Value)
 {
     if (!InventoryComponent) return;
 
-    // If already holding the medkit, put it back
+    // Unequip weapon if holding one
+    if (CurrentWeapon)
+    {
+        UE_LOG(Player, Log, TEXT("Unequipping weapon to hold MedKit."));
+        CurrentWeapon = nullptr;
+        CurrentEquippedWeaponSlot = -1;
+    }
+
+    // Toggle medkit state
     if (bIsHoldingMedKit)
     {
         bIsHoldingMedKit = false;
-        UE_LOG(LogTemp, Log, TEXT("MedKit unequipped."));
+        UE_LOG(Player, Log, TEXT("MedKit unequipped."));
         return;
     }
 
-    // Check if we have one in inventory
     if (InventoryComponent->HasItem("MedKit", 1))
     {
         bIsHoldingMedKit = true;
-        UE_LOG(LogTemp, Log, TEXT("MedKit equipped."));
+        UE_LOG(Player, Log, TEXT("MedKit equipped."));
     }
     else
     {
-        UE_LOG(LogTemp, Warning, TEXT("No MedKit in inventory."));
+        UE_LOG(Player, Warning, TEXT("No MedKit in inventory."));
     }
+}
+
+void AMyCharacter::UseEquippedMedkit()
+{
+    UE_LOG(LogTemp, Log, TEXT("Attempting to use medkit"));
+
+    if (!InventoryComponent->HasItem("MedKit", 1))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("No MedKit in inventory."));
+        return;
+    }
+
+    UHealthComponent* HealthComp = get_health_component();
+    if (HealthComp)
+    {
+        HealthComp->set_health(HealthComp->get_max_health());
+    }
+
+    GetCharacterMovement()->MaxWalkSpeed = 400.f;
+    ResetMovementDebuffs();
+
+    InventoryComponent->RemoveItem("MedKit", 1);
+    CurrentEquippedWeaponSlot = -1;
+    CurrentWeapon = nullptr;
+
+    UE_LOG(LogTemp, Log, TEXT("Used MedKit: healed and removed movement debuffs."));
 }
 
 
@@ -409,68 +444,101 @@ void AMyCharacter::PickUpWeapon(AWeapon* PickedUpWeapon)
 // handle weapon equipping slot 1-3
 void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
 {
-    if (!InventoryComponent)
+    if (!InventoryComponent) return;
+
+    // Toggle medkit if Slot == 4
+    if (Slot == 4)
     {
-        UE_LOG(LogTemp, Warning, TEXT("InventoryComponent is NULL!"));
+        if (bIsHoldingMedKit)
+        {
+            bIsHoldingMedKit = false;
+            UE_LOG(Player, Log, TEXT("[Slot 4][MedKit][UNEQUIPPED]"));
+        }
+        else if (InventoryComponent->HasItem("MedKit", 1))
+        {
+            bIsHoldingMedKit = true;
+            CurrentWeapon = nullptr;
+            CurrentEquippedWeaponSlot = -1;
+            UE_LOG(Player, Log, TEXT("[Slot 4][MedKit][EQUIPPED]"));
+        }
+        else
+        {
+            UE_LOG(Player, Warning, TEXT("No MedKit in inventory to equip."));
+        }
         return;
     }
 
+    // Unequip medkit if switching to a weapon
+    if (bIsHoldingMedKit)
+    {
+        bIsHoldingMedKit = false;
+        UE_LOG(Player, Log, TEXT("MedKit unequipped due to weapon switch."));
+    }
+
+    const int32 SlotIndex = Slot - 1;
     const TArray<FName>& WeaponSlots = InventoryComponent->GetWeaponSlots();
-    if (Slot < 1 || Slot > WeaponSlots.Num())
+
+    if (SlotIndex >= WeaponSlots.Num() || WeaponSlots[SlotIndex].IsNone())
     {
-        UE_LOG(LogTemp, Warning, TEXT("Invalid weapon slot: %d"), Slot);
+        UE_LOG(Player, Warning, TEXT("[Slot %d][Empty][CANNOT EQUIP]"), Slot);
         return;
     }
 
-    int32 SlotIndex = Slot - 1;
-    FName WeaponID = WeaponSlots[SlotIndex];
-
-    if (WeaponID.IsNone())
+    if (CurrentEquippedWeaponSlot == Slot)
     {
-        UE_LOG(LogTemp, Warning, TEXT("Slot %d is empty"), Slot);
-        return;
-    }
-
-    // Toggle equip/unequip
-    if (EquippedSlot == SlotIndex)
-    {
-        UE_LOG(LogTemp, Log, TEXT("[Slot %d][%s][UNEQUIPPED]"), Slot, *WeaponID.ToString());
         CurrentWeapon = nullptr;
-        EquippedSlot = -1;
+        CurrentEquippedWeaponSlot = -1;
+        UE_LOG(Player, Log, TEXT("[Slot %d][%s][UNEQUIPPED]"), Slot, *WeaponSlots[SlotIndex].ToString());
         return;
     }
 
-     EquippedSlot = SlotIndex;
-    CurrentWeapon = Cast<AWeapon>(UGameplayStatics::GetActorOfClass(GetWorld(), AWeapon::StaticClass()));
-
-    if (CurrentWeapon)
+    AWeapon* FoundWeapon = nullptr;
+    for (TActorIterator<AWeapon> It(GetWorld()); It; ++It)
     {
-        UE_LOG(LogTemp, Log, TEXT("[Slot %d][%s][EQUIPPED]"), Slot, *WeaponID.ToString());
+        if (It->GetName() == WeaponSlots[SlotIndex].ToString())
+        {
+            FoundWeapon = *It;
+            break;
+        }
+    }
+
+    if (FoundWeapon)
+    {
+        CurrentWeapon = FoundWeapon;
+        CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("WeaponSocket"));
+        CurrentWeapon->SetActorEnableCollision(false);
+        CurrentWeapon->SetActorHiddenInGame(false);
+
+        CurrentEquippedWeaponSlot = Slot;
+        UE_LOG(Player, Log, TEXT("[Slot %d][%s][EQUIPPED]"), Slot, *FoundWeapon->GetName());
     }
     else
     {
-        UE_LOG(LogTemp, Warning, TEXT("Weapon not found in world!"));
+        UE_LOG(Player, Warning, TEXT("Weapon in slot %d not found in world."), Slot);
     }
 }
+
 
 //drop weapon
 void AMyCharacter::DropWeapon()
 {
-    if (!CurrentWeapon || EquippedSlot == -1)
+    if (!CurrentWeapon || CurrentEquippedWeaponSlot == -1)
     {
-        UE_LOG(LogTemp, Warning, TEXT("No weapon equipped to drop."));
+        UE_LOG(Player, Warning, TEXT("No weapon equipped to drop."));
         return;
     }
 
-    UE_LOG(LogTemp, Log, TEXT("[Slot %d][%s][DROPPED]"), EquippedSlot + 1, *CurrentWeapon->GetName());
+    UE_LOG(Player, Log, TEXT("[Slot %d][%s][DROPPED]"), CurrentEquippedWeaponSlot, *CurrentWeapon->GetName());
 
-    // Drop logic
     CurrentWeapon->SetActorHiddenInGame(false);
     CurrentWeapon->SetActorEnableCollision(true);
     CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+
+    InventoryComponent->RemoveWeapon(CurrentEquippedWeaponSlot - 1);
     CurrentWeapon = nullptr;
-    EquippedSlot = -1;
+    CurrentEquippedWeaponSlot = -1;
 }
+
 
 
 

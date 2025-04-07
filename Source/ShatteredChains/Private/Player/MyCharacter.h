@@ -70,6 +70,8 @@ public:
 
 protected:
 
+    bool bIsMedkitEquipped = false;
+
     // Input mapping for enhanced input
     UPROPERTY(EditAnywhere, Category = "EnhancedInput")
     class UInputMappingContext* InputMapping;
@@ -108,6 +110,8 @@ protected:
     UPROPERTY(EditAnywhere, Category = "EnhancedInput")
     UInputAction* ReloadAction;
     
+    int32 CurrentEquippedWeaponSlot = -1;
+
     //medkit handling
     UPROPERTY()
     class AMedKit* NearbyMedKit = nullptr;
@@ -183,6 +187,9 @@ protected:
     UFUNCTION()
     void Interact();
 
+    UFUNCTION()
+    void UseEquippedMedkit();
+
 
     UPROPERTY()
     AWeapon* CurrentWeapon = nullptr;
@@ -203,6 +210,7 @@ protected:
     bool bCanRoll = true;
 
     // Tracks whether the player has a medkit equipped (slot 4)
+    UPROPERTY()
     bool bIsHoldingMedKit = false;
 
     /*--------------------- Input Actions ---------------------*/
@@ -551,6 +559,5 @@ private:
     void HandleWeaponSlotInput(int32 Slot);
     void DropWeapon();
 
-    UPROPERTY()
-    int32 EquippedSlot = -1; // -1 means no weapon equipped
+
 };

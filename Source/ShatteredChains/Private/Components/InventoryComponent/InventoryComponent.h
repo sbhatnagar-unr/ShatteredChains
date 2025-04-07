@@ -107,6 +107,9 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Inventory")
     void ToggleInventory();
 
+    UFUNCTION(BlueprintCallable)
+    void RemoveWeapon(int32 SlotIndex);
+
     bool AddWeapon(FName WeaponID);
     void LogInventory() const;
 

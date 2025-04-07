@@ -190,3 +190,13 @@ FName UInventoryComponent::GetEquippedWeapon() const
 {
     return EquippedWeapons.Num() > 0 ? EquippedWeapons[0] : FName("");
 }
+
+void UInventoryComponent::RemoveWeapon(int32 SlotIndex)
+{
+    if (SlotIndex >= 0 && SlotIndex < WeaponSlots.Num())
+    {
+        UE_LOG(LogTemp, Log, TEXT("Removing weapon from slot %d (%s)"), SlotIndex + 1, *WeaponSlots[SlotIndex].ToString());
+        WeaponSlots[SlotIndex] = NAME_None;
+    }
+}
+
