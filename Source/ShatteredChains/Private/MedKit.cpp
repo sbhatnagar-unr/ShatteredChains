@@ -10,17 +10,25 @@
 // Sets default values
 AMedKit::AMedKit()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-    PrimaryActorTick.bCanEverTick = false;
+    // Create mesh and set it as root
+    MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MedkitMesh"));
+    RootComponent = MeshComponent;
 
-    // Create and initialize collision component
+    // Enable physics
+    MeshComponent->SetSimulatePhysics(true);
+    MeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    MeshComponent->SetCollisionObjectType(ECC_PhysicsBody);
+    MeshComponent->SetCollisionResponseToAllChannels(ECR_Block);
+
+    // Create sphere component and attach to mesh
     SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionSphere"));
+    SphereComponent->SetupAttachment(MeshComponent); // Attach to mesh now
     SphereComponent->InitSphereRadius(50.0f);
     SphereComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     SphereComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
     SphereComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
     SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &AMedKit::OnOverlapBegin);
-    RootComponent = SphereComponent;
+
 }
 
 // Called when the game starts or when spawned

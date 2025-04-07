@@ -26,14 +26,20 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
+    // Properties
     UPROPERTY(EditAnywhere, Category = "Medkit Properties")
     float HealingAmount = 100.0f; // Fully restores health
 
     UPROPERTY(EditAnywhere, Category = "Medkit Properties")
     float NormalWalkSpeed = 400.0f; // Restores movement speed
 
+    // Sphere collision for detecting overlap with player
     UPROPERTY(VisibleAnywhere, Category = "Collision")
     USphereComponent* SphereComponent;
+
+    // Mesh for physical appearance and physics simulation
+    UPROPERTY(VisibleAnywhere, Category = "Mesh")
+    UStaticMeshComponent* MeshComponent;
 
     // Collision handling for pickup
     UFUNCTION()
