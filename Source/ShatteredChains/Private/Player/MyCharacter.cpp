@@ -12,6 +12,9 @@
 #include "Camera/CameraComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "ShatteredChains/CustomTraceChannels.h"
+#include "MedKit.h"
+
+
 
 // Sets default values
 AMyCharacter::AMyCharacter()
@@ -482,23 +485,37 @@ void AMyCharacter::Interact()
     FCollisionQueryParams Params;
     Params.AddIgnoredActor(this);
 
-    // Perform the line trace
     if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
     {
         AActor* HitActor = HitResult.GetActor();
-        if (HitActor)
+        if (!HitActor) return;
+
+        UE_LOG(Player, Log, TEXT("Line Trace Hit Actor: %s"), *HitActor->GetName());
+
+        // 🔸 Handle MedKit pickup
+        if (AMedKit* MedKit = Cast<AMedKit>(HitActor))
         {
-            UE_LOG(Player, Log, TEXT("Line Trace Hit Actor: %s"), *HitActor->GetName());
-
-            // Check if the hit actor is a weapon
-            if (AWeapon* weapon = Cast<AWeapon>(HitActor))
+            if (InventoryComponent->AddItem("MedKit", EItemType::HealthKit, 1))
             {
-                UE_LOG(Player, Log, TEXT("Weapon Detected: %s"), *weapon->GetName());
-
-                EquipWeapon(weapon); // Attempt to equip the weapon
-                weapon->SetActorHiddenInGame(true); // Hide the weapon
-                weapon->SetActorEnableCollision(false);
+                UE_LOG(Player, Log, TEXT("Picked up MedKit via Interact"));
+                MedKit->Destroy();
             }
+            else
+            {
+                UE_LOG(Player, Warning, TEXT("Could not pick up MedKit: Inventory full"));
+            }
+            return;
+        }
+
+        // 🔸 Handle Weapon pickup
+        if (AWeapon* HitWeapon = Cast<AWeapon>(HitActor))
+        {
+            UE_LOG(Player, Log, TEXT("Weapon Detected: %s"), *HitWeapon->GetName());
+
+            EquipWeapon(HitWeapon);
+            HitWeapon->SetActorHiddenInGame(true);
+            HitWeapon->SetActorEnableCollision(false);
+            return;
         }
     }
     else
@@ -506,6 +523,8 @@ void AMyCharacter::Interact()
         UE_LOG(Player, Warning, TEXT("No interactable object detected."));
     }
 }
+
+
 
 
 

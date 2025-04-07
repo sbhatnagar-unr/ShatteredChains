@@ -107,7 +107,10 @@ protected:
 
     UPROPERTY(EditAnywhere, Category = "EnhancedInput")
     UInputAction* ReloadAction;
-
+    
+    //medkit handling
+    UPROPERTY()
+    class AMedKit* NearbyMedKit = nullptr;
 
 
     void Move(const FInputActionValue& InputValue);
