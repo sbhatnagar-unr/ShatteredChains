@@ -332,10 +332,28 @@ void AMyCharacter::FireWeapon()
     }
     if (CurrentWeapon)
     {
-        if (!has_fired_weapon || CurrentWeapon->is_full_auto())
+        // This condition stops it from spamming the out of ammo sound on full-auto weapons, which plays when the gun is fired without ammo
+        // Here we will just fire once, then set has_fired_weapon to true, so all guns, regardless of full-auto or not, operate as if they were semi-auto ONLY WHEN
+        // there is no ammo.
+        // These if statements can probably be combined, since they run the same body, but the expression needed to make it work as intended
+        // Would not be as readable
+        if (CurrentWeapon->get_current_magazine_ammo_count() == 0)
+        {
+            // This can not be added to the above if-statement with an &&
+            // If we did that, after we dry fire once, the following else if block would still run on full-auto weapons
+            // leading to the weapon empty sound being spammed.
+            // This way, code execution does not reach the else if below
+            if (!has_fired_weapon)
+            {
+                CurrentWeapon->fire(); // Calls the fire function in Weapon.cpp
+                UE_LOG(Player, Log, LOG_TEXT("Fired weapon with no ammo: %s"), *CurrentWeapon->GetName());
+                has_fired_weapon = true;
+            }
+        }
+        else if (!has_fired_weapon || CurrentWeapon->is_full_auto())
         {
             CurrentWeapon->fire(); // Calls the fire function in Weapon.cpp
-            UE_LOG(Player, Log, TEXT("Fired weapon: %s"), *CurrentWeapon->GetName());
+            UE_LOG(Player, Log, LOG_TEXT("Fired weapon: %s"), *CurrentWeapon->GetName());
             has_fired_weapon = true;
         }
     }
