@@ -144,24 +144,6 @@ void AWeapon::fire() const
     Basically, handling the firing through notifiers in the montage makes this function flexible enough to be used with ANY weapon, regardless of how it functions.
     */
 
-    // Don't fire if we are out of ammo
-    if (current_magazine_ammo_count <= 0)
-    {
-        UE_LOG(Weapon, Verbose, LOG_TEXT("No ammo, skipping fire"));
-        // Play out_of_ammo sound
-        // Function internally handles nullptr audio
-        UGameplayStatics::PlaySound2D(GetWorld(), out_of_ammo_sound, 1, 1, 0, nullptr, this, false);
-        return;
-    }
-
-    // Don't fire if we don't have a montage
-    // We can't anyway since firing happens in notifiers
-    if (!has_fire_animation_montage)
-    {
-        UE_LOG(Enemy, Error, LOG_TEXT("No fire weapon animation montage, aborting fire"));
-        return;
-    }
-
     // Don't fire if we don't have a animation instance
     // We can't anyway since firing happens in notifiers
     if (anim_instance == nullptr)
@@ -180,6 +162,24 @@ void AWeapon::fire() const
     if (anim_instance->Montage_IsPlaying(reload_animation_montage))
     {
         UE_LOG(Weapon, VeryVerbose, LOG_TEXT("Can't fire now, already reloading"));
+        return;
+    }
+    
+    // Don't fire if we are out of ammo
+    if (current_magazine_ammo_count <= 0)
+    {
+        UE_LOG(Weapon, Verbose, LOG_TEXT("No ammo, skipping fire"));
+        // Play out_of_ammo sound
+        // Function internally handles nullptr audio
+        UGameplayStatics::PlaySound2D(GetWorld(), out_of_ammo_sound, 1, 1, 0, nullptr, this, false);
+        return;
+    }
+
+    // Don't fire if we don't have a montage
+    // We can't anyway since firing happens in notifiers
+    if (!has_fire_animation_montage)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("No fire weapon animation montage, aborting fire"));
         return;
     }
     
