@@ -106,7 +106,7 @@ protected:
 
     UPROPERTY(EditAnywhere, Category = "EnhancedInput")
     UInputAction* FireAction;
-
+    
     UPROPERTY(EditAnywhere, Category = "EnhancedInput")
     UInputAction* ReloadAction;
     
@@ -195,6 +195,7 @@ protected:
     AWeapon* CurrentWeapon = nullptr;
 
     void FireWeapon();
+    void EndFireWeapon();
 
     void ReloadWeapon();
 
@@ -558,6 +559,9 @@ private:
     
     void HandleWeaponSlotInput(int32 Slot);
     void DropWeapon();
+
+
+    bool has_fired_weapon = false;
 
 
 };

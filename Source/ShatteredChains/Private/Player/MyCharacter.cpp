@@ -208,7 +208,9 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
     if (UEnhancedInputComponent* Input = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
     {
         // Fire Weapon
-        Input->BindAction(FireAction, ETriggerEvent::Started, this, &AMyCharacter::FireWeapon);
+        Input->BindAction(FireAction, ETriggerEvent::Ongoing, this, &AMyCharacter::FireWeapon);
+        Input->BindAction(FireAction, ETriggerEvent::Completed, this, &AMyCharacter::EndFireWeapon);
+
         //Reload Weapon
         Input->BindAction(ReloadAction, ETriggerEvent::Started, this, &AMyCharacter::ReloadWeapon);
 
@@ -330,13 +332,23 @@ void AMyCharacter::FireWeapon()
     }
     if (CurrentWeapon)
     {
-        CurrentWeapon->fire(); // Calls the fire function in Weapon.cpp
-        UE_LOG(Player, Log, TEXT("Fired weapon: %s"), *CurrentWeapon->GetName());
+        if (!has_fired_weapon || CurrentWeapon->is_full_auto())
+        {
+            CurrentWeapon->fire(); // Calls the fire function in Weapon.cpp
+            UE_LOG(Player, Log, TEXT("Fired weapon: %s"), *CurrentWeapon->GetName());
+            has_fired_weapon = true;
+        }
     }
     else
     {
         UE_LOG(Player, Warning, TEXT("No weapon equipped to fire."));
     }
+}
+
+
+void AMyCharacter::EndFireWeapon()
+{
+    has_fired_weapon = false;
 }
 
 //Toggle medkit
