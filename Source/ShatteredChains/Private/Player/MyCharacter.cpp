@@ -374,23 +374,27 @@ void AMyCharacter::ToggleMedKit(const FInputActionValue& Value)
 {
     if (!InventoryComponent) return;
 
-    // Unequip any equipped weapon
+    // Unequip weapon if holding one
     if (CurrentWeapon)
     {
-        CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-        CurrentWeapon->SetActorHiddenInGame(true);
-        CurrentWeapon->SetActorEnableCollision(false);
+        if (CurrentWeapon)
+        {
+            CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+            CurrentWeapon->SetActorHiddenInGame(true);
+            CurrentWeapon->SetActorEnableCollision(false);
+        }
         CurrentWeapon = nullptr;
         CurrentEquippedWeaponSlot = -1;
+        UE_LOG(Player, Log, TEXT("Weapon unequipped to equip MedKit."));
     }
 
-    // If already holding medkit, unequip it
     if (bIsHoldingMedKit)
     {
         if (NearbyMedKit)
         {
-            NearbyMedKit->Destroy();
-            NearbyMedKit = nullptr;
+            NearbyMedKit->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+            NearbyMedKit->SetActorHiddenInGame(true);
+            NearbyMedKit->SetActorEnableCollision(false);
         }
 
         bIsHoldingMedKit = false;
@@ -398,79 +402,70 @@ void AMyCharacter::ToggleMedKit(const FInputActionValue& Value)
         return;
     }
 
-    // Check if we actually have a medkit
-    if (!InventoryComponent->HasItem("MedKit", 1))
+    // Equip if one is in inventory
+    if (InventoryComponent->HasItem("MedKit", 1))
+    {
+        // Spawn a visual medkit to attach (optional: reuse pooled one)
+        FActorSpawnParameters SpawnParams;
+        NearbyMedKit = GetWorld()->SpawnActor<AMedKit>(AMedKit::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+
+        if (NearbyMedKit)
+        {
+            NearbyMedKit->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("MedkitSocket"));
+            NearbyMedKit->SetActorHiddenInGame(false);
+            NearbyMedKit->SetActorEnableCollision(false);
+        }
+
+        bIsHoldingMedKit = true;
+        UE_LOG(Player, Log, TEXT("MedKit equipped."));
+    }
+    else
     {
         UE_LOG(Player, Warning, TEXT("No MedKit in inventory."));
-        return;
     }
+}
 
-    // Ensure the class is set
-    if (!MedKitVisualClass)
+
+void AMyCharacter::UseEquippedMedkit()
+{
+    UE_LOG(LogTemp, Log, TEXT("Attempting to use medkit"));
+
+    // Check inventory
+    if (!InventoryComponent->HasItem("MedKit", 1))
     {
-        UE_LOG(Player, Error, TEXT("MedKitVisualClass is not set in editor."));
+        UE_LOG(LogTemp, Warning, TEXT("No MedKit in inventory."));
         return;
     }
 
-    // Ensure mesh/socket exist
-    USkeletalMeshComponent* CharacterMesh = GetMesh();
-    if (!CharacterMesh || !CharacterMesh->DoesSocketExist(TEXT("MedkitSocket")))
+    // Heal the player
+    UHealthComponent* HealthComp = get_health_component();
+    if (HealthComp)
     {
-        UE_LOG(Player, Error, TEXT("Mesh or 'MedkitSocket' missing."));
-        return;
+        HealthComp->set_health(HealthComp->get_max_health());
     }
 
-    // Clean up any previous medkit actor
+    // Reset movement debuffs
+    GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+    ResetMovementDebuffs();
+
+    // Remove medkit from inventory
+    InventoryComponent->RemoveItem("MedKit", 1);
+
+    // Destroy the visual medkit actor
     if (NearbyMedKit)
     {
         NearbyMedKit->Destroy();
         NearbyMedKit = nullptr;
     }
 
-    // Spawn the medkit
-    FActorSpawnParameters SpawnParams;
-    SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-    NearbyMedKit = GetWorld()->SpawnActor<AMedKit>(MedKitVisualClass, SpawnParams);
-    if (!NearbyMedKit)
-    {
-        UE_LOG(Player, Error, TEXT("Failed to spawn MedKit."));
-        return;
-    }
-
-    // Attach medkit actor to socket on character mesh
-    NearbyMedKit->GetMeshComponent()->AttachToComponent(CharacterMesh, FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("MedkitSocket"));
-
-
-    bIsHoldingMedKit = true;
-    UE_LOG(Player, Log, TEXT("MedKit equipped and attached to hand."));
-}
-
-void AMyCharacter::UseEquippedMedkit()
-{
-    if (!bIsHoldingMedKit || !NearbyMedKit) return;
-
-    if (!InventoryComponent->HasItem("MedKit", 1)) return;
-
-    if (UHealthComponent* HealthComp = get_health_component())
-    {
-        HealthComp->set_health(HealthComp->get_max_health());
-    }
-
-    GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
-    ResetMovementDebuffs();
-    InventoryComponent->RemoveItem("MedKit", 1);
-
-    // ✅ Destroy medkit actor properly
-    NearbyMedKit->Destroy();
-    NearbyMedKit = nullptr;
-
+    // Clear equipped state
     bIsHoldingMedKit = false;
-    CurrentWeapon = nullptr;
     CurrentEquippedWeaponSlot = -1;
+    CurrentWeapon = nullptr;
 
-    UE_LOG(LogTemp, Log, TEXT("Used MedKit and destroyed it."));
+    UE_LOG(LogTemp, Log, TEXT("Used MedKit: healed and removed movement debuffs."));
 }
+
 
 
 
@@ -516,79 +511,36 @@ void AMyCharacter::PickUpWeapon(AWeapon* PickedUpWeapon)
     }
 }
 
-// handle weapon equipping slot 1-3 + medkit slot
+// handle weapon equipping slot 1-3
 void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
 {
     if (!InventoryComponent) return;
 
-    // Slot 4: Medkit
+    // Toggle medkit if Slot == 4
     if (Slot == 4)
     {
-        // Unequip current weapon if switching from one
-        if (CurrentWeapon)
-        {
-            CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-            CurrentWeapon->SetActorHiddenInGame(true);
-            CurrentWeapon->SetActorEnableCollision(false);
-            CurrentWeapon = nullptr;
-            CurrentEquippedWeaponSlot = -1;
-        }
-
-        // Toggle medkit
         if (bIsHoldingMedKit)
         {
-            if (NearbyMedKit)
-            {
-                NearbyMedKit->Destroy();
-                NearbyMedKit = nullptr;
-            }
-
             bIsHoldingMedKit = false;
             UE_LOG(Player, Log, TEXT("[Slot 4][MedKit][UNEQUIPPED]"));
         }
         else if (InventoryComponent->HasItem("MedKit", 1))
         {
-            // Clean up any previous actor
-            if (NearbyMedKit)
-            {
-                NearbyMedKit->Destroy();
-                NearbyMedKit = nullptr;
-            }
-
-            // Spawn the medkit
-            FActorSpawnParameters SpawnParams;
-            SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-            NearbyMedKit = GetWorld()->SpawnActor<AMedKit>(MedKitVisualClass, SpawnParams);
-
-            if (NearbyMedKit && GetMesh()->DoesSocketExist(TEXT("MedkitSocket")))
-            {
-                NearbyMedKit->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("MedkitSocket"));
-                bIsHoldingMedKit = true;
-                UE_LOG(Player, Log, TEXT("[Slot 4][MedKit][EQUIPPED]"));
-            }
-            else
-            {
-                UE_LOG(Player, Error, TEXT("Failed to spawn or attach MedKit."));
-            }
+            bIsHoldingMedKit = true;
+            CurrentWeapon = nullptr;
+            CurrentEquippedWeaponSlot = -1;
+            UE_LOG(Player, Log, TEXT("[Slot 4][MedKit][EQUIPPED]"));
         }
         else
         {
             UE_LOG(Player, Warning, TEXT("No MedKit in inventory to equip."));
         }
-
         return;
     }
 
-    // Weapon slot: 1–3
-    // Unequip medkit if switching from it
+    // Unequip medkit if switching to a weapon
     if (bIsHoldingMedKit)
     {
-        if (NearbyMedKit)
-        {
-            NearbyMedKit->Destroy();
-            NearbyMedKit = nullptr;
-        }
-
         bIsHoldingMedKit = false;
         UE_LOG(Player, Log, TEXT("MedKit unequipped due to weapon switch."));
     }
@@ -618,6 +570,7 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
         return;
     }
 
+
     AWeapon* FoundWeapon = nullptr;
     for (TActorIterator<AWeapon> It(GetWorld()); It; ++It)
     {
@@ -630,6 +583,7 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
 
     if (FoundWeapon)
     {
+        // First, detach and hide the currently equipped weapon
         if (CurrentWeapon)
         {
             CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
@@ -638,6 +592,7 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
             UE_LOG(Player, Log, TEXT("Swapping out weapon: %s"), *CurrentWeapon->GetName());
         }
 
+        // Now equip the new one
         CurrentWeapon = FoundWeapon;
         CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("WeaponSocket"));
         CurrentWeapon->SetActorEnableCollision(false);
