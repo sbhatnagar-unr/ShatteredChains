@@ -516,20 +516,11 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
 
     if (CurrentEquippedWeaponSlot == Slot)
     {
-        if (CurrentWeapon)
-        {
-            CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-            CurrentWeapon->SetActorHiddenInGame(true);
-            CurrentWeapon->SetActorEnableCollision(false);
-            UE_LOG(Player, Log, TEXT("Unequipped weapon: %s"), *CurrentWeapon->GetName());
-        }
-
         CurrentWeapon = nullptr;
         CurrentEquippedWeaponSlot = -1;
         UE_LOG(Player, Log, TEXT("[Slot %d][%s][UNEQUIPPED]"), Slot, *WeaponSlots[SlotIndex].ToString());
         return;
     }
-
 
     AWeapon* FoundWeapon = nullptr;
     for (TActorIterator<AWeapon> It(GetWorld()); It; ++It)
