@@ -14,8 +14,8 @@ AMedKit::AMedKit()
     // Mesh as root
     MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MedkitMesh"));
     RootComponent = MeshComponent;
-    MeshComponent->SetSimulatePhysics(true);
-    MeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    MeshComponent->SetSimulatePhysics(false);
+    MeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     MeshComponent->SetCollisionResponseToAllChannels(ECR_Block);
 
     // Overlap sphere
