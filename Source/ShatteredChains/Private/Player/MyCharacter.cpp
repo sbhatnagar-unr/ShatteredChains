@@ -516,11 +516,20 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
 
     if (CurrentEquippedWeaponSlot == Slot)
     {
+        if (CurrentWeapon)
+        {
+            CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+            CurrentWeapon->SetActorHiddenInGame(true);
+            CurrentWeapon->SetActorEnableCollision(false);
+            UE_LOG(Player, Log, TEXT("Unequipped weapon: %s"), *CurrentWeapon->GetName());
+        }
+
         CurrentWeapon = nullptr;
         CurrentEquippedWeaponSlot = -1;
         UE_LOG(Player, Log, TEXT("[Slot %d][%s][UNEQUIPPED]"), Slot, *WeaponSlots[SlotIndex].ToString());
         return;
     }
+
 
     AWeapon* FoundWeapon = nullptr;
     for (TActorIterator<AWeapon> It(GetWorld()); It; ++It)
@@ -534,6 +543,16 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
 
     if (FoundWeapon)
     {
+        //  First, detach and hide the currently equipped weapon
+        if (CurrentWeapon)
+        {
+            CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+            CurrentWeapon->SetActorHiddenInGame(true);
+            CurrentWeapon->SetActorEnableCollision(false);
+            UE_LOG(Player, Log, TEXT("Swapping out weapon: %s"), *CurrentWeapon->GetName());
+        }
+
+        //  Now equip the new one
         CurrentWeapon = FoundWeapon;
         CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("WeaponSocket"));
         CurrentWeapon->SetActorEnableCollision(false);
@@ -542,10 +561,7 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
         CurrentEquippedWeaponSlot = Slot;
         UE_LOG(Player, Log, TEXT("[Slot %d][%s][EQUIPPED]"), Slot, *FoundWeapon->GetName());
     }
-    else
-    {
-        UE_LOG(Player, Warning, TEXT("Weapon in slot %d not found in world."), Slot);
-    }
+
 }
 
 
