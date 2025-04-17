@@ -20,16 +20,16 @@
 // Sets default values
 AMyCharacter::AMyCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+    // Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+    PrimaryActorTick.bCanEverTick = true;
     InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 
-	// Initialize movement states and stamina
-	bIsCrouched = false;
-	bIsSprinting = false;
-	bIsSliding = false;
-	bCanRoll = true;
-	CurrentStamina = Stamina; // Set initial stamina
+    // Initialize movement states and stamina
+    bIsCrouched = false;
+    bIsSprinting = false;
+    bIsSliding = false;
+    bCanRoll = true;
+    CurrentStamina = Stamina; // Set initial stamina
     CurrentWeapon = nullptr;
 
     Camera = CreateDefaultSubobject<UCameraComponent>("Camera");
@@ -37,7 +37,7 @@ AMyCharacter::AMyCharacter()
     Camera->bUsePawnControlRotation = true;
 
     camera_timeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("Camera Timeline"));
-    
+
     HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("Health Component"));
     InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory Component"));
 
@@ -68,7 +68,7 @@ AMyCharacter::AMyCharacter()
 // Called when the game starts or when spawned
 void AMyCharacter::BeginPlay()
 {
-	Super::BeginPlay();
+    Super::BeginPlay();
 
     const TObjectPtr<UPhysicsAsset> physics_asset = GetMesh()->GetPhysicsAsset();
     add_stats_modifiers(physics_asset, &stats_modifiers);
@@ -84,7 +84,7 @@ void AMyCharacter::BeginPlay()
     stats_modifiers["LeftLeg"]->set_damage_multiplier(leg_shot_damage_multiplier);
     stats_modifiers["LeftLeg"]->set_speed_multiplier(leg_shot_speed_multiplier);
     stats_modifiers["LeftLeg"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
-    
+
     stats_modifiers["LeftFoot"]->set_damage_multiplier(foot_shot_damage_multiplier);
     stats_modifiers["LeftFoot"]->set_speed_multiplier(foot_shot_speed_multiplier);
     stats_modifiers["LeftFoot"]->set_accuracy_multiplier(foot_shot_accuracy_multiplier);
@@ -96,7 +96,7 @@ void AMyCharacter::BeginPlay()
     stats_modifiers["RightLeg"]->set_damage_multiplier(leg_shot_damage_multiplier);
     stats_modifiers["RightLeg"]->set_speed_multiplier(leg_shot_speed_multiplier);
     stats_modifiers["RightLeg"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
-    
+
     stats_modifiers["RightFoot"]->set_damage_multiplier(foot_shot_damage_multiplier);
     stats_modifiers["RightFoot"]->set_speed_multiplier(foot_shot_speed_multiplier);
     stats_modifiers["RightFoot"]->set_accuracy_multiplier(foot_shot_accuracy_multiplier);
@@ -104,7 +104,7 @@ void AMyCharacter::BeginPlay()
     stats_modifiers["Spine1"]->set_damage_multiplier(torso_shot_damage_multiplier);
     stats_modifiers["Spine1"]->set_speed_multiplier(torso_shot_speed_multiplier);
     stats_modifiers["Spine1"]->set_accuracy_multiplier(torso_shot_accuracy_multiplier);
-    
+
     stats_modifiers["Spine2"]->set_damage_multiplier(torso_shot_damage_multiplier);
     stats_modifiers["Spine2"]->set_speed_multiplier(torso_shot_speed_multiplier);
     stats_modifiers["Spine2"]->set_accuracy_multiplier(torso_shot_accuracy_multiplier);
@@ -112,7 +112,7 @@ void AMyCharacter::BeginPlay()
     stats_modifiers["LeftArm"]->set_damage_multiplier(arm_shot_damage_multiplier);
     stats_modifiers["LeftArm"]->set_speed_multiplier(arm_shot_speed_multiplier);
     stats_modifiers["LeftArm"]->set_accuracy_multiplier(arm_shot_accuracy_multiplier);
-    
+
     stats_modifiers["LeftHand"]->set_damage_multiplier(hand_shot_damage_multiplier);
     stats_modifiers["LeftHand"]->set_speed_multiplier(hand_shot_speed_multiplier);
     stats_modifiers["LeftHand"]->set_accuracy_multiplier(hand_shot_accuracy_multiplier);
@@ -158,14 +158,14 @@ void AMyCharacter::BeginPlay()
     {
         UE_LOG(Enemy, Warning, LOG_TEXT("No sound effects for head shot in '%s'"), *actor_name);
     }
-    
+
     // Add bones to sound map 
     for (int32 i = 0; i < physics_asset->SkeletalBodySetups.Num(); i++)
     {
         sound_map.Add(physics_asset->SkeletalBodySetups[i]->BoneName);
     }
     sound_map.Add("dead");
-    
+
     sound_map["dead"] = death_sounds;
     sound_map["Hips"] = torso_shot_sounds;
     sound_map["LeftUpLeg"] = leg_shot_sounds;
@@ -280,7 +280,7 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
     /*
     PlayerInputComponent->BindAxis("MoveForward", this, &AMyCharacter::MoveForward);
     PlayerInputComponent->BindAxis("MoveRight", this, &AMyCharacter::MoveRight);
-    */ 
+    */
 
     /*
     // Bind action mappings for jumping
@@ -374,102 +374,57 @@ void AMyCharacter::ToggleMedKit(const FInputActionValue& Value)
 {
     if (!InventoryComponent) return;
 
-    // Unequip any equipped weapon
+    // Unequip weapon if holding one
     if (CurrentWeapon)
     {
-        CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-        CurrentWeapon->SetActorHiddenInGame(true);
-        CurrentWeapon->SetActorEnableCollision(false);
+        UE_LOG(Player, Log, TEXT("Unequipping weapon to hold MedKit."));
         CurrentWeapon = nullptr;
         CurrentEquippedWeaponSlot = -1;
     }
 
-    // If already holding medkit, unequip it
+    // Toggle medkit state
     if (bIsHoldingMedKit)
     {
-        if (NearbyMedKit)
-        {
-            NearbyMedKit->Destroy();
-            NearbyMedKit = nullptr;
-        }
-
         bIsHoldingMedKit = false;
         UE_LOG(Player, Log, TEXT("MedKit unequipped."));
         return;
     }
 
-    // Check if we actually have a medkit
-    if (!InventoryComponent->HasItem("MedKit", 1))
+    if (InventoryComponent->HasItem("MedKit", 1))
+    {
+        bIsHoldingMedKit = true;
+        UE_LOG(Player, Log, TEXT("MedKit equipped."));
+    }
+    else
     {
         UE_LOG(Player, Warning, TEXT("No MedKit in inventory."));
-        return;
     }
-
-    // Ensure the class is set
-    if (!MedKitVisualClass)
-    {
-        UE_LOG(Player, Error, TEXT("MedKitVisualClass is not set in editor."));
-        return;
-    }
-
-    // Ensure mesh/socket exist
-    USkeletalMeshComponent* CharacterMesh = GetMesh();
-    if (!CharacterMesh || !CharacterMesh->DoesSocketExist(TEXT("MedkitSocket")))
-    {
-        UE_LOG(Player, Error, TEXT("Mesh or 'MedkitSocket' missing."));
-        return;
-    }
-
-    // Clean up any previous medkit actor
-    if (NearbyMedKit)
-    {
-        NearbyMedKit->Destroy();
-        NearbyMedKit = nullptr;
-    }
-
-    // Spawn the medkit
-    FActorSpawnParameters SpawnParams;
-    SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-    NearbyMedKit = GetWorld()->SpawnActor<AMedKit>(MedKitVisualClass, SpawnParams);
-    if (!NearbyMedKit)
-    {
-        UE_LOG(Player, Error, TEXT("Failed to spawn MedKit."));
-        return;
-    }
-
-    // Attach medkit actor to socket on character mesh
-    NearbyMedKit->GetMeshComponent()->AttachToComponent(CharacterMesh, FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("MedkitSocket"));
-
-
-    bIsHoldingMedKit = true;
-    UE_LOG(Player, Log, TEXT("MedKit equipped and attached to hand."));
 }
 
 void AMyCharacter::UseEquippedMedkit()
 {
-    if (!bIsHoldingMedKit || !NearbyMedKit) return;
+    UE_LOG(LogTemp, Log, TEXT("Attempting to use medkit"));
 
-    if (!InventoryComponent->HasItem("MedKit", 1)) return;
+    if (!InventoryComponent->HasItem("MedKit", 1))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("No MedKit in inventory."));
+        return;
+    }
 
-    if (UHealthComponent* HealthComp = get_health_component())
+    UHealthComponent* HealthComp = get_health_component();
+    if (HealthComp)
     {
         HealthComp->set_health(HealthComp->get_max_health());
     }
 
-    GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+    GetCharacterMovement()->MaxWalkSpeed = 400.f;
     ResetMovementDebuffs();
+
     InventoryComponent->RemoveItem("MedKit", 1);
-
-    // ✅ Destroy medkit actor properly
-    NearbyMedKit->Destroy();
-    NearbyMedKit = nullptr;
-
-    bIsHoldingMedKit = false;
-    CurrentWeapon = nullptr;
     CurrentEquippedWeaponSlot = -1;
+    CurrentWeapon = nullptr;
 
-    UE_LOG(LogTemp, Log, TEXT("Used MedKit and destroyed it."));
+    UE_LOG(LogTemp, Log, TEXT("Used MedKit: healed and removed movement debuffs."));
 }
 
 
@@ -516,79 +471,36 @@ void AMyCharacter::PickUpWeapon(AWeapon* PickedUpWeapon)
     }
 }
 
-// handle weapon equipping slot 1-3 + medkit slot
+// handle weapon equipping slot 1-3
 void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
 {
     if (!InventoryComponent) return;
 
-    // Slot 4: Medkit
+    // Toggle medkit if Slot == 4
     if (Slot == 4)
     {
-        // Unequip current weapon if switching from one
-        if (CurrentWeapon)
-        {
-            CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-            CurrentWeapon->SetActorHiddenInGame(true);
-            CurrentWeapon->SetActorEnableCollision(false);
-            CurrentWeapon = nullptr;
-            CurrentEquippedWeaponSlot = -1;
-        }
-
-        // Toggle medkit
         if (bIsHoldingMedKit)
         {
-            if (NearbyMedKit)
-            {
-                NearbyMedKit->Destroy();
-                NearbyMedKit = nullptr;
-            }
-
             bIsHoldingMedKit = false;
             UE_LOG(Player, Log, TEXT("[Slot 4][MedKit][UNEQUIPPED]"));
         }
         else if (InventoryComponent->HasItem("MedKit", 1))
         {
-            // Clean up any previous actor
-            if (NearbyMedKit)
-            {
-                NearbyMedKit->Destroy();
-                NearbyMedKit = nullptr;
-            }
-
-            // Spawn the medkit
-            FActorSpawnParameters SpawnParams;
-            SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-            NearbyMedKit = GetWorld()->SpawnActor<AMedKit>(MedKitVisualClass, SpawnParams);
-
-            if (NearbyMedKit && GetMesh()->DoesSocketExist(TEXT("MedkitSocket")))
-            {
-                NearbyMedKit->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("MedkitSocket"));
-                bIsHoldingMedKit = true;
-                UE_LOG(Player, Log, TEXT("[Slot 4][MedKit][EQUIPPED]"));
-            }
-            else
-            {
-                UE_LOG(Player, Error, TEXT("Failed to spawn or attach MedKit."));
-            }
+            bIsHoldingMedKit = true;
+            CurrentWeapon = nullptr;
+            CurrentEquippedWeaponSlot = -1;
+            UE_LOG(Player, Log, TEXT("[Slot 4][MedKit][EQUIPPED]"));
         }
         else
         {
             UE_LOG(Player, Warning, TEXT("No MedKit in inventory to equip."));
         }
-
         return;
     }
 
-    // Weapon slot: 1–3
-    // Unequip medkit if switching from it
+    // Unequip medkit if switching to a weapon
     if (bIsHoldingMedKit)
     {
-        if (NearbyMedKit)
-        {
-            NearbyMedKit->Destroy();
-            NearbyMedKit = nullptr;
-        }
-
         bIsHoldingMedKit = false;
         UE_LOG(Player, Log, TEXT("MedKit unequipped due to weapon switch."));
     }
@@ -618,6 +530,7 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
         return;
     }
 
+
     AWeapon* FoundWeapon = nullptr;
     for (TActorIterator<AWeapon> It(GetWorld()); It; ++It)
     {
@@ -630,6 +543,7 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
 
     if (FoundWeapon)
     {
+        // First, detach and hide the currently equipped weapon
         if (CurrentWeapon)
         {
             CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
@@ -638,6 +552,7 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
             UE_LOG(Player, Log, TEXT("Swapping out weapon: %s"), *CurrentWeapon->GetName());
         }
 
+        // Now equip the new one
         CurrentWeapon = FoundWeapon;
         CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("WeaponSocket"));
         CurrentWeapon->SetActorEnableCollision(false);
@@ -1042,7 +957,7 @@ void AMyCharacter::StartSlide()
         bCanSlideJump = true; // Allow slide jump
 
         // Reduce capsule height for sliding
-        GetCapsuleComponent()->SetCapsuleHalfHeight(22.0f); 
+        GetCapsuleComponent()->SetCapsuleHalfHeight(22.0f);
         GetCharacterMovement()->MaxWalkSpeed = SlideSpeed;
 
         // Calculate the slide direction
@@ -1212,9 +1127,9 @@ void AMyCharacter::LogInventory(const FInputActionValue& Value)
     }
 
     TMap<FName, FInventoryItem> InventoryItems = InventoryComponent->GetInventory();
-    
+
     UE_LOG(Player, Log, LOG_TEXT("---- Current Inventory ----"));
-    for (const auto &ItemPair : InventoryItems)
+    for (const auto& ItemPair : InventoryItems)
     {
         FInventoryItem Item = ItemPair.Value;
         UE_LOG(Player, Log, LOG_TEXT("Item: %s, Quantity: %d"), *Item.ItemID.ToString(), Item.Quantity);
@@ -1225,7 +1140,7 @@ void AMyCharacter::Mantle()
 {
     // Define the start point (player's eye level) and end point (forward and up)
     FVector Start = GetActorLocation() + FVector(0, 0, 50.0f); // Slightly above character's feet
-    FVector ForwardVector = GetActorForwardVector(); 
+    FVector ForwardVector = GetActorForwardVector();
     FVector End = Start + (ForwardVector * 100.0f) + FVector(0, 0, 100.0f); // Forward and upwards
 
     FHitResult Hit;
@@ -1376,7 +1291,7 @@ void AMyCharacter::ResetMovementDebuffs()
 // Called every frame
 void AMyCharacter::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
+    Super::Tick(DeltaTime);
 
 }
 
@@ -1390,7 +1305,7 @@ void AMyCharacter::restart_current_level() const
         UE_LOG(Player, Error, LOG_TEXT("Could not get world to start reset timer"));
         return;
     }
-    
+
     const ULevel* current_level = world->GetCurrentLevel();
     const FName current_level_name = *current_level->GetPackage()->GetName();
     UGameplayStatics::OpenLevel(this, current_level_name);
@@ -1400,8 +1315,8 @@ void AMyCharacter::restart_current_level() const
 
 void AMyCharacter::UpdateCameraPosition(const float value)
 {
-    const FVector new_camera_location = FMath::Lerp(player_death_camera_start_location, player_death_camera_end_location, value); 
-    const FRotator new_camera_rotation = FMath::Lerp(player_death_camera_start_rotation, player_death_camera_end_rotation, value); 
+    const FVector new_camera_location = FMath::Lerp(player_death_camera_start_location, player_death_camera_end_location, value);
+    const FRotator new_camera_rotation = FMath::Lerp(player_death_camera_start_rotation, player_death_camera_end_rotation, value);
     UE_LOG(Player, VeryVerbose, LOG_TEXT("Updating camera position for dead player '%s' (value=%f, position=%s, rotation=%s)"), *actor_name, value, *(new_camera_location.ToString()), *(new_camera_rotation.ToString()));
     Camera->SetRelativeLocationAndRotation(new_camera_location, new_camera_rotation);
 }
@@ -1411,12 +1326,13 @@ void AMyCharacter::UpdateCameraPosition(const float value)
 void AMyCharacter::on_death(const AActor* killed_by)
 {
     // Play random death sound
-    const TArray<TObjectPtr<USoundBase>> *sounds = sound_map.Find("dead");
+    const TArray<TObjectPtr<USoundBase>>* sounds = sound_map.Find("dead");
     // Don't have to worry about nullptr in second condition because of short circuit evaluation
     if (sounds == nullptr || sounds->Num() == 0)
     {
         UE_LOG(Enemy, Error, LOG_TEXT("No death sounds for '%s'"), *actor_name);
-    } else
+    }
+    else
     {
         const int num_sounds = sounds->Num();
         const int sound_to_play = FMath::RandHelper(num_sounds);
@@ -1434,7 +1350,7 @@ void AMyCharacter::on_death(const AActor* killed_by)
         UE_LOG(Player, Error, LOG_TEXT("Could not get world to start reset timer"));
         return;
     }
-    
+
     // Start level reset timer
     FTimerHandle restart_level_timer_handle;
     world->GetTimerManager().SetTimer(restart_level_timer_handle, this, &AMyCharacter::restart_current_level, 5, false);
@@ -1451,12 +1367,13 @@ void AMyCharacter::on_death(const AActor* killed_by)
     if (APlayerController* player_controller = GetWorld()->GetFirstPlayerController())
     {
         UE_LOG(Player, Log, LOG_TEXT("Disabling input for dead player '%s'"), *actor_name);
-        this->DisableInput(player_controller);    
-    } else
+        this->DisableInput(player_controller);
+    }
+    else
     {
         UE_LOG(Player, Error, LOG_TEXT("No player controller for player '%s'"), *actor_name);
     }
-    
+
     if (camera_curve)
     {
         FOnTimelineFloat timeline_callback;
@@ -1467,11 +1384,12 @@ void AMyCharacter::on_death(const AActor* killed_by)
         // Set this to false so that the camera can rotate
         Camera->bUsePawnControlRotation = false;
         camera_timeline->PlayFromStart();
-    } else
+    }
+    else
     {
         UE_LOG(Player, Warning, LOG_TEXT("No camera curve for player '%s'"), *actor_name);
     }
-    
+
 
     // Make player "dead"
     USkeletalMeshComponent* mesh = GetMesh();
@@ -1487,7 +1405,7 @@ void AMyCharacter::on_death(const AActor* killed_by)
         UE_LOG(Player, Verbose, LOG_TEXT("Player '%s' is no longer shootable"), *actor_name);
 
         // Stop all animations
-        UAnimInstance *anim_instance = GetMesh()->GetAnimInstance();
+        UAnimInstance* anim_instance = GetMesh()->GetAnimInstance();
         if (anim_instance == nullptr)
         {
             UE_LOG(Player, Warning, LOG_TEXT("Player '%s' has no animation instance"), *actor_name);
@@ -1496,7 +1414,7 @@ void AMyCharacter::on_death(const AActor* killed_by)
         {
             anim_instance->StopAllMontages(0);
         }
-        
+
         UE_LOG(Player, Verbose, LOG_TEXT("Stopped all animation montages for '%s'"), *actor_name);
 
         // Ragdoll player
@@ -1551,16 +1469,16 @@ void AMyCharacter::hit_bone(const AActor* hit_by, const FName bone_name, float w
         UE_LOG(BoneCollision, Error, LOG_TEXT("Enemy '%s' does not have modifier for bone '%s'.  Its possible its capsule component is blocking the shot, set trace channel Shootable to Ignore on the capsule component."), *actor_name, *(bone_name.ToString()));
         return;
     }
-    
+
     // Get the modifier
     const TObjectPtr<UStatsModifier> modifier = stats_modifiers[bone_name];
-    
+
     UE_LOG(BoneCollision, Log, LOG_TEXT("Player '%s' hit in bone '%s'"), *actor_name, *(bone_name.ToString()));
 
     // Apply other modifier stats, like speed, accuracy, etc.
     UCharacterMovementComponent* movement_component = GetCharacterMovement();
     const float old_movement_speed = movement_component->MaxWalkSpeed;
-    
+
     movement_component->MaxWalkSpeed *= modifier->get_speed_multiplier();
 
     UE_LOG(BoneCollision, Log, LOG_TEXT("Changing player '%s' speed: %f -> %f"), *actor_name, old_movement_speed, movement_component->MaxWalkSpeed);
@@ -1577,12 +1495,13 @@ void AMyCharacter::hit_bone(const AActor* hit_by, const FName bone_name, float w
     if (!HealthComponent->dead())
     {
         // Play random sound depending on where we were hit
-        const TArray<TObjectPtr<USoundBase>> *sounds = sound_map.Find(bone_name);
+        const TArray<TObjectPtr<USoundBase>>* sounds = sound_map.Find(bone_name);
         // Don't have to worry about nullptr in second condition because of short circuit evaluation
         if (sounds == nullptr || sounds->Num() == 0)
         {
             UE_LOG(Enemy, Error, LOG_TEXT("No damage sounds for bone '%s' on player '%s'"), *(bone_name.ToString()), *actor_name);
-        } else
+        }
+        else
         {
             const int num_sounds = sounds->Num();
             const int sound_to_play = FMath::RandHelper(num_sounds);
@@ -1591,7 +1510,7 @@ void AMyCharacter::hit_bone(const AActor* hit_by, const FName bone_name, float w
             UE_LOG(Enemy, Verbose, LOG_TEXT("Playing damage sound '%s' for bone '%s' on player '%s'"), *(sound->GetPathName()), *(bone_name.ToString()), *actor_name);
         }
     }
-    
+
 }
 
 
