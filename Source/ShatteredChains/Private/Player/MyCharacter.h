@@ -454,9 +454,6 @@ protected:
     UPROPERTY(EditAnywhere, Category = "EnhancedInput")
     UInputAction* IA_UseHealthKit; // Bound to "4"
     
-    UPROPERTY(EditDefaultsOnly, Category = "Medkit")
-    TSubclassOf<AMedKit> MedKitVisualClass;
-
     // Bone Collision
     // Stats modifiers map
     UPROPERTY()

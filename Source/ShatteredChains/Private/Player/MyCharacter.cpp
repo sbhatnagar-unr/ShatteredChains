@@ -377,45 +377,21 @@ void AMyCharacter::ToggleMedKit(const FInputActionValue& Value)
     // Unequip weapon if holding one
     if (CurrentWeapon)
     {
-        if (CurrentWeapon)
-        {
-            CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-            CurrentWeapon->SetActorHiddenInGame(true);
-            CurrentWeapon->SetActorEnableCollision(false);
-        }
+        UE_LOG(Player, Log, TEXT("Unequipping weapon to hold MedKit."));
         CurrentWeapon = nullptr;
         CurrentEquippedWeaponSlot = -1;
-        UE_LOG(Player, Log, TEXT("Weapon unequipped to equip MedKit."));
     }
 
+    // Toggle medkit state
     if (bIsHoldingMedKit)
     {
-        if (NearbyMedKit)
-        {
-            NearbyMedKit->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-            NearbyMedKit->SetActorHiddenInGame(true);
-            NearbyMedKit->SetActorEnableCollision(false);
-        }
-
         bIsHoldingMedKit = false;
         UE_LOG(Player, Log, TEXT("MedKit unequipped."));
         return;
     }
 
-    // Equip if one is in inventory
     if (InventoryComponent->HasItem("MedKit", 1))
     {
-        // Spawn a visual medkit to attach (optional: reuse pooled one)
-        FActorSpawnParameters SpawnParams;
-        NearbyMedKit = GetWorld()->SpawnActor<AMedKit>(AMedKit::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-
-        if (NearbyMedKit)
-        {
-            NearbyMedKit->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("MedkitSocket"));
-            NearbyMedKit->SetActorHiddenInGame(false);
-            NearbyMedKit->SetActorEnableCollision(false);
-        }
-
         bIsHoldingMedKit = true;
         UE_LOG(Player, Log, TEXT("MedKit equipped."));
     }
@@ -425,47 +401,31 @@ void AMyCharacter::ToggleMedKit(const FInputActionValue& Value)
     }
 }
 
-
 void AMyCharacter::UseEquippedMedkit()
 {
     UE_LOG(LogTemp, Log, TEXT("Attempting to use medkit"));
 
-    // Check inventory
     if (!InventoryComponent->HasItem("MedKit", 1))
     {
         UE_LOG(LogTemp, Warning, TEXT("No MedKit in inventory."));
         return;
     }
 
-    // Heal the player
     UHealthComponent* HealthComp = get_health_component();
     if (HealthComp)
     {
         HealthComp->set_health(HealthComp->get_max_health());
     }
 
-    // Reset movement debuffs
-    GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+    GetCharacterMovement()->MaxWalkSpeed = 400.f;
     ResetMovementDebuffs();
 
-    // Remove medkit from inventory
     InventoryComponent->RemoveItem("MedKit", 1);
-
-    // Destroy the visual medkit actor
-    if (NearbyMedKit)
-    {
-        NearbyMedKit->Destroy();
-        NearbyMedKit = nullptr;
-    }
-
-    // Clear equipped state
-    bIsHoldingMedKit = false;
     CurrentEquippedWeaponSlot = -1;
     CurrentWeapon = nullptr;
 
     UE_LOG(LogTemp, Log, TEXT("Used MedKit: healed and removed movement debuffs."));
 }
-
 
 
 
