@@ -19,6 +19,7 @@ public:
 
     void Use(AMyCharacter* Character);
     bool IsPlayerInRange() const { return bIsPlayerInRange; }
+    FORCEINLINE UStaticMeshComponent* GetMeshComponent() const { return MeshComponent; }
 
 protected:
     virtual void BeginPlay() override;
