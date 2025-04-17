@@ -116,6 +116,9 @@ protected:
     UPROPERTY()
     class AMedKit* NearbyMedKit = nullptr;
 
+    UPROPERTY()
+    AMedKit* EquippedMedKit = nullptr;
+
 
     void Move(const FInputActionValue& InputValue);
     void Look(const FInputActionValue& InputValue);

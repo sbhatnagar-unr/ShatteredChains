@@ -374,10 +374,12 @@ void AMyCharacter::ToggleMedKit(const FInputActionValue& Value)
 {
     if (!InventoryComponent) return;
 
-    // Unequip weapon if holding one
+    // Unequip current weapon if holding one
     if (CurrentWeapon)
     {
-        UE_LOG(Player, Log, TEXT("Unequipping weapon to hold MedKit."));
+        CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+        CurrentWeapon->SetActorHiddenInGame(true);
+        CurrentWeapon->SetActorEnableCollision(false);
         CurrentWeapon = nullptr;
         CurrentEquippedWeaponSlot = -1;
     }
@@ -386,6 +388,12 @@ void AMyCharacter::ToggleMedKit(const FInputActionValue& Value)
     if (bIsHoldingMedKit)
     {
         bIsHoldingMedKit = false;
+        if (EquippedMedKit)
+        {
+            EquippedMedKit->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+            EquippedMedKit->SetActorHiddenInGame(true);
+            EquippedMedKit->SetActorEnableCollision(false);
+        }
         UE_LOG(Player, Log, TEXT("MedKit unequipped."));
         return;
     }
@@ -393,6 +401,22 @@ void AMyCharacter::ToggleMedKit(const FInputActionValue& Value)
     if (InventoryComponent->HasItem("MedKit", 1))
     {
         bIsHoldingMedKit = true;
+
+        if (!EquippedMedKit)
+        {
+            // Spawn medkit actor once and reuse it
+            FActorSpawnParameters SpawnParams;
+            SpawnParams.Owner = this;
+            EquippedMedKit = GetWorld()->SpawnActor<AMedKit>(AMedKit::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+        }
+
+        if (EquippedMedKit)
+        {
+            EquippedMedKit->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("MedKitSocket")); // or use WeaponSocket
+            EquippedMedKit->SetActorHiddenInGame(false);
+            EquippedMedKit->SetActorEnableCollision(false);
+        }
+
         UE_LOG(Player, Log, TEXT("MedKit equipped."));
     }
     else
@@ -400,6 +424,7 @@ void AMyCharacter::ToggleMedKit(const FInputActionValue& Value)
         UE_LOG(Player, Warning, TEXT("No MedKit in inventory."));
     }
 }
+
 
 void AMyCharacter::UseEquippedMedkit()
 {
@@ -482,7 +507,15 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
         if (bIsHoldingMedKit)
         {
             bIsHoldingMedKit = false;
-            UE_LOG(Player, Log, TEXT("[Slot 4][MedKit][UNEQUIPPED]"));
+
+            if (EquippedMedKit)
+            {
+                EquippedMedKit->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+                EquippedMedKit->SetActorHiddenInGame(true);
+                EquippedMedKit->SetActorEnableCollision(false);
+            }
+
+            UE_LOG(Player, Log, TEXT("MedKit unequipped due to weapon switch."));
         }
         else if (InventoryComponent->HasItem("MedKit", 1))
         {
