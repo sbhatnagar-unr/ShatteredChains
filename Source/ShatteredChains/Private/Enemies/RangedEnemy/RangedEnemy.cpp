@@ -24,8 +24,7 @@ void ARangedEnemy::BeginPlay()
     Super::BeginPlay();
 
     // If we spawn as dead we don't need to do any of the other things
-    if (health_component->get_health() == 0) return;
-    
+    if (health_component->get_health() == 0) AEnemy::on_death(nullptr, false);
     
     // Get the world
     UWorld* world = GetWorld();
@@ -125,68 +124,56 @@ void ARangedEnemy::BeginPlay()
 
 
     // Here we set all the bone collision modifier values
-    stats_modifiers["head"]->set_damage_multiplier(head_shot_damage_multiplier);
-    stats_modifiers["head"]->set_speed_multiplier(head_shot_speed_multiplier);
-    stats_modifiers["head"]->set_accuracy_multiplier(head_shot_accuracy_multiplier);
+    stats_modifiers["Neck"]->set_damage_multiplier(head_shot_damage_multiplier);
+    stats_modifiers["Neck"]->set_speed_multiplier(head_shot_speed_multiplier);
+    stats_modifiers["Neck"]->set_accuracy_multiplier(head_shot_accuracy_multiplier);
 
-    stats_modifiers["pelvis"]->set_damage_multiplier(torso_shot_damage_multiplier);
-    stats_modifiers["pelvis"]->set_speed_multiplier(torso_shot_speed_multiplier);
-    stats_modifiers["pelvis"]->set_accuracy_multiplier(torso_shot_accuracy_multiplier);
+    stats_modifiers["Hips"]->set_damage_multiplier(torso_shot_damage_multiplier);
+    stats_modifiers["Hips"]->set_speed_multiplier(torso_shot_speed_multiplier);
+    stats_modifiers["Hips"]->set_accuracy_multiplier(torso_shot_accuracy_multiplier);
 
-    stats_modifiers["spine_01"]->set_damage_multiplier(torso_shot_damage_multiplier);
-    stats_modifiers["spine_01"]->set_speed_multiplier(torso_shot_speed_multiplier);
-    stats_modifiers["spine_01"]->set_accuracy_multiplier(torso_shot_accuracy_multiplier);
+    stats_modifiers["Spine"]->set_damage_multiplier(torso_shot_damage_multiplier);
+    stats_modifiers["Spine"]->set_speed_multiplier(torso_shot_speed_multiplier);
+    stats_modifiers["Spine"]->set_accuracy_multiplier(torso_shot_accuracy_multiplier);
 
-    stats_modifiers["spine_03"]->set_damage_multiplier(torso_shot_damage_multiplier);
-    stats_modifiers["spine_03"]->set_speed_multiplier(torso_shot_speed_multiplier);
-    stats_modifiers["spine_03"]->set_accuracy_multiplier(torso_shot_accuracy_multiplier);
-    
-    stats_modifiers["upperarm_l"]->set_damage_multiplier(arm_shot_damage_multiplier);
-    stats_modifiers["upperarm_l"]->set_speed_multiplier(arm_shot_speed_multiplier);
-    stats_modifiers["upperarm_l"]->set_accuracy_multiplier(arm_shot_accuracy_multiplier);
-    
-    stats_modifiers["hand_l"]->set_damage_multiplier(hand_shot_damage_multiplier);
-    stats_modifiers["hand_l"]->set_speed_multiplier(hand_shot_speed_multiplier);
-    stats_modifiers["hand_l"]->set_accuracy_multiplier(hand_shot_accuracy_multiplier);
-    
-    stats_modifiers["upperarm_r"]->set_damage_multiplier(arm_shot_damage_multiplier);
-    stats_modifiers["upperarm_r"]->set_speed_multiplier(arm_shot_speed_multiplier);
-    stats_modifiers["upperarm_r"]->set_accuracy_multiplier(arm_shot_accuracy_multiplier);
-    
-    stats_modifiers["hand_r"]->set_damage_multiplier(hand_shot_damage_multiplier);
-    stats_modifiers["hand_r"]->set_speed_multiplier(hand_shot_speed_multiplier);
-    stats_modifiers["hand_r"]->set_accuracy_multiplier(hand_shot_accuracy_multiplier);
-    
-    stats_modifiers["thigh_l"]->set_damage_multiplier(leg_shot_damage_multiplier);
-    stats_modifiers["thigh_l"]->set_speed_multiplier(leg_shot_speed_multiplier);
-    stats_modifiers["thigh_l"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
-    
-    stats_modifiers["calf_l"]->set_damage_multiplier(leg_shot_damage_multiplier);
-    stats_modifiers["calf_l"]->set_speed_multiplier(leg_shot_speed_multiplier);
-    stats_modifiers["calf_l"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
-    
-    stats_modifiers["thigh_r"]->set_damage_multiplier(leg_shot_damage_multiplier);
-    stats_modifiers["thigh_r"]->set_speed_multiplier(leg_shot_speed_multiplier);
-    stats_modifiers["thigh_r"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
-    
-    stats_modifiers["calf_r"]->set_damage_multiplier(leg_shot_damage_multiplier);
-    stats_modifiers["calf_r"]->set_speed_multiplier(leg_shot_speed_multiplier);
-    stats_modifiers["calf_r"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
-    
-    sound_map["head"] = head_shot_sounds;
-    sound_map["pelvis"] = torso_shot_sounds;
-    sound_map["spine_01"] = torso_shot_sounds;
-    sound_map["spine_03"] = torso_shot_sounds;
-    sound_map["upperarm_l"] = arm_shot_sounds;
-    sound_map["hand_l"] = hand_shot_sounds;
-    sound_map["upperarm_r"] = arm_shot_sounds;
-    sound_map["hand_r"] = hand_shot_sounds;
-    sound_map["thigh_l"] = leg_shot_sounds;
-    sound_map["calf_l"] = leg_shot_sounds;
-    sound_map["thigh_r"] = leg_shot_sounds;
-    sound_map["calf_r"] = leg_shot_sounds;
+    stats_modifiers["Spine2"]->set_damage_multiplier(torso_shot_damage_multiplier);
+    stats_modifiers["Spine2"]->set_speed_multiplier(torso_shot_speed_multiplier);
+    stats_modifiers["Spine2"]->set_accuracy_multiplier(torso_shot_accuracy_multiplier);
 
+    stats_modifiers["LeftLeg"]->set_damage_multiplier(leg_shot_damage_multiplier);
+    stats_modifiers["LeftLeg"]->set_speed_multiplier(leg_shot_speed_multiplier);
+    stats_modifiers["LeftLeg"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
+
+    stats_modifiers["RightLeg"]->set_damage_multiplier(leg_shot_damage_multiplier);
+    stats_modifiers["RightLeg"]->set_speed_multiplier(leg_shot_speed_multiplier);
+    stats_modifiers["RightLeg"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
     
+    stats_modifiers["LeftShoulder"]->set_damage_multiplier(arm_shot_damage_multiplier);
+    stats_modifiers["LeftShoulder"]->set_speed_multiplier(arm_shot_speed_multiplier);
+    stats_modifiers["LeftShoulder"]->set_accuracy_multiplier(arm_shot_accuracy_multiplier);
+    
+    stats_modifiers["LeftHand"]->set_damage_multiplier(hand_shot_damage_multiplier);
+    stats_modifiers["LeftHand"]->set_speed_multiplier(hand_shot_speed_multiplier);
+    stats_modifiers["LeftHand"]->set_accuracy_multiplier(hand_shot_accuracy_multiplier);
+    
+    stats_modifiers["RightArm"]->set_damage_multiplier(arm_shot_damage_multiplier);
+    stats_modifiers["RightArm"]->set_speed_multiplier(arm_shot_speed_multiplier);
+    stats_modifiers["RightArm"]->set_accuracy_multiplier(arm_shot_accuracy_multiplier);
+    
+    stats_modifiers["RightHand"]->set_damage_multiplier(hand_shot_damage_multiplier);
+    stats_modifiers["RightHand"]->set_speed_multiplier(hand_shot_speed_multiplier);
+    stats_modifiers["RightHand"]->set_accuracy_multiplier(hand_shot_accuracy_multiplier);
+    
+    sound_map["Neck"] = head_shot_sounds;
+    sound_map["Hips"] = torso_shot_sounds;
+    sound_map["Spine"] = torso_shot_sounds;
+    sound_map["Spine2"] = torso_shot_sounds;
+    sound_map["LeftLeg"] = leg_shot_sounds;
+    sound_map["RightLeg"] = leg_shot_sounds;
+    sound_map["LeftShoulder"] = arm_shot_sounds;
+    sound_map["LeftHand"] = hand_shot_sounds;
+    sound_map["RightArm"] = arm_shot_sounds;
+    sound_map["RightHand"] = hand_shot_sounds;
 }
 
 
