@@ -1357,7 +1357,7 @@ void AMyCharacter::UpdateCameraPosition(const float value)
 
 
 
-void AMyCharacter::on_death(const AActor* killed_by)
+void AMyCharacter::on_death(const AActor* killed_by, const bool play_death_sound)
 {
     // Play random death sound
     const TArray<TObjectPtr<USoundBase>> *sounds = sound_map.Find("dead");
@@ -1367,11 +1367,14 @@ void AMyCharacter::on_death(const AActor* killed_by)
         UE_LOG(Enemy, Error, LOG_TEXT("No death sounds for '%s'"), *actor_name);
     } else
     {
-        const int num_sounds = sounds->Num();
-        const int sound_to_play = FMath::RandHelper(num_sounds);
-        USoundBase* sound = (*sounds)[sound_to_play];
-        UGameplayStatics::PlaySound2D(GetWorld(), sound, 1, 1, 0, nullptr, this, false);
-        UE_LOG(Enemy, Log, LOG_TEXT("Playing death sound '%s' for enemy '%s'"), *(sound->GetPathName()), *actor_name);
+        if (play_death_sound)
+        {
+            const int num_sounds = sounds->Num();
+            const int sound_to_play = FMath::RandHelper(num_sounds);
+            USoundBase* sound = (*sounds)[sound_to_play];
+            UGameplayStatics::PlaySound2D(GetWorld(), sound, 1, 1, 0, nullptr, this, false);
+            UE_LOG(Enemy, Log, LOG_TEXT("Playing death sound '%s' for enemy '%s'"), *(sound->GetPathName()), *actor_name);
+        }
     }
 
     UE_LOG(Player, Log, LOG_TEXT("Player dead"));

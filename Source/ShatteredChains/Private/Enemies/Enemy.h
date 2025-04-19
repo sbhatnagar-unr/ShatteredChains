@@ -28,7 +28,7 @@ public:
 
     // IHasHealth functions
     virtual UHealthComponent* get_health_component() const override final;
-    virtual void on_death(const AActor* killed_by) override;
+    virtual void on_death(const AActor* killed_by, const bool play_death_sound=true) override;
 
     // INamedActor functions
     virtual FString get_default_actor_name() const override final;

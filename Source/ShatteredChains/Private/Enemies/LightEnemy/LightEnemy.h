@@ -21,7 +21,7 @@ public:
     UAnimMontage* get_attack_animation_montage() const;
     float get_attack_animation_exit_blend() const;
     
-    virtual void on_death(const AActor* killed_by) override final;
+    virtual void on_death(const AActor* killed_by, const bool play_death_sound=true) override final;
 
     bool get_should_chase_target() const;
     void set_should_chase_target(const bool chase_target);

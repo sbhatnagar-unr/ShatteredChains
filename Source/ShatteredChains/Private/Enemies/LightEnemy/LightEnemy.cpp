@@ -256,7 +256,7 @@ float ALightEnemy::get_attack_animation_exit_blend() const
 }
 
 
-void ALightEnemy::on_death(const AActor* killed_by)
+void ALightEnemy::on_death(const AActor* killed_by, const bool play_death_sound)
 {
     AEnemy::on_death(killed_by);
 }

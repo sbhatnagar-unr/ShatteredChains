@@ -7,7 +7,7 @@
 #include "HealthComponent.generated.h"
 
 // Make on dead delegate
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDeathDelegate, const AActor*, killed_by);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDeathDelegate, const AActor*, killed_by, const bool, play_death_sound);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class UHealthComponent : public UActorComponent

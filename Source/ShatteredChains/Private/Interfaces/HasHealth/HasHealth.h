@@ -24,6 +24,6 @@ class IHasHealth
     // Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
     UFUNCTION()
-    virtual void on_death(const AActor* killed_by) PURE_VIRTUAL(IHasHealth::on_death, return;);
+    virtual void on_death(const AActor* killed_by, const bool play_death_sound=true) PURE_VIRTUAL(IHasHealth::on_death, return;);
     virtual UHealthComponent* get_health_component() const PURE_VIRTUAL(IHasHealth::get_health_component, return nullptr;);
 };
