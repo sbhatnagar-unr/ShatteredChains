@@ -380,6 +380,10 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category = "Sound Effects")
     USoundBase* scope_in_sound;
 
+    UPROPERTY(EditDefaultsOnly, Category = "Sound Effects")
+    USoundBase* weapon_equip_sound;
+
+
     /*--------------------- Timer Handles ---------------------*/
 
     // Timer for managing roll cooldown 

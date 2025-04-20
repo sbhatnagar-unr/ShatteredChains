@@ -544,15 +544,26 @@ void AMyCharacter::PickUpWeapon(AWeapon* PickedUpWeapon)
                 UGameplayStatics::PlaySound2D(GetWorld(), item_pickup_sound);
             }
 
-            // Equip weapon if it's the first one picked up
-            if (!CurrentWeapon)
+            // Find what slot the weapon is in after adding
+            const TArray<FName>& WeaponSlots = InventoryComponent->GetWeaponSlots();
+            int32 AssignedSlot = -1;
+            for (int32 i = 0; i < WeaponSlots.Num(); ++i)
+            {
+                if (WeaponSlots[i] == WeaponID)
+                {
+                    AssignedSlot = i + 1;
+                    break;
+                }
+            }
+            /*
+            // Equip if no weapon is held OR if that slot is currently selected
+            if (!CurrentWeapon || CurrentEquippedWeaponSlot == AssignedSlot)
             {
                 EquipWeapon(PickedUpWeapon);
-                UE_LOG(LogTemp, Log, TEXT("Equipped weapon: %s"), *WeaponID.ToString());
             }
-
+            */
             // Hide weapon from the world
-            PickedUpWeapon->SetActorHiddenInGame(true);
+            //PickedUpWeapon->SetActorHiddenInGame(true);
             PickedUpWeapon->SetActorEnableCollision(false);
         }
         else
@@ -619,9 +630,20 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
 
     if (SlotIndex >= WeaponSlots.Num() || WeaponSlots[SlotIndex].IsNone())
     {
-        UE_LOG(Player, Warning, TEXT("[Slot %d][Empty][CANNOT EQUIP]"), Slot);
+        // Unequip current weapon
+        if (CurrentWeapon)
+        {
+            CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+            CurrentWeapon->SetActorHiddenInGame(true);
+            CurrentWeapon->SetActorEnableCollision(false);
+            CurrentWeapon = nullptr;
+        }
+
+        CurrentEquippedWeaponSlot = -1;
+        UE_LOG(Player, Log, TEXT("[Slot %d][Empty][UNEQUIPPED]"), Slot);
         return;
     }
+
 
     if (CurrentEquippedWeaponSlot == Slot)
     {
@@ -670,9 +692,9 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
         CurrentEquippedWeaponSlot = Slot;
         UE_LOG(Player, Log, TEXT("[Slot %d][%s][EQUIPPED]"), Slot, *FoundWeapon->GetName());
     }
-    if (item_pickup_sound)
+    if (weapon_equip_sound)
     {
-        UGameplayStatics::PlaySound2D(GetWorld(), item_pickup_sound);
+        UGameplayStatics::PlaySound2D(GetWorld(), weapon_equip_sound);
     }
 
 
@@ -793,25 +815,40 @@ void AMyCharacter::Interact()
 // equip weapon
 void AMyCharacter::EquipWeapon(AWeapon* weapon)
 {
-    if (!weapon)
-    {
-        return;
-    }
+    if (!weapon) return;
 
     if (CurrentWeapon)
     {
-        UE_LOG(Player, Log, TEXT("Current Weapon: %s will be replaced with %s"), *CurrentWeapon->GetName(), *weapon->GetName());
-        CurrentWeapon->Destroy(); // Destroy the old weapon if needed
-    }
-    else
-    {
-        UE_LOG(Player, Log, TEXT("Equipping first weapon: %s"), *weapon->GetName());
+        CurrentWeapon->Destroy(); // Optional: or Detach
     }
 
-    // Equip new weapon
     CurrentWeapon = weapon;
+
+    // Make sure ownership and visibility are correct
+    CurrentWeapon->SetOwner(this); // ← CRITICAL so it's "yours"
+    CurrentWeapon->SetActorHiddenInGame(false); // ← Force visible before attach
+
     CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("WeaponSocket"));
     CurrentWeapon->SetActorEnableCollision(false);
+
+    // Play equip sound
+    if (weapon_equip_sound)
+    {
+        UGameplayStatics::PlaySound2D(GetWorld(), weapon_equip_sound);
+    }
+
+    // Find and assign equipped slot
+    const TArray<FName>& WeaponSlots = InventoryComponent->GetWeaponSlots();
+    for (int32 i = 0; i < WeaponSlots.Num(); ++i)
+    {
+        if (WeaponSlots[i] == FName(*weapon->GetName()))
+        {
+            CurrentEquippedWeaponSlot = i + 1;
+            break;
+        }
+    }
+
+    UE_LOG(Player, Log, TEXT("Weapon equipped: %s"), *weapon->GetName());
 }
 
 
