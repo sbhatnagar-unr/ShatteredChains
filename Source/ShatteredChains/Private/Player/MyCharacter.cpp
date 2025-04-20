@@ -691,20 +691,37 @@ void AMyCharacter::DropWeapon()
     UE_LOG(Player, Log, TEXT("[Slot %d][%s][DROPPED]"), CurrentEquippedWeaponSlot, *CurrentWeapon->GetName());
 
     // Place the weapon a little in front of the player
-    FVector DropLocation = GetActorLocation() + GetActorForwardVector() * 200.0f + FVector(0, 0, -40.0f);
-    FRotator DropRotation = GetActorRotation();
+    FHitResult hit_result;
+    FCollisionQueryParams collision_query_params;
+    collision_query_params.AddIgnoredActor(this);
 
-    CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-    CurrentWeapon->SetActorLocation(DropLocation);
-    CurrentWeapon->SetActorRotation(DropRotation);
-    CurrentWeapon->SetActorEnableCollision(true);
-    CurrentWeapon->SetActorHiddenInGame(false);
-    CurrentWeapon->SetOwner(nullptr); // Ensure it's no longer "held"
+    const UWorld* world = GetWorld();
+    if (world->LineTraceSingleByChannel(hit_result, GetActorLocation(), GetActorLocation() - FVector(0, 0, 1000), ECC_Visibility, collision_query_params))
+    {
+        const FVector DropLocation = hit_result.Location + GetActorForwardVector() * 200.0f + FVector(0, 0, 2);
+        FRotator DropRotation = GetActorRotation();
+        DropRotation.Pitch += 90;
+        
+        CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+        CurrentWeapon->SetActorLocation(DropLocation);
+        CurrentWeapon->SetActorRotation(DropRotation);
+        CurrentWeapon->SetActorEnableCollision(true);
+        CurrentWeapon->SetActorHiddenInGame(false);
+        CurrentWeapon->SetOwner(nullptr); // Ensure it's no longer "held"
 
-    // Remove it from inventory
-    InventoryComponent->RemoveWeapon(CurrentEquippedWeaponSlot - 1);
-    CurrentWeapon = nullptr;
-    CurrentEquippedWeaponSlot = -1;
+        // Remove it from inventory
+        InventoryComponent->RemoveWeapon(CurrentEquippedWeaponSlot - 1);
+        CurrentWeapon = nullptr;
+        CurrentEquippedWeaponSlot = -1; 
+    } else
+    {
+        UE_LOG(Player, Warning, LOG_TEXT("Could not find location to drop weapon"));
+    }
+
+    
+
+
+
 }
 
 
