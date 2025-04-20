@@ -1089,7 +1089,7 @@ void AMyCharacter::StopSlide()
 }
 
 
-// Rolling Function
+// Rolling Function or dodge
 void AMyCharacter::StartRoll()
 {
     if (bCanRoll) // Ensure rolling is allowed
@@ -1106,7 +1106,7 @@ void AMyCharacter::StartRoll()
         RollDirection.Normalize(); // Ensure the direction vector is normalized
 
         // Launch the character in the roll direction
-        LaunchCharacter(RollDirection * 600.0f + FVector(0, 0, 200.0f), true, true); // Adjust speed and height
+        LaunchCharacter(RollDirection * 900.0f + FVector(0, 0, 300.0f), true, true); // Adjust speed and height
 
         // Play roll animation
         if (RollAnimMontage)
@@ -1114,8 +1114,12 @@ void AMyCharacter::StartRoll()
             PlayAnimMontage(RollAnimMontage, 1.0f);
         }
 
+        bIsDodging = true;
+
+        GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision); // disable hit
+
         // Set a cooldown timer for rolling
-        const float RollCooldown = 1.0f; // Adjust cooldown time
+        const float RollCooldown = 2.0f; // Adjust cooldown time
         GetWorld()->GetTimerManager().SetTimer(RollCooldownTimer, this, &AMyCharacter::EnableRolling, RollCooldown, false);
 
         UE_LOG(Player, Log, TEXT("Started Roll in direction: %s"), *RollDirection.ToString());
@@ -1133,7 +1137,7 @@ void AMyCharacter::StopRoll()
     UE_LOG(Player, Log, TEXT("StopRoll triggered"));
 
     // Allow rolling again after cooldown
-    GetWorld()->GetTimerManager().SetTimer(RollCooldownTimer, this, &AMyCharacter::EnableRolling, 1.0f, false);
+    //GetWorld()->GetTimerManager().SetTimer(RollCooldownTimer, this, &AMyCharacter::EnableRolling, 1.0f, false);
 }
 
 // Spam Prevention on rolling, needs testing.
@@ -1141,6 +1145,10 @@ void AMyCharacter::EnableRolling()
 {
     bCanRoll = true;
     UE_LOG(Player, Log, TEXT("Rolling re-enabled"));
+
+    bIsDodging = false;
+    GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics); // restore hit
+
 }
 
 // Toggle Inventory UI (placeholder, can be linked to an actual UI)
@@ -1527,6 +1535,13 @@ const TMap<FName, TObjectPtr<UStatsModifier>>* AMyCharacter::get_bone_collider_s
 
 void AMyCharacter::hit_bone(const AActor* hit_by, const FName bone_name, float weapon_damage)
 {
+    // If the player is currently dodging, ignore the hit entirely
+    if (bIsDodging)
+    {
+        UE_LOG(Player, Log, TEXT("Dodged attack! Ignored hit to bone: %s"), *bone_name.ToString());
+        return;
+    }
+
     if (!stats_modifiers.Contains(bone_name))
     {
         UE_LOG(BoneCollision, Error, LOG_TEXT("Enemy '%s' does not have modifier for bone '%s'.  Its possible its capsule component is blocking the shot, set trace channel Shootable to Ignore on the capsule component."), *actor_name, *(bone_name.ToString()));

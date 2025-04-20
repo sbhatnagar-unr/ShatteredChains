@@ -236,6 +236,9 @@ protected:
     UFUNCTION()
     void StopZoom();
 
+    // dodging
+    bool bIsDodging = false;
+
     /*--------------------- Input Actions ---------------------*/
 
     // Input actions for sprinting, can be editable in editor
