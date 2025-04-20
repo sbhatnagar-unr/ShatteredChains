@@ -45,6 +45,15 @@ public:
     // zoom getter
     float GetZoomFOV() const { return ZoomFOV; }
     
+    // Custom Zoom in Speed per weapon
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Scope")
+    float ZoomInterpSpeed = 15.0f;  // Default speed
+
+    // custom zoom mouse speed
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Scope")
+    float ZoomMouseSensitivity = 0.5f; // default sensitivity modifier for scoped mode
+
+
 protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
@@ -97,6 +106,7 @@ protected:
     // Custom Zoom Level for this weapon
     UPROPERTY(EditDefaultsOnly, Category = "Scope")
     float ZoomFOV = 90.0f; // Default (no zoom) — override in BP_Pistol, BP_Rifle, BP_Sniper
+
 
 private:
     UPROPERTY(EditInstanceOnly)

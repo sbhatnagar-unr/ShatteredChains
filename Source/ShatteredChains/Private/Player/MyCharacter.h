@@ -237,8 +237,13 @@ protected:
     UFUNCTION()
     void StopZoom();
 
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Scope")
+    float ZoomMouseSensitivity = 0.5f; // reduced mouse speed while scoped
+
+
     // dodging
     bool bIsDodging = false;
+
 
     /*--------------------- Input Actions ---------------------*/
 

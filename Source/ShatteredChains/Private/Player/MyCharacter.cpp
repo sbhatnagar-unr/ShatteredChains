@@ -824,13 +824,19 @@ void AMyCharacter::Move(const FInputActionValue& Value)
 void AMyCharacter::Look(const FInputActionValue& InputValue)
 {
     FVector2D InputVector = InputValue.Get<FVector2D>();
+    if (!IsValid(Controller)) return;
 
-    if (IsValid(Controller))
+    float EffectiveSensitivity = MouseSensitivity;
+
+    if (bIsZooming && CurrentWeapon)
     {
-        AddControllerYawInput(InputVector.X * MouseSensitivity);
-        AddControllerPitchInput(InputVector.Y * MouseSensitivity);
+        EffectiveSensitivity *= CurrentWeapon->ZoomMouseSensitivity;
     }
+
+    AddControllerYawInput(InputVector.X * EffectiveSensitivity);
+    AddControllerPitchInput(InputVector.Y * EffectiveSensitivity);
 }
+
 
 // Jump Function
 void AMyCharacter::Jump()
@@ -1406,7 +1412,12 @@ void AMyCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
     // Smooth zoom interpolation
-    Camera->SetFieldOfView(FMath::FInterpTo(Camera->FieldOfView, TargetFOV, DeltaTime, ZoomInterpSpeed));
+    float EffectiveZoomSpeed = ZoomInterpSpeed;
+    if (CurrentWeapon)
+    {
+        EffectiveZoomSpeed = CurrentWeapon->ZoomInterpSpeed;
+    }
+    Camera->SetFieldOfView(FMath::FInterpTo(Camera->FieldOfView, TargetFOV, DeltaTime, EffectiveZoomSpeed));
 
 
 }
