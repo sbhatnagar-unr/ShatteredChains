@@ -690,14 +690,23 @@ void AMyCharacter::DropWeapon()
 
     UE_LOG(Player, Log, TEXT("[Slot %d][%s][DROPPED]"), CurrentEquippedWeaponSlot, *CurrentWeapon->GetName());
 
-    CurrentWeapon->SetActorHiddenInGame(false);
-    CurrentWeapon->SetActorEnableCollision(true);
-    CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+    // Place the weapon a little in front of the player
+    FVector DropLocation = GetActorLocation() + GetActorForwardVector() * 200.0f + FVector(0, 0, -40.0f);
+    FRotator DropRotation = FRotator::ZeroRotator;
 
+    CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+    CurrentWeapon->SetActorLocation(DropLocation);
+    CurrentWeapon->SetActorRotation(DropRotation);
+    CurrentWeapon->SetActorEnableCollision(true);
+    CurrentWeapon->SetActorHiddenInGame(false);
+    CurrentWeapon->SetOwner(nullptr); // Ensure it's no longer "held"
+
+    // Remove it from inventory
     InventoryComponent->RemoveWeapon(CurrentEquippedWeaponSlot - 1);
     CurrentWeapon = nullptr;
     CurrentEquippedWeaponSlot = -1;
 }
+
 
 
 
