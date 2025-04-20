@@ -217,6 +217,25 @@ protected:
     UPROPERTY()
     bool bIsHoldingMedKit = false;
 
+    // Zoom
+    UPROPERTY(EditAnywhere)
+    float DefaultFOV = 90.0f;
+
+    float TargetFOV;
+
+    float ZoomInterpSpeed = 15.0f;
+
+    bool bIsZooming = false;
+
+    UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+    UInputAction* ScopeAction;
+
+    UFUNCTION()
+    void StartZoom();
+
+    UFUNCTION()
+    void StopZoom();
+
     /*--------------------- Input Actions ---------------------*/
 
     // Input actions for sprinting, can be editable in editor

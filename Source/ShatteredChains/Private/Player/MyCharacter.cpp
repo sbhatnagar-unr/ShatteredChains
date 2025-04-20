@@ -70,6 +70,9 @@ void AMyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+    DefaultFOV = Camera->FieldOfView;
+    TargetFOV = DefaultFOV;
+
     const TObjectPtr<UPhysicsAsset> physics_asset = GetMesh()->GetPhysicsAsset();
     add_stats_modifiers(physics_asset, &stats_modifiers);
 
@@ -247,14 +250,14 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
         // Bind roll action "alt"
         Input->BindAction(RollAction, ETriggerEvent::Started, this, &AMyCharacter::StartRoll);
 
-        //bind toggle inventory ui "i"
+        // bind toggle inventory ui "i"
         Input->BindAction(IA_ToggleInventory, ETriggerEvent::Triggered, this, &AMyCharacter::ToggleInventory);
         UE_LOG(LogTemp, Warning, TEXT("ToggleInventory binding successful!"));
 
-        //bind log invetory "o"
+        // bind log invetory "o"
         Input->BindAction(IA_LogInventory, ETriggerEvent::Triggered, this, &AMyCharacter::LogInventory);
 
-        //weapon slots
+        // weapon slots
         Input->BindAction(IA_WeaponSlot1, ETriggerEvent::Triggered, this, &AMyCharacter::HandleWeaponSlotInput, 1);
 
         Input->BindAction(IA_WeaponSlot2, ETriggerEvent::Triggered, this, &AMyCharacter::HandleWeaponSlotInput, 2);
@@ -263,12 +266,17 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
         Input->BindAction(IA_DropWeapon, ETriggerEvent::Triggered, this, &AMyCharacter::DropWeapon);
 
-        //drop weapon
+        // drop weapon
         Input->BindAction(IA_DropWeapon, ETriggerEvent::Triggered, this, &AMyCharacter::DropWeapon);
 
-        //use healthkit/take out
+        // use healthkit/take out
         Input->BindAction(IA_UseHealthKit, ETriggerEvent::Started, this, &AMyCharacter::ToggleMedKit);
 
+        // scope in
+        Input->BindAction(ScopeAction, ETriggerEvent::Started, this, &AMyCharacter::StartZoom);
+
+        // scope out
+        Input->BindAction(ScopeAction, ETriggerEvent::Completed, this, &AMyCharacter::StopZoom);
 
     }
     else
@@ -367,6 +375,23 @@ void AMyCharacter::FireWeapon()
 void AMyCharacter::EndFireWeapon()
 {
     has_fired_weapon = false;
+}
+
+// scope in
+void AMyCharacter::StartZoom()
+{
+    bIsZooming = true;
+    if (CurrentWeapon)
+    {
+        TargetFOV = CurrentWeapon->GetZoomFOV();
+    }
+}
+
+//scope out
+void AMyCharacter::StopZoom()
+{
+    bIsZooming = false;
+    TargetFOV = DefaultFOV;
 }
 
 //Toggle medkit
@@ -1326,6 +1351,10 @@ void AMyCharacter::ResetMovementDebuffs()
 void AMyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+    // Smooth zoom interpolation
+    Camera->SetFieldOfView(FMath::FInterpTo(Camera->FieldOfView, TargetFOV, DeltaTime, ZoomInterpSpeed));
+
 
 }
 

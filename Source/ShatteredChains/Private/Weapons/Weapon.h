@@ -42,6 +42,8 @@ public:
 
     bool is_full_auto() const;
 
+    // zoom getter
+    float GetZoomFOV() const { return ZoomFOV; }
     
 protected:
     // Called when the game starts or when spawned
@@ -92,6 +94,9 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category="Gun Stats")
     bool full_auto;
 
+    // Custom Zoom Level for this weapon
+    UPROPERTY(EditDefaultsOnly, Category = "Scope")
+    float ZoomFOV = 90.0f; // Default (no zoom) — override in BP_Pistol, BP_Rifle, BP_Sniper
 
 private:
     UPROPERTY(EditInstanceOnly)
