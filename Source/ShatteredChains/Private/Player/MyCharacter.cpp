@@ -389,16 +389,22 @@ void AMyCharacter::StartZoom()
 {
     bIsZooming = true;
 
-    if (scope_in_sound)
-    {
-        UGameplayStatics::PlaySound2D(GetWorld(), scope_in_sound);
-    }
-
     if (CurrentWeapon)
     {
         TargetFOV = CurrentWeapon->GetZoomFOV();
+
+        if (scope_in_sound)
+        {
+            UGameplayStatics::PlaySound2D(GetWorld(), scope_in_sound);
+        }
+    }
+    else
+    {
+        // No weapon equipped, default to full FOV
+        TargetFOV = DefaultFOV;
     }
 }
+
 
 //scope out
 void AMyCharacter::StopZoom()
