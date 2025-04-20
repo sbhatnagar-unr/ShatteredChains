@@ -441,6 +441,11 @@ void AMyCharacter::ToggleMedKit(const FInputActionValue& Value)
             EquippedMedKit->SetActorHiddenInGame(false);
             EquippedMedKit->SetActorEnableCollision(false);
         }
+        if (item_pickup_sound)
+        {
+            UGameplayStatics::PlaySound2D(GetWorld(), item_pickup_sound);
+        }
+
 
         UE_LOG(Player, Log, TEXT("MedKit equipped."));
     }
@@ -503,6 +508,12 @@ void AMyCharacter::PickUpWeapon(AWeapon* PickedUpWeapon)
         {
             UE_LOG(LogTemp, Log, TEXT("Picked up weapon: %s"), *WeaponID.ToString());
 
+            // Item pickup sound
+            if (item_pickup_sound)
+            {
+                UGameplayStatics::PlaySound2D(GetWorld(), item_pickup_sound);
+            }
+
             // Equip weapon if it's the first one picked up
             if (!CurrentWeapon)
             {
@@ -548,6 +559,10 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
             CurrentWeapon = nullptr;
             CurrentEquippedWeaponSlot = -1;
             UE_LOG(Player, Log, TEXT("[Slot 4][MedKit][EQUIPPED]"));
+        }
+        if (item_pickup_sound)
+        {
+            UGameplayStatics::PlaySound2D(GetWorld(), item_pickup_sound);
         }
         else
         {
@@ -619,6 +634,11 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
         CurrentEquippedWeaponSlot = Slot;
         UE_LOG(Player, Log, TEXT("[Slot %d][%s][EQUIPPED]"), Slot, *FoundWeapon->GetName());
     }
+    if (item_pickup_sound)
+    {
+        UGameplayStatics::PlaySound2D(GetWorld(), item_pickup_sound);
+    }
+
 
 }
 
@@ -664,13 +684,19 @@ void AMyCharacter::Interact()
 
         UE_LOG(Player, Log, TEXT("Line Trace Hit Actor: %s"), *HitActor->GetName());
 
-        // 🔸 Handle MedKit pickup
+        // Handle MedKit pickup
         if (AMedKit* MedKit = Cast<AMedKit>(HitActor))
         {
             if (InventoryComponent->AddItem("MedKit", EItemType::HealthKit, 1))
             {
                 UE_LOG(Player, Log, TEXT("Picked up MedKit via Interact"));
                 MedKit->Destroy();
+
+                // Item pickup sound
+                if (item_pickup_sound)
+                {
+                    UGameplayStatics::PlaySound2D(GetWorld(), item_pickup_sound);
+                }
             }
             else
             {
@@ -679,7 +705,7 @@ void AMyCharacter::Interact()
             return;
         }
 
-        // 🔸 Handle Weapon pickup
+        // Handle Weapon pickup
         if (AWeapon* HitWeapon = Cast<AWeapon>(HitActor))
         {
             UE_LOG(Player, Log, TEXT("Weapon Detected: %s"), *HitWeapon->GetName());

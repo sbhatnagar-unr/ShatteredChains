@@ -359,6 +359,17 @@ protected:
     UPROPERTY(EditAnywhere, Category = "EnhancedInput")
     UInputAction* IA_DropWeapon;
 
+    /*--------------------- Sound Effects ---------------------*/
+
+    UPROPERTY(EditDefaultsOnly, Category = "Sound Effects")
+    USoundBase* item_pickup_sound;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Sound Effects")
+    USoundBase* medkit_heal_sound;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Sound Effects")
+    USoundBase* scope_in_sound;
+
     /*--------------------- Timer Handles ---------------------*/
 
     // Timer for managing roll cooldown 
