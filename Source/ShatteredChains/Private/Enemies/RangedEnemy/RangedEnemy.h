@@ -33,6 +33,7 @@ public:
     // Bone collision functions
     virtual void hit_bone(const AActor* hit_by, const FName bone_name, float weapon_damage) override final;
 
+    virtual void on_death(const AActor* killed_by, const bool play_death_sound=true) override;
     
 protected:
     // Called when the game starts or when spawned

@@ -24,7 +24,7 @@ void ARangedEnemy::BeginPlay()
     Super::BeginPlay();
 
     // If we spawn as dead we don't need to do any of the other things
-    if (health_component->get_health() == 0) AEnemy::on_death(nullptr, false);
+    if (health_component->get_health() == 0) on_death(nullptr, false);
     
     // Get the world
     UWorld* world = GetWorld();
@@ -174,6 +174,45 @@ void ARangedEnemy::BeginPlay()
     sound_map["LeftHand"] = hand_shot_sounds;
     sound_map["RightArm"] = arm_shot_sounds;
     sound_map["RightHand"] = hand_shot_sounds;
+}
+
+
+void ARangedEnemy::on_death(const AActor* killed_by, const bool play_death_sound)
+{
+    if (weapon)
+    {
+        // Destroy the weapon
+        weapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+        weapon->Destroy();
+        UE_LOG(Enemy, Log, LOG_TEXT("Removing weapon from ranged enemy '%s'"), *actor_name);
+
+        // Spawn one on the ground that the player can pick up
+        const FVector enemy_transform = GetActorLocation();
+        const FVector point_below = enemy_transform - FVector(0, 0, 1000);
+
+        FHitResult hit_result;
+        FCollisionQueryParams collision_query_params;
+        collision_query_params.AddIgnoredActor(this);
+
+        UWorld* world = GetWorld();
+        if (world->LineTraceSingleByChannel(hit_result, enemy_transform, point_below, ECC_Visibility, collision_query_params))
+        {
+            const FVector location = hit_result.Location + FVector(0, 0, 2);
+            FRotator rotation = GetActorRotation();
+            rotation.Pitch += 90;
+            
+            FActorSpawnParameters spawn_parameters;
+            weapon = GetWorld()->SpawnActor<AWeapon>(weapon_class, location, rotation, spawn_parameters);
+            UE_LOG(Enemy, Log, LOG_TEXT("Spawned weapon on ground upon death of enemy '%s'"), *actor_name);
+        } else
+        {
+            UE_LOG(Enemy, Warning, LOG_TEXT("Unable to find ground to spawn weapon upon death for ranged enemy '%s'"), *actor_name);
+        }
+        
+
+    }
+    
+    AEnemy::on_death(killed_by, play_death_sound);
 }
 
 
