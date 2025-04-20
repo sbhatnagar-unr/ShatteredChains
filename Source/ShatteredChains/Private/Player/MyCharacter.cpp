@@ -692,7 +692,7 @@ void AMyCharacter::DropWeapon()
 
     // Place the weapon a little in front of the player
     FVector DropLocation = GetActorLocation() + GetActorForwardVector() * 200.0f + FVector(0, 0, -40.0f);
-    FRotator DropRotation = FRotator::ZeroRotator;
+    FRotator DropRotation = GetActorRotation();
 
     CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
     CurrentWeapon->SetActorLocation(DropLocation);
