@@ -284,6 +284,10 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Movement")
     float CrouchSpeed = 200.0f;
 
+    // mouse speed
+    UPROPERTY(EditAnywhere, Category = "Camera")
+    float MouseSensitivity = 1.0f;
+
 
     /*--------------------- Jump Mechanics ---------------------*/
 

@@ -827,8 +827,8 @@ void AMyCharacter::Look(const FInputActionValue& InputValue)
 
     if (IsValid(Controller))
     {
-        AddControllerYawInput(InputVector.X);
-        AddControllerPitchInput(InputVector.Y);
+        AddControllerYawInput(InputVector.X * MouseSensitivity);
+        AddControllerPitchInput(InputVector.Y * MouseSensitivity);
     }
 }
 
