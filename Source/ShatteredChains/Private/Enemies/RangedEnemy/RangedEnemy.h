@@ -34,6 +34,9 @@ public:
     virtual void hit_bone(const AActor* hit_by, const FName bone_name, float weapon_damage) override final;
 
     virtual void on_death(const AActor* killed_by, const bool play_death_sound=true) override;
+
+    void increment_current_burst();
+    bool is_ready_to_shoot() const;
     
 protected:
     // Called when the game starts or when spawned
@@ -48,7 +51,17 @@ private:
 
     UPROPERTY(EditAnywhere, Category="Weapon", meta=(ToolTip="Max accuracy offset when aiming in degrees (left/right)"))
     float max_yaw_offset;
-    
+
+
+    UPROPERTY(EditAnywhere, Category="Weapon", meta=(ToolTip="Number of shots to take before a pause"))
+    unsigned int burst_count;
+
+    UPROPERTY(EditAnywhere, Category="Weapon", meta=(ToolTip="Number of second to pause between bursts"))
+    float shoot_pause;
+
+
+    unsigned int current_burst;
+    bool ready_to_shoot;
     
     UPROPERTY()
     TObjectPtr<AWeapon> weapon;

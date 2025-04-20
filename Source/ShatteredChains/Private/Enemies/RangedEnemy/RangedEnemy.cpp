@@ -16,6 +16,12 @@ ARangedEnemy::ARangedEnemy() : AEnemy()
     anchor_tolerance = 0;
     max_pitch_offset = 0;
     max_yaw_offset = 0;
+
+    burst_count = 4;
+    shoot_pause = 1;
+    
+    current_burst = 0;
+    ready_to_shoot = true;
 }
 
 // Called when the game starts or when spawned
@@ -213,6 +219,39 @@ void ARangedEnemy::on_death(const AActor* killed_by, const bool play_death_sound
     }
     
     AEnemy::on_death(killed_by, play_death_sound);
+}
+
+
+
+void ARangedEnemy::increment_current_burst()
+{
+    ++current_burst;
+    UE_LOG(Enemy, Log, LOG_TEXT("Ranged enemy '%s' incremented burst count to %d, max %d"), *actor_name, current_burst, burst_count);
+
+    if (current_burst >= burst_count)
+    {
+        ready_to_shoot = false;
+
+        UE_LOG(Enemy, Log, LOG_TEXT("Ranged enemy '%s' reached burst count of %d (max=%d), starting reset time (%f seconds)"), *actor_name, current_burst, burst_count, shoot_pause);
+        FTimerHandle timer_handle;
+        GetWorld()->GetTimerManager().SetTimer(
+            timer_handle,
+            FTimerDelegate::CreateLambda([this]()
+            {
+                this->ready_to_shoot = true;
+                this->current_burst = 0;
+                UE_LOG(Enemy, Log, LOG_TEXT("Ranged Enemy '%s' shoot timer has been reset (%f seconds)"), *actor_name, shoot_pause);
+            }),
+            shoot_pause,
+            false
+        );
+    }
+}
+
+
+bool ARangedEnemy::is_ready_to_shoot() const
+{
+    return ready_to_shoot;
 }
 
 

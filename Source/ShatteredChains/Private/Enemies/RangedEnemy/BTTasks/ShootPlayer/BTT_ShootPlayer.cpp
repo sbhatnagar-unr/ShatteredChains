@@ -105,7 +105,10 @@ EBTNodeResult::Type UShootPlayer::ExecuteTask(UBehaviorTreeComponent& OwnerComp,
         // Only shoot if we can see the player
         if (ai_controller->LineOfSightTo(target_actor))
         {
-            weapon->fire();
+            if (enemy_actor->is_ready_to_shoot())
+            {
+                if (weapon->fire()) enemy_actor->increment_current_burst();
+            }
         }
     }
     else

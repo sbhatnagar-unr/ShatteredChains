@@ -132,9 +132,11 @@ void AWeapon::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* O
 
 
 
-void AWeapon::fire() const
+bool AWeapon::fire() const
 {
     /*
+    Returns true if weapon was fired
+
     Starts firing animation montage
     Actual weapon firing is done through notifiers set up in the montage
     This is so that firing happens at the correct part of the animation
@@ -149,20 +151,20 @@ void AWeapon::fire() const
     if (anim_instance == nullptr)
     {
         UE_LOG(Enemy, Error, LOG_TEXT("No animation instance, aborting fire"));
-        return;
+        return false;
     }
     
     // Check if either of the animations are currently playing
     if (anim_instance->Montage_IsPlaying(fire_animation_montage))
     {
         UE_LOG(Weapon, VeryVerbose, LOG_TEXT("Can't fire now, already firing"));
-        return;
+        return false;
     }
 
     if (anim_instance->Montage_IsPlaying(reload_animation_montage))
     {
         UE_LOG(Weapon, VeryVerbose, LOG_TEXT("Can't fire now, already reloading"));
-        return;
+        return false;
     }
     
     // Don't fire if we are out of ammo
@@ -172,7 +174,7 @@ void AWeapon::fire() const
         // Play out_of_ammo sound
         // Function internally handles nullptr audio
         UGameplayStatics::PlaySound2D(GetWorld(), out_of_ammo_sound, 1, 1, 0, nullptr, this, false);
-        return;
+        return false;
     }
 
     // Don't fire if we don't have a montage
@@ -180,7 +182,7 @@ void AWeapon::fire() const
     if (!has_fire_animation_montage)
     {
         UE_LOG(Enemy, Error, LOG_TEXT("No fire weapon animation montage, aborting fire"));
-        return;
+        return false;
     }
     
     UE_LOG(Weapon, Verbose, LOG_TEXT("Playing weapon fire animation montage"));
@@ -191,11 +193,13 @@ void AWeapon::fire() const
     if (duration == 0.f)
     {
         UE_LOG(Weapon, Error, LOG_TEXT("Could not play weapon fire animation montage"));
+        return false;
     }
 
     // Play fire sound
     // Function internally handles nullptr audio case
     UGameplayStatics::PlaySound2D(GetWorld(), shoot_sound, 1, 1, 0, nullptr, this, false);
+    return true;
 }
 
 

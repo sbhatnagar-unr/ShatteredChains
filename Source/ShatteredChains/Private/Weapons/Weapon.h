@@ -17,7 +17,7 @@ public:
     // Sets default values for this actor's properties
     AWeapon();
 
-    void fire() const;
+    bool fire() const;
     void reload() const;
 
     void decrement_mag_ammo_count();
@@ -105,7 +105,7 @@ protected:
 
     // Custom Zoom Level for this weapon
     UPROPERTY(EditDefaultsOnly, Category = "Scope")
-    float ZoomFOV = 90.0f; // Default (no zoom) — override in BP_Pistol, BP_Rifle, BP_Sniper
+    float ZoomFOV = 90.0f; // Default (no zoom) ï¿½ override in BP_Pistol, BP_Rifle, BP_Sniper
 
 
 private:
