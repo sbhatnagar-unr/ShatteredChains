@@ -327,6 +327,12 @@ void AMyCharacter::FireWeapon()
         {
             InventoryComponent->RemoveItem("MedKit", 1);
             HealthComponent->set_health(HealthComponent->get_max_health());
+
+            if (medkit_heal_sound)
+            {
+                UGameplayStatics::PlaySound2D(GetWorld(), medkit_heal_sound);
+            }
+
             GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
             ResetMovementDebuffs();
             bIsHoldingMedKit = false;
@@ -338,6 +344,7 @@ void AMyCharacter::FireWeapon()
         UE_LOG(LogTemp, Warning, TEXT("Tried to use MedKit but none left."));
         return;
     }
+
     if (CurrentWeapon)
     {
         // This condition stops it from spamming the out of ammo sound on full-auto weapons, which plays when the gun is fired without ammo
@@ -381,6 +388,12 @@ void AMyCharacter::EndFireWeapon()
 void AMyCharacter::StartZoom()
 {
     bIsZooming = true;
+
+    if (scope_in_sound)
+    {
+        UGameplayStatics::PlaySound2D(GetWorld(), scope_in_sound);
+    }
+
     if (CurrentWeapon)
     {
         TargetFOV = CurrentWeapon->GetZoomFOV();
@@ -470,6 +483,11 @@ void AMyCharacter::UseEquippedMedkit()
     if (HealthComp)
     {
         HealthComp->set_health(HealthComp->get_max_health());
+
+        if (medkit_heal_sound)
+        {
+            UGameplayStatics::PlaySound2D(GetWorld(), medkit_heal_sound);
+        }
     }
 
     GetCharacterMovement()->MaxWalkSpeed = 400.f;
@@ -481,6 +499,7 @@ void AMyCharacter::UseEquippedMedkit()
 
     UE_LOG(LogTemp, Log, TEXT("Used MedKit: healed and removed movement debuffs."));
 }
+
 
 
 
