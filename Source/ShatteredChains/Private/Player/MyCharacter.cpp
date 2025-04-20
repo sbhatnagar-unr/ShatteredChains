@@ -418,6 +418,11 @@ void AMyCharacter::ToggleMedKit(const FInputActionValue& Value)
 {
     if (!InventoryComponent) return;
 
+    if (bIsZooming)
+    {
+        StopZoom();
+    }
+
     // Unequip current weapon if holding one
     if (CurrentWeapon)
     {
@@ -561,6 +566,12 @@ void AMyCharacter::PickUpWeapon(AWeapon* PickedUpWeapon)
 void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
 {
     if (!InventoryComponent) return;
+
+    // Cancel zoom if active
+    if (bIsZooming)
+    {
+        StopZoom();
+    }
 
     // Toggle medkit if Slot == 4
     if (Slot == 4)
