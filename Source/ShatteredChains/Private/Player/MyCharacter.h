@@ -223,6 +223,7 @@ protected:
 
     float TargetFOV;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
     float ZoomInterpSpeed = 15.0f;
 
     bool bIsZooming = false;
@@ -285,7 +286,7 @@ protected:
     float CrouchSpeed = 200.0f;
 
     // mouse speed
-    UPROPERTY(EditAnywhere, Category = "Camera")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
     float MouseSensitivity = 1.0f;
 
 
