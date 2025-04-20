@@ -194,7 +194,7 @@ void ARangedEnemy::on_death(const AActor* killed_by, const bool play_death_sound
         FCollisionQueryParams collision_query_params;
         collision_query_params.AddIgnoredActor(this);
 
-        UWorld* world = GetWorld();
+        const UWorld* world = GetWorld();
         if (world->LineTraceSingleByChannel(hit_result, enemy_transform, point_below, ECC_Visibility, collision_query_params))
         {
             const FVector location = hit_result.Location + FVector(0, 0, 2);
