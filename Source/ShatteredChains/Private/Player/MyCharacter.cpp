@@ -13,6 +13,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "ShatteredChains/CustomTraceChannels.h"
 #include "MedKit.h"
+#include "Weapons/MeleeWeapon.h"
 #include "EngineUtils.h"
 
 
@@ -69,6 +70,21 @@ AMyCharacter::AMyCharacter()
 void AMyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+    if (FistWeaponClass)
+    {
+        FActorSpawnParameters Params;
+        Params.Owner = this;
+        AMeleeWeapon* Fist = GetWorld()->SpawnActor<AMeleeWeapon>(FistWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, Params);
+        if (Fist)
+        {
+            Fist->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("WeaponSocket"));
+            Fist->SetActorHiddenInGame(true); 
+            Fist->SetActorEnableCollision(false);
+            CurrentWeapon = nullptr;
+            FistWeapon = Fist;
+        }
+    }
 
     DefaultFOV = Camera->FieldOfView;
     TargetFOV = DefaultFOV;
@@ -371,6 +387,11 @@ void AMyCharacter::FireWeapon()
             UE_LOG(Player, Log, LOG_TEXT("Fired weapon: %s"), *CurrentWeapon->GetName());
             has_fired_weapon = true;
         }
+    }
+    else if (FistWeapon)
+    {
+        FistWeapon->Punch();
+        UE_LOG(LogTemp, Log, TEXT("Punch executed using fists."));
     }
     else
     {

@@ -202,6 +202,12 @@ protected:
 
     void ReloadWeapon();
 
+    UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+    TSubclassOf<class AMeleeWeapon> FistWeaponClass;
+
+    UPROPERTY()
+    AMeleeWeapon* FistWeapon;
+
     /*--------------------- State Variables ---------------------*/
 
     // Tracks if character is currently crouched
