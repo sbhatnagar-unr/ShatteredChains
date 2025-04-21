@@ -20,7 +20,7 @@ void AMeleeWeapon::BeginPlay()
 
 void AMeleeWeapon::Punch()
 {
-    if (!OwnerPawn) return;
+    if (!OwnerPawn || bIsPunching) return; // Prevent spam if already punching
 
     UAnimInstance* AnimInstance = Cast<ACharacter>(OwnerPawn)->GetMesh()->GetAnimInstance();
     if (!AnimInstance) return;
@@ -28,12 +28,21 @@ void AMeleeWeapon::Punch()
     UAnimMontage* SelectedMontage = (FMath::RandBool()) ? PunchMontage1 : PunchMontage2;
     if (SelectedMontage)
     {
-        AnimInstance->Montage_Play(SelectedMontage);
-    }
+        bIsPunching = true;
 
-    // Delay damage application to match animation
-    FTimerHandle DamageTimer;
-    GetWorldTimerManager().SetTimer(DamageTimer, this, &AMeleeWeapon::ApplyDamage, DamageDelay, false);
+        float Duration = AnimInstance->Montage_Play(SelectedMontage);
+
+        // Reset punch state after montage ends
+        FTimerHandle PunchResetTimer;
+        GetWorldTimerManager().SetTimer(PunchResetTimer, [this]()
+            {
+                bIsPunching = false;
+            }, Duration, false);
+
+        // Delay damage
+        FTimerHandle DamageTimer;
+        GetWorldTimerManager().SetTimer(DamageTimer, this, &AMeleeWeapon::ApplyDamage, DamageDelay, false);
+    }
 }
 
 void AMeleeWeapon::ApplyDamage()

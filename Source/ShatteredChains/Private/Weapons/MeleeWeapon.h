@@ -18,6 +18,9 @@ public:
 
     void Punch();
 
+    UPROPERTY()
+    bool bIsPunching = false;
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
     float Damage = 15.0f;
 
