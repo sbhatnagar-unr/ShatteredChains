@@ -33,6 +33,9 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
     UAnimMontage* PunchMontage2;
 
+    UPROPERTY(EditAnywhere, Category = "Combat")
+    USoundBase* PunchSound;
+
     UFUNCTION()
     void ApplyDamage();
 

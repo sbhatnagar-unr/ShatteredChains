@@ -88,6 +88,11 @@ void AMeleeWeapon::ApplyDamage()
             }
         }
     }
+    if (PunchSound && OwnerPawn)
+    {
+        UGameplayStatics::PlaySoundAtLocation(GetWorld(), PunchSound, OwnerPawn->GetActorLocation());
+    }
+
 }
 
 
