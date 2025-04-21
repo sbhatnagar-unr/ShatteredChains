@@ -47,7 +47,7 @@ public:
     virtual TObjectPtr<UInventoryComponent> get_inventory_component() const override final;
 
     void EquipWeapon(AWeapon* Weapon);
-    void PickUpWeapon(AWeapon* Weapon);
+    bool PickUpWeapon(AWeapon* Weapon);
 
 
     // This should return a location to start a hitscan from

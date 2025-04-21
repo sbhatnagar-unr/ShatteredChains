@@ -121,12 +121,14 @@ void AWeapon::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* O
             return;
         }
         
-        // Use proxy function
-        Character->PickUpWeapon(this);
+        // Try to pick up weapon
+        bool bWasPickedUp = Character->PickUpWeapon(this);
 
-        // Optional: Make the weapon disappear from the world
-        SetActorHiddenInGame(true);
-        SetActorEnableCollision(false);
+        if (bWasPickedUp)
+        {
+            SetActorHiddenInGame(true);
+            SetActorEnableCollision(false);
+        } 
     }
 }
 

@@ -548,7 +548,7 @@ void AMyCharacter::ReloadWeapon()
     }
 }
 
-void AMyCharacter::PickUpWeapon(AWeapon* PickedUpWeapon)
+bool AMyCharacter::PickUpWeapon(AWeapon* PickedUpWeapon)
 {
     if (PickedUpWeapon && InventoryComponent)
     {
@@ -559,13 +559,11 @@ void AMyCharacter::PickUpWeapon(AWeapon* PickedUpWeapon)
         {
             UE_LOG(LogTemp, Log, TEXT("Picked up weapon: %s"), *WeaponID.ToString());
 
-            // Item pickup sound
             if (item_pickup_sound)
             {
                 UGameplayStatics::PlaySound2D(GetWorld(), item_pickup_sound);
             }
 
-            // Find what slot the weapon is in after adding
             const TArray<FName>& WeaponSlots = InventoryComponent->GetWeaponSlots();
             int32 AssignedSlot = -1;
             for (int32 i = 0; i < WeaponSlots.Num(); ++i)
@@ -576,23 +574,19 @@ void AMyCharacter::PickUpWeapon(AWeapon* PickedUpWeapon)
                     break;
                 }
             }
-            /*
-            // Equip if no weapon is held OR if that slot is currently selected
-            if (!CurrentWeapon || CurrentEquippedWeaponSlot == AssignedSlot)
-            {
-                EquipWeapon(PickedUpWeapon);
-            }
-            */
-            // Hide weapon from the world
-            //PickedUpWeapon->SetActorHiddenInGame(true);
+
             PickedUpWeapon->SetActorEnableCollision(false);
+            return true; 
         }
         else
         {
             UE_LOG(LogTemp, Warning, TEXT("Weapon slots full! Cannot pick up %s"), *WeaponID.ToString());
         }
     }
+
+    return false; 
 }
+
 
 // handle weapon equipping slot 1-3
 void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
