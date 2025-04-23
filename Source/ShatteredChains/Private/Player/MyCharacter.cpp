@@ -238,6 +238,7 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
         // Wasd 
         Input->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMyCharacter::Move);
+        Input->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMyCharacter::CancelLedgeLatch);
 
         // Look 
         Input->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMyCharacter::Look);
@@ -938,24 +939,38 @@ void AMyCharacter::Jump()
 {
     if (bIsSliding)
     {
-        SlideJump(); // Perform slide jump
+        SlideJump();
+        return;
     }
-    else
+
+    if (bIsLatchedToLedge)
     {
-        ACharacter::Jump(); // Perform Unreal's default jump logic
+        PullUpFromLedge();
+        return;
+    }
+
+    if (!bHasJumpedOnce)
+    {
+        ACharacter::Jump();
+        bHasJumpedOnce = true;
 
         if (JumpAnimMontage)
-        {
-            float Duration = PlayAnimMontage(JumpAnimMontage, 1.0f);
-            UE_LOG(Player, Log, TEXT("Jump animation montage triggered, duration: %f"), Duration);
-        }
-        else
-        {
-            UE_LOG(Player, Warning, TEXT("JumpAnimMontage is missing!"));
-        }
+            PlayAnimMontage(JumpAnimMontage);
+
+        UE_LOG(Player, Log, TEXT("First jump"));
     }
 }
 
+
+void AMyCharacter::CancelLedgeLatch()
+{
+    if (bIsLatchedToLedge)
+    {
+        bIsLatchedToLedge = false;
+        GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Falling); // Resume falling
+        UE_LOG(Player, Log, TEXT("Latch canceled: dropped from ledge"));
+    }
+}
 
 
 
@@ -1021,9 +1036,9 @@ void AMyCharacter::StopJump()
 void AMyCharacter::Landed(const FHitResult& Hit)
 {
     Super::Landed(Hit);
-    JumpCount = 0; // Reset jump count on landing
-
-    UE_LOG(Player, Log, TEXT("Landed: JumpCount reset, ensuring no animation override"));
+    bHasJumpedOnce = false;
+    JumpCount = 0;
+    bIsLatchedToLedge = false; // ensure it's reset
 }
 
 
@@ -1351,39 +1366,40 @@ void AMyCharacter::LogInventory(const FInputActionValue& Value)
 
 void AMyCharacter::Mantle()
 {
-    // Define the start point (player's eye level) and end point (forward and up)
-    FVector Start = GetActorLocation() + FVector(0, 0, 50.0f); // Slightly above character's feet
-    FVector ForwardVector = GetActorForwardVector(); 
-    FVector End = Start + (ForwardVector * 100.0f) + FVector(0, 0, 100.0f); // Forward and upwards
+    FVector Start = GetActorLocation() + FVector(0, 0, 50.0f);
+    FVector Forward = GetActorForwardVector();
+    FVector WallCheckEnd = Start + Forward * 100.0f;
 
-    FHitResult Hit;
+    FHitResult WallHit;
     FCollisionQueryParams Params;
     Params.AddIgnoredActor(this);
 
-    // Perform a line trace to detect a ledge
-    if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
+    if (GetWorld()->LineTraceSingleByChannel(WallHit, Start, WallCheckEnd, ECC_Visibility, Params))
     {
-        // Check if a ledge is detected
-        if (Hit.bBlockingHit)
+        FVector LedgeStart = WallHit.ImpactPoint + FVector(0, 0, 100.0f);
+        FVector LedgeEnd = LedgeStart - FVector(0, 0, 150.0f);
+
+        FHitResult LedgeHit;
+        if (GetWorld()->LineTraceSingleByChannel(LedgeHit, LedgeStart, LedgeEnd, ECC_Visibility, Params))
         {
-            // Launch the character upwards and slightly forward to simulate mantling
-            FVector MantleTarget = Hit.ImpactPoint + FVector(0, 0, 50.0f); // Adjust to move onto the ledge
-            FVector LaunchVelocity = (MantleTarget - GetActorLocation()) * 2.0f; // Scale for speed
+            FVector MantleTarget = LedgeHit.ImpactPoint + FVector(0, 0, 50.0f);
+            FVector LaunchVelocity = (MantleTarget - GetActorLocation()) * 2.0f;
+
             LaunchCharacter(LaunchVelocity, true, true);
 
-            // Play mantling animation
             if (MantleAnimMontage)
             {
                 PlayAnimMontage(MantleAnimMontage);
             }
-            UE_LOG(Player, Log, TEXT("Mantle triggered: Target = %s"), *MantleTarget.ToString());
+
+            UE_LOG(Player, Log, TEXT("Mantle successful: %s"), *MantleTarget.ToString());
+            return;
         }
     }
-    else
-    {
-        UE_LOG(Player, Warning, TEXT("Mantle failed: No ledge detected"));
-    }
+
+    UE_LOG(Player, Warning, TEXT("Mantle failed: No ledge found"));
 }
+
 
 
 
@@ -1391,16 +1407,29 @@ void AMyCharacter::Mantle()
 bool AMyCharacter::CanMantle() const
 {
     FVector Start = GetActorLocation() + FVector(0, 0, 50.0f);
-    FVector ForwardVector = GetActorForwardVector();
-    FVector End = Start + (ForwardVector * 100.0f) + FVector(0, 0, 100.0f);
+    FVector Forward = GetActorForwardVector();
+    FVector WallCheckEnd = Start + Forward * 100.0f;
 
-    FHitResult Hit;
+    FHitResult WallHit;
     FCollisionQueryParams Params;
     Params.AddIgnoredActor(this);
 
-    // Perform a line trace to check for a ledge
-    return GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params) && Hit.bBlockingHit;
+    // Check for wall
+    if (GetWorld()->LineTraceSingleByChannel(WallHit, Start, WallCheckEnd, ECC_Visibility, Params))
+    {
+        FVector LedgeStart = WallHit.ImpactPoint + FVector(0, 0, 100.0f); // Check above wall
+        FVector LedgeEnd = LedgeStart - FVector(0, 0, 150.0f);            // Trace down to ledge
+
+        FHitResult LedgeHit;
+        if (GetWorld()->LineTraceSingleByChannel(LedgeHit, LedgeStart, LedgeEnd, ECC_Visibility, Params))
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
+
 
 
 // Function checks if the character is close enough to a wall, a prerequisite for initiating mantling.
@@ -1439,20 +1468,16 @@ void AMyCharacter::StartLedgeGrab()
 // Function completes the ledge grab and moves the character onto the ledge.
 void AMyCharacter::PullUpFromLedge()
 {
-    FVector TargetLocation = GetActorLocation() + FVector(0, 0, 100.0f); // Adjust height
-    SetActorLocation(TargetLocation);
-
-    // Re-enable movement
+    SetActorLocation(LatchedLedgeLocation);
     GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+    bIsLatchedToLedge = false;
 
-    UE_LOG(Player, Log, TEXT("PullUpFromLedge triggered: New Location = %s"), *TargetLocation.ToString());
-
-    // play a pull-up animation
     if (PullUpAnimMontage)
-    {
         PlayAnimMontage(PullUpAnimMontage);
-    }
+
+    UE_LOG(Player, Log, TEXT("Climbed to ledge: %s"), *LatchedLedgeLocation.ToString());
 }
+
 
 
 // Function identifies whether there�s a ledge above the character that can be climbed.
@@ -1504,7 +1529,7 @@ void AMyCharacter::ResetMovementDebuffs()
 // Called every frame
 void AMyCharacter::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
+    Super::Tick(DeltaTime);
 
     // Smooth zoom interpolation
     float EffectiveZoomSpeed = ZoomInterpSpeed;
@@ -1514,8 +1539,49 @@ void AMyCharacter::Tick(float DeltaTime)
     }
     Camera->SetFieldOfView(FMath::FInterpTo(Camera->FieldOfView, TargetFOV, DeltaTime, EffectiveZoomSpeed));
 
+    // Skip if already latched or not falling
+    if (bIsLatchedToLedge || !GetCharacterMovement()->IsFalling()) return;
 
+    // Auto-latch wall detection
+    FVector Start = GetActorLocation() + FVector(0, 0, 50.0f);
+    FVector Forward = GetActorForwardVector();
+    FVector WallEnd = Start + Forward * 100.0f;
+
+    FHitResult WallHit;
+    FCollisionQueryParams Params;
+    Params.AddIgnoredActor(this);
+
+    if (GetWorld()->LineTraceSingleByChannel(WallHit, Start, WallEnd, ECC_Visibility, Params))
+    {
+        // Ledge check (above the wall hit)
+        FVector LedgeStart = WallHit.ImpactPoint + FVector(0, 0, 100.0f);
+        FVector LedgeEnd = LedgeStart - FVector(0, 0, 150.0f);
+
+        FHitResult LedgeHit;
+        if (GetWorld()->LineTraceSingleByChannel(LedgeHit, LedgeStart, LedgeEnd, ECC_Visibility, Params))
+        {
+            FVector Normal = LedgeHit.ImpactNormal;
+            float SlopeAngle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(Normal, FVector::UpVector)));
+
+            if (SlopeAngle < 45.0f) // Only latch on flat-enough surfaces
+            {
+                bIsLatchedToLedge = true;
+                LatchedLedgeLocation = LedgeHit.ImpactPoint + FVector(0, 0, 90.0f);
+
+                GetCharacterMovement()->StopMovementImmediately();
+                GetCharacterMovement()->DisableMovement();
+
+                if (LedgeGrabAnimMontage)
+                {
+                    PlayAnimMontage(LedgeGrabAnimMontage);
+                }
+
+                UE_LOG(Player, Log, TEXT("Latched to ledge at %s"), *LatchedLedgeLocation.ToString());
+            }
+        }
+    }
 }
+
 
 
 void AMyCharacter::restart_current_level() const

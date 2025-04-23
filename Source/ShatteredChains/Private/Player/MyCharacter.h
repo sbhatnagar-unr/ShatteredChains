@@ -124,6 +124,13 @@ protected:
     void Look(const FInputActionValue& InputValue);
     void Jump();
 
+    bool bHasJumpedOnce = false;
+
+    bool bIsLatchedToLedge = false; // are we hanging on a ledge
+    FVector LatchedLedgeLocation;   // target ledge top to pull up to
+
+    void CancelLedgeLatch();
+
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
 
@@ -266,11 +273,11 @@ protected:
 
     // Slide speed
     UPROPERTY(EditAnywhere, Category = "Slide")
-    float SlideSpeed = 900.0f;
+    float SlideSpeed = 1000.0f;
 
     // Slide duration
     UPROPERTY(EditAnywhere, Category = "Slide")
-    float SlideDuration = 0.75f;
+    float SlideDuration = 1.0f;
 
     // Timer to stop sliding
     FTimerHandle SlideStopTimer;
@@ -280,17 +287,17 @@ protected:
 
     // Slide jump force
     UPROPERTY(EditAnywhere, Category = "Slide Jump")
-    FVector SlideJumpForce = FVector(0.0f, 0.0f, 400.0f);
+    FVector SlideJumpForce = FVector(0.0f, 0.0f, 500.0f);
 
     /*--------------------- Movement Speeds ---------------------*/
 
     // Base movement speed when walking
     UPROPERTY(EditAnywhere, Category = "Movement")
-    float WalkSpeed = 400.0f;
+    float WalkSpeed = 450.0f;
 
     // Sprinting speed 
     UPROPERTY(EditAnywhere, Category = "Movement")
-    float SprintSpeed = 600.0f;
+    float SprintSpeed = 750.0f;
 
     // Speed while crouched
     UPROPERTY(EditAnywhere, Category = "Movement")
