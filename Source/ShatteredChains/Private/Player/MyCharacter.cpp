@@ -71,6 +71,8 @@ void AMyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+    GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+
     if (FistWeaponClass)
     {
         FActorSpawnParameters Params;
