@@ -949,7 +949,23 @@ void AMyCharacter::Jump()
         return;
     }
 
-    if (!bHasJumpedOnce)
+    // Force uncrouch or unprone BEFORE jumping
+    if (bIsCrouched || bIsProne)
+    {
+        // Forcefully reset states first
+        bIsCrouched = false;
+        bIsProne = false;
+
+        UCapsuleComponent* Capsule = GetCapsuleComponent();
+        Capsule->SetCapsuleHalfHeight(88.0f); // Reset to default
+        GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+        GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+
+        UnCrouch(); // Also clear any crouch flags
+    }
+
+    // Make sure we're not mid-animation that blocks movement
+    if (!GetCharacterMovement()->IsFalling() && CanJump())
     {
         ACharacter::Jump();
         bHasJumpedOnce = true;
@@ -957,9 +973,11 @@ void AMyCharacter::Jump()
         if (JumpAnimMontage)
             PlayAnimMontage(JumpAnimMontage);
 
-        UE_LOG(Player, Log, TEXT("First jump"));
+        UE_LOG(Player, Log, TEXT("Jump successful"));
     }
 }
+
+
 
 
 void AMyCharacter::CancelLedgeLatch()
@@ -1038,7 +1056,19 @@ void AMyCharacter::Landed(const FHitResult& Hit)
     Super::Landed(Hit);
     bHasJumpedOnce = false;
     JumpCount = 0;
-    bIsLatchedToLedge = false; // ensure it's reset
+    bIsLatchedToLedge = false;
+
+    // Safety: Reset capsule height if still crouched
+    if (bIsCrouched)
+    {
+        GetCapsuleComponent()->SetCapsuleHalfHeight(88.0f);
+    }
+    if (bIsProne)
+    {
+        GetCapsuleComponent()->SetCapsuleHalfHeight(88.0f);
+        GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+        bIsProne = false;
+    }
 }
 
 
