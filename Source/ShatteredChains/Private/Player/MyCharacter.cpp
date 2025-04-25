@@ -444,7 +444,6 @@ void AMyCharacter::StopZoom()
     TargetFOV = DefaultFOV;
 }
 
-//Toggle medkit
 void AMyCharacter::ToggleMedKit(const FInputActionValue& Value)
 {
     if (!InventoryComponent) return;
@@ -462,6 +461,15 @@ void AMyCharacter::ToggleMedKit(const FInputActionValue& Value)
         CurrentWeapon->SetActorEnableCollision(false);
         CurrentWeapon = nullptr;
         CurrentEquippedWeaponSlot = -1;
+    }
+
+    // Unequip melee sword
+    if (EquippedMeleeWeapon)
+    {
+        EquippedMeleeWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+        EquippedMeleeWeapon->SetActorHiddenInGame(true);
+        EquippedMeleeWeapon->SetActorEnableCollision(false);
+        EquippedMeleeWeapon = nullptr;
     }
 
     // Toggle medkit state
@@ -484,7 +492,6 @@ void AMyCharacter::ToggleMedKit(const FInputActionValue& Value)
 
         if (!EquippedMedKit)
         {
-            // Spawn medkit actor once and reuse it
             FActorSpawnParameters SpawnParams;
             SpawnParams.Owner = this;
             EquippedMedKit = GetWorld()->SpawnActor<AMedKit>(AMedKit::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
@@ -492,15 +499,15 @@ void AMyCharacter::ToggleMedKit(const FInputActionValue& Value)
 
         if (EquippedMedKit)
         {
-            EquippedMedKit->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("WeaponSocket")); // or use WeaponSocket
+            EquippedMedKit->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("WeaponSocket"));
             EquippedMedKit->SetActorHiddenInGame(false);
             EquippedMedKit->SetActorEnableCollision(false);
         }
+
         if (item_pickup_sound)
         {
             UGameplayStatics::PlaySound2D(GetWorld(), item_pickup_sound);
         }
-
 
         UE_LOG(Player, Log, TEXT("MedKit equipped."));
     }
@@ -747,10 +754,39 @@ void AMyCharacter::QuickMelee()
     }
     else if (FistWeapon)
     {
-        // Gun equipped or no weapon → punch
-        FistWeapon->Punch();
+        // Punch left only when quick melee
+        if (!FistWeapon->bIsPunching)
+        {
+            UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+            if (AnimInstance && FistWeapon->PunchMontage1)
+            {
+                float Duration = AnimInstance->Montage_Play(FistWeapon->PunchMontage1);
+
+                FistWeapon->bIsPunching = true;
+
+                // Reset after animation
+                FTimerHandle PunchResetTimer;
+                GetWorldTimerManager().SetTimer(PunchResetTimer, [this]()
+                    {
+                        if (FistWeapon)
+                        {
+                            FistWeapon->bIsPunching = false;
+                        }
+                    }, Duration, false);
+
+                // Delay punch damage
+                FTimerHandle DamageTimer;
+                GetWorldTimerManager().SetTimer(DamageTimer, FistWeapon, &AMeleeWeapon::ApplyDamage, FistWeapon->DamageDelay, false);
+
+                if (FistWeapon->PunchSound)
+                {
+                    UGameplayStatics::PlaySoundAtLocation(GetWorld(), FistWeapon->PunchSound, GetActorLocation());
+                }
+            }
+        }
     }
 }
+
 
 
 
