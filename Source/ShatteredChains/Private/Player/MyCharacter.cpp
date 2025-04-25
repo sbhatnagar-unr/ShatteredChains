@@ -789,7 +789,7 @@ void AMyCharacter::Interact()
         // Handle MedKit pickup
         if (AMedKit* MedKit = Cast<AMedKit>(HitActor))
         {
-            if (InventoryComponent->AddItem("MedKit", EItemType::HealthKit, 1))
+            if (!InventoryComponent->HasItem("MedKit", 1) && InventoryComponent->AddItem("MedKit", EItemType::HealthKit, 1, 1))
             {
                 UE_LOG(Player, Log, TEXT("Picked up MedKit via Interact"));
                 MedKit->Destroy();
