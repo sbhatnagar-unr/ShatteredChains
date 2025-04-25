@@ -22,6 +22,12 @@ public:
     bool bIsPunching = false;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+    float MeleeRange = 150.0f;
+     
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+    float MeleeRadius = 100.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
     float Damage = 15.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
@@ -38,6 +44,23 @@ public:
 
     UFUNCTION()
     void ApplyDamage();
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pickup")
+    class USphereComponent* PickupSphere;
+
+    UFUNCTION()
+    void HandleBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+        UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+    UFUNCTION()
+    void HandleEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+        UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+    bool bIsPlayerInRange = false;
+
+    UPROPERTY(VisibleAnywhere, Category = "Mesh")
+    USkeletalMeshComponent* MeshComponent;
+
 
 protected:
     APawn* OwnerPawn;

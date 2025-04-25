@@ -5,17 +5,57 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Character.h"
 #include "TimerManager.h"
+#include "Components/SphereComponent.h"  
+#include "Components/StaticMeshComponent.h"
+#include "Player/MyCharacter.h"   
 #include "Components/HealthComponent/HealthComponent.h"
 
 AMeleeWeapon::AMeleeWeapon()
 {
     PrimaryActorTick.bCanEverTick = false;
+
+    // Mesh as root
+    MeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SwordMesh"));
+    RootComponent = MeshComponent;
+    MeshComponent->SetSimulatePhysics(true);
+    MeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    MeshComponent->SetCollisionResponseToAllChannels(ECR_Block);
+
+    // Overlap sphere
+    PickupSphere = CreateDefaultSubobject<USphereComponent>(TEXT("PickupSphere"));
+    PickupSphere->SetupAttachment(MeshComponent);
+    PickupSphere->InitSphereRadius(50.0f);
+    PickupSphere->SetGenerateOverlapEvents(true);
+    PickupSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    PickupSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
+    PickupSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+
+    PickupSphere->OnComponentBeginOverlap.AddDynamic(this, &AMeleeWeapon::HandleBeginOverlap);
+    PickupSphere->OnComponentEndOverlap.AddDynamic(this, &AMeleeWeapon::HandleEndOverlap);
 }
 
 void AMeleeWeapon::BeginPlay()
 {
     Super::BeginPlay();
     OwnerPawn = Cast<APawn>(GetOwner());
+}
+
+void AMeleeWeapon::HandleBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+    if (Cast<AMyCharacter>(OtherActor))
+    {
+        bIsPlayerInRange = true;
+    }
+}
+
+void AMeleeWeapon::HandleEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+    if (Cast<AMyCharacter>(OtherActor))
+    {
+        bIsPlayerInRange = false;
+    }
 }
 
 void AMeleeWeapon::Punch()
@@ -51,9 +91,8 @@ void AMeleeWeapon::ApplyDamage()
 
     FVector Start = OwnerPawn->GetActorLocation();
     FVector Forward = OwnerPawn->GetActorForwardVector();
-    FVector End = Start + Forward * 150.0f; // Punch reach distance
-
-    float Radius = 100.0f;
+    FVector End = Start + Forward * MeleeRange; // Punch reach distance
+    float Radius = MeleeRadius;
 
     TArray<FHitResult> HitResults;
     FCollisionShape CollisionShape = FCollisionShape::MakeSphere(Radius);
