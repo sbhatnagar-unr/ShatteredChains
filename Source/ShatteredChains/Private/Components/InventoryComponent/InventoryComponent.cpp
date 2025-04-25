@@ -19,6 +19,18 @@ void UInventoryComponent::BeginPlay()
 
 bool UInventoryComponent::AddWeapon(FName WeaponID)
 {
+    if (WeaponID.ToString().Contains("Sword")) // Simple melee check
+    {
+        if (!MeleeWeaponID.IsNone())
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Already holding a melee weapon"));
+            return false;
+        }
+
+        MeleeWeaponID = WeaponID;
+        UE_LOG(LogTemp, Log, TEXT("Added melee weapon: %s"), *WeaponID.ToString());
+        return true;
+    }
     // Check if there's an empty slot before adding a weapon
     for (int32 i = 0; i < WeaponSlots.Num(); ++i)
     {
@@ -29,9 +41,8 @@ bool UInventoryComponent::AddWeapon(FName WeaponID)
             return true;
         }
     }
-
     // If all slots are occupied, prevent adding another weapon
-    UE_LOG(LogTemp, Warning, TEXT("Cannot pick up %s, weapon inventory is full!"), *WeaponID.ToString());
+    UE_LOG(LogTemp, Warning, TEXT("Weapon slots full!"));
     return false;
 }
 
@@ -84,6 +95,15 @@ void UInventoryComponent::ToggleInventory()
     }
 }
 
+FName UInventoryComponent::GetMeleeWeaponID() const
+{
+    return MeleeWeaponID;
+}
+
+void UInventoryComponent::RemoveMeleeWeapon()
+{
+    MeleeWeaponID = NAME_None;
+}
 
 
 // Add an item to the inventory

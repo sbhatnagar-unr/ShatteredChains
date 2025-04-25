@@ -58,6 +58,14 @@ class SHATTEREDCHAINS_API UInventoryComponent : public UActorComponent
 public:
     UInventoryComponent();
 
+    FName MeleeWeaponID;
+
+    UFUNCTION(BlueprintCallable, Category = "Inventory")
+    FName GetMeleeWeaponID() const;
+
+    UFUNCTION(BlueprintCallable, Category = "Inventory")
+    void RemoveMeleeWeapon();
+
 protected:
     virtual void BeginPlay() override;
 
