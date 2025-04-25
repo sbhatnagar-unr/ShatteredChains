@@ -215,6 +215,17 @@ protected:
     UPROPERTY()
     AMeleeWeapon* FistWeapon;
 
+    UPROPERTY()
+    AMeleeWeapon* EquippedMeleeWeapon = nullptr;
+
+    void QuickMelee();
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EnhancedInput")
+    UInputAction* IA_WeaponSlot5;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EnhancedInput")
+    UInputAction* IA_QuickMelee;
+
     /*--------------------- State Variables ---------------------*/
 
     // Tracks if character is currently crouched

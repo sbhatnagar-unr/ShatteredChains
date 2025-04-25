@@ -297,6 +297,12 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
         // scope out
         Input->BindAction(ScopeAction, ETriggerEvent::Completed, this, &AMyCharacter::StopZoom);
 
+        // equip melee slot
+        Input->BindAction(IA_WeaponSlot5, ETriggerEvent::Triggered, this, &AMyCharacter::HandleWeaponSlotInput, 5);
+
+        // quick melee action
+        Input->BindAction(IA_QuickMelee, ETriggerEvent::Started, this, &AMyCharacter::QuickMelee);
+
     }
     else
     {
@@ -485,7 +491,7 @@ void AMyCharacter::ToggleMedKit(const FInputActionValue& Value)
 
         if (EquippedMedKit)
         {
-            EquippedMedKit->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("MedKitSocket")); // or use WeaponSocket
+            EquippedMedKit->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("WeaponSocket")); // or use WeaponSocket
             EquippedMedKit->SetActorHiddenInGame(false);
             EquippedMedKit->SetActorEnableCollision(false);
         }
@@ -714,9 +720,58 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
     {
         UGameplayStatics::PlaySound2D(GetWorld(), weapon_equip_sound);
     }
+    if (Slot == 5)
+    {
+        if (!InventoryComponent) return;
 
+        FName SwordID = InventoryComponent->GetMeleeWeaponID();
+        if (SwordID.IsNone())
+        {
+            UE_LOG(LogTemp, Warning, TEXT("No melee weapon to equip."));
+            return;
+        }
 
+        for (TActorIterator<AMeleeWeapon> It(GetWorld()); It; ++It)
+        {
+            if (It->GetName() == SwordID.ToString())
+            {
+                if (EquippedMeleeWeapon)
+                {
+                    EquippedMeleeWeapon->SetActorHiddenInGame(true);
+                    EquippedMeleeWeapon->SetActorEnableCollision(false);
+                }
+
+                EquippedMeleeWeapon = *It;
+                EquippedMeleeWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("WeaponSocket"));
+                EquippedMeleeWeapon->SetActorHiddenInGame(false);
+                EquippedMeleeWeapon->SetActorEnableCollision(false);
+
+                UE_LOG(LogTemp, Log, TEXT("Equipped Melee Weapon: %s"), *SwordID.ToString());
+                return;
+            }
+        }
+
+        return;
+    }
 }
+
+// quick melee
+void AMyCharacter::QuickMelee()
+{
+    if (bIsHoldingMedKit) return;
+
+    if (EquippedMeleeWeapon && !EquippedMeleeWeapon->bIsPunching)
+    {
+        EquippedMeleeWeapon->Punch();
+        UE_LOG(LogTemp, Log, TEXT("Quick melee executed."));
+    }
+    else if (FistWeapon && !FistWeapon->bIsPunching)
+    {
+        FistWeapon->Punch();
+        UE_LOG(LogTemp, Log, TEXT("Quick melee fallback with fists."));
+    }
+}
+
 
 
 //drop weapon
@@ -767,8 +822,6 @@ void AMyCharacter::DropWeapon()
 
 
 
-
-
 // Interact Function
 void AMyCharacter::Interact()
 {
@@ -786,15 +839,37 @@ void AMyCharacter::Interact()
 
         UE_LOG(Player, Log, TEXT("Line Trace Hit Actor: %s"), *HitActor->GetName());
 
-        // Handle MedKit pickup
+        // Sword Pickup 
+        if (AMeleeWeapon* HitMelee = Cast<AMeleeWeapon>(HitActor))
+        {
+            FName SwordID = FName(*HitMelee->GetName());
+
+            if (!InventoryComponent->GetMeleeWeaponID().IsNone())
+            {
+                UE_LOG(LogTemp, Warning, TEXT("Already carrying melee weapon."));
+                return;
+            }
+
+            if (InventoryComponent->AddWeapon(SwordID))
+            {
+                UE_LOG(LogTemp, Log, TEXT("Picked up sword: %s"), *SwordID.ToString());
+                HitMelee->SetActorHiddenInGame(true);
+                HitMelee->SetActorEnableCollision(false);
+                if (item_pickup_sound)
+                {
+                    UGameplayStatics::PlaySound2D(GetWorld(), item_pickup_sound);
+                }
+            }
+            return;
+        }
+
+        // Medkit Pickup 
         if (AMedKit* MedKit = Cast<AMedKit>(HitActor))
         {
             if (!InventoryComponent->HasItem("MedKit", 1) && InventoryComponent->AddItem("MedKit", EItemType::HealthKit, 1, 1))
             {
                 UE_LOG(Player, Log, TEXT("Picked up MedKit via Interact"));
                 MedKit->Destroy();
-
-                // Item pickup sound
                 if (item_pickup_sound)
                 {
                     UGameplayStatics::PlaySound2D(GetWorld(), item_pickup_sound);
@@ -807,7 +882,7 @@ void AMyCharacter::Interact()
             return;
         }
 
-        // Handle Weapon pickup
+        // Gun Pickup 
         if (AWeapon* HitWeapon = Cast<AWeapon>(HitActor))
         {
             UE_LOG(Player, Log, TEXT("Weapon Detected: %s"), *HitWeapon->GetName());
@@ -823,10 +898,6 @@ void AMyCharacter::Interact()
         UE_LOG(Player, Warning, TEXT("No interactable object detected."));
     }
 }
-
-
-
-
 
 
 
