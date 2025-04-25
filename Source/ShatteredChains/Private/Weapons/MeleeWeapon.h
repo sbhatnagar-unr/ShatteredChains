@@ -61,6 +61,15 @@ public:
     UPROPERTY(VisibleAnywhere, Category = "Mesh")
     USkeletalMeshComponent* MeshComponent;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+    UAnimMontage* SwordSlashMontage1;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+    UAnimMontage* SwordSlashMontage2;
+
+    UPROPERTY(EditAnywhere, Category = "Combat")
+    USoundBase* SwordSwingSound;
+
 
 protected:
     APawn* OwnerPawn;

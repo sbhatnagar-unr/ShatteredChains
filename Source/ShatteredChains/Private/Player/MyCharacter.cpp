@@ -375,6 +375,7 @@ void AMyCharacter::FireWeapon()
         // This condition stops it from spamming the out of ammo sound on full-auto weapons, which plays when the gun is fired without ammo
         // Here we will just fire once, then set has_fired_weapon to true, so all guns, regardless of full-auto or not, operate as if they were semi-auto ONLY WHEN
         // there is no ammo.
+        // there is no ammo.
         // These if statements can probably be combined, since they run the same body, but the expression needed to make it work as intended
         // Would not be as readable
         if (CurrentWeapon->get_current_magazine_ammo_count() == 0)
@@ -397,8 +398,15 @@ void AMyCharacter::FireWeapon()
             has_fired_weapon = true;
         }
     }
-    else if (FistWeapon)
+    else if (EquippedMeleeWeapon && !EquippedMeleeWeapon->bIsPunching)
     {
+        // Slash with melee weapon (sword)
+        EquippedMeleeWeapon->Punch();
+        UE_LOG(LogTemp, Log, TEXT("Melee swing with equipped melee weapon."));
+    }
+    else if (FistWeapon && !FistWeapon->bIsPunching)
+    {
+        // Fallback to fists
         FistWeapon->Punch();
         UE_LOG(LogTemp, Log, TEXT("Punch executed using fists."));
     }
@@ -608,53 +616,50 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
         StopZoom();
     }
 
-    // Toggle medkit if Slot == 4
-    if (Slot == 4)
+    // Handle melee weapon separately FIRST
+    if (Slot == 5)
     {
-        if (bIsHoldingMedKit)
+        if (EquippedMeleeWeapon && CurrentEquippedWeaponSlot == 5)
         {
-            bIsHoldingMedKit = false;
-
-            if (EquippedMedKit)
-            {
-                EquippedMedKit->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-                EquippedMedKit->SetActorHiddenInGame(true);
-                EquippedMedKit->SetActorEnableCollision(false);
-            }
-
-            UE_LOG(Player, Log, TEXT("MedKit unequipped due to weapon switch."));
-        }
-        else if (InventoryComponent->HasItem("MedKit", 1))
-        {
-            bIsHoldingMedKit = true;
-            CurrentWeapon = nullptr;
+            // Already equipped, so unequip
+            EquippedMeleeWeapon->SetActorHiddenInGame(true);
+            EquippedMeleeWeapon->SetActorEnableCollision(false);
+            EquippedMeleeWeapon = nullptr;
             CurrentEquippedWeaponSlot = -1;
-            UE_LOG(Player, Log, TEXT("[Slot 4][MedKit][EQUIPPED]"));
+            UE_LOG(LogTemp, Log, TEXT("[Slot 5][MeleeWeapon][UNEQUIPPED]"));
+            return;
         }
-        if (item_pickup_sound)
+
+        FName SwordID = InventoryComponent->GetMeleeWeaponID();
+        if (SwordID.IsNone())
         {
-            UGameplayStatics::PlaySound2D(GetWorld(), item_pickup_sound);
+            UE_LOG(LogTemp, Warning, TEXT("No melee weapon to equip."));
+            return;
         }
-        else
+
+        for (TActorIterator<AMeleeWeapon> It(GetWorld()); It; ++It)
         {
-            UE_LOG(Player, Warning, TEXT("No MedKit in inventory to equip."));
+            if (It->GetName() == SwordID.ToString())
+            {
+                EquippedMeleeWeapon = *It;
+                EquippedMeleeWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("MeleeSocket"));
+                EquippedMeleeWeapon->SetActorHiddenInGame(false);
+                EquippedMeleeWeapon->SetActorEnableCollision(false);
+                CurrentEquippedWeaponSlot = 5;
+                UE_LOG(LogTemp, Log, TEXT("[Slot 5][MeleeWeapon][EQUIPPED]"));
+                return;
+            }
         }
         return;
     }
 
-    // Unequip medkit if switching to a weapon
-    if (bIsHoldingMedKit)
-    {
-        bIsHoldingMedKit = false;
-        UE_LOG(Player, Log, TEXT("MedKit unequipped due to weapon switch."));
-    }
-
+    // Handle regular gun slots 1-3 below
     const int32 SlotIndex = Slot - 1;
     const TArray<FName>& WeaponSlots = InventoryComponent->GetWeaponSlots();
 
     if (SlotIndex >= WeaponSlots.Num() || WeaponSlots[SlotIndex].IsNone())
     {
-        // Unequip current weapon
+        // Empty slot behavior
         if (CurrentWeapon)
         {
             CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
@@ -662,12 +667,10 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
             CurrentWeapon->SetActorEnableCollision(false);
             CurrentWeapon = nullptr;
         }
-
         CurrentEquippedWeaponSlot = -1;
         UE_LOG(Player, Log, TEXT("[Slot %d][Empty][UNEQUIPPED]"), Slot);
         return;
     }
-
 
     if (CurrentEquippedWeaponSlot == Slot)
     {
@@ -685,7 +688,6 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
         return;
     }
 
-
     AWeapon* FoundWeapon = nullptr;
     for (TActorIterator<AWeapon> It(GetWorld()); It; ++It)
     {
@@ -698,7 +700,7 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
 
     if (FoundWeapon)
     {
-        //  First, detach and hide the currently equipped weapon
+        // First, detach and hide the currently equipped weapon
         if (CurrentWeapon)
         {
             CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
@@ -707,7 +709,7 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
             UE_LOG(Player, Log, TEXT("Swapping out weapon: %s"), *CurrentWeapon->GetName());
         }
 
-        //  Now equip the new one
+        // Now equip the new one
         CurrentWeapon = FoundWeapon;
         CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("WeaponSocket"));
         CurrentWeapon->SetActorEnableCollision(false);
@@ -715,45 +717,14 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
 
         CurrentEquippedWeaponSlot = Slot;
         UE_LOG(Player, Log, TEXT("[Slot %d][%s][EQUIPPED]"), Slot, *FoundWeapon->GetName());
-    }
-    if (weapon_equip_sound)
-    {
-        UGameplayStatics::PlaySound2D(GetWorld(), weapon_equip_sound);
-    }
-    if (Slot == 5)
-    {
-        if (!InventoryComponent) return;
 
-        FName SwordID = InventoryComponent->GetMeleeWeaponID();
-        if (SwordID.IsNone())
+        if (weapon_equip_sound)
         {
-            UE_LOG(LogTemp, Warning, TEXT("No melee weapon to equip."));
-            return;
+            UGameplayStatics::PlaySound2D(GetWorld(), weapon_equip_sound);
         }
-
-        for (TActorIterator<AMeleeWeapon> It(GetWorld()); It; ++It)
-        {
-            if (It->GetName() == SwordID.ToString())
-            {
-                if (EquippedMeleeWeapon)
-                {
-                    EquippedMeleeWeapon->SetActorHiddenInGame(true);
-                    EquippedMeleeWeapon->SetActorEnableCollision(false);
-                }
-
-                EquippedMeleeWeapon = *It;
-                EquippedMeleeWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("WeaponSocket"));
-                EquippedMeleeWeapon->SetActorHiddenInGame(false);
-                EquippedMeleeWeapon->SetActorEnableCollision(false);
-
-                UE_LOG(LogTemp, Log, TEXT("Equipped Melee Weapon: %s"), *SwordID.ToString());
-                return;
-            }
-        }
-
-        return;
     }
 }
+
 
 // quick melee
 void AMyCharacter::QuickMelee()
@@ -777,49 +748,87 @@ void AMyCharacter::QuickMelee()
 //drop weapon
 void AMyCharacter::DropWeapon()
 {
-    if (!CurrentWeapon || CurrentEquippedWeaponSlot == -1)
+    if (CurrentEquippedWeaponSlot == -1)
     {
         UE_LOG(Player, Warning, TEXT("No weapon equipped to drop."));
         return;
     }
 
-    UE_LOG(Player, Log, TEXT("[Slot %d][%s][DROPPED]"), CurrentEquippedWeaponSlot, *CurrentWeapon->GetName());
+    const UWorld* World = GetWorld();
+    if (!World) return;
 
-    // Place the weapon a little in front of the player
-    FHitResult hit_result;
-    FCollisionQueryParams collision_query_params;
-    collision_query_params.AddIgnoredActor(this);
+    FHitResult HitResult;
+    FCollisionQueryParams QueryParams;
+    QueryParams.AddIgnoredActor(this);
 
-    const UWorld* world = GetWorld();
-    if (world->LineTraceSingleByChannel(hit_result, GetActorLocation(), GetActorLocation() - FVector(0, 0, 1000), ECC_Visibility, collision_query_params))
+    if (World->LineTraceSingleByChannel(HitResult, GetActorLocation(), GetActorLocation() - FVector(0, 0, 1000), ECC_Visibility, QueryParams))
     {
-        const FVector DropLocation = hit_result.Location + GetActorForwardVector() * 200.0f + FVector(0, 0, 2);
+        const FVector GunDropLocation = HitResult.Location + GetActorForwardVector() * 200.0f + FVector(0, 0, 2.0f); // Guns
+        const FVector MeleeDropLocation = HitResult.Location + GetActorForwardVector() * 150.0f + FVector(0, 0, 100.0f); // Melee
         FRotator DropRotation = GetActorRotation();
-        DropRotation.Pitch += 90;
-        
-        CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-        CurrentWeapon->SetActorLocation(DropLocation);
-        CurrentWeapon->SetActorRotation(DropRotation);
-        CurrentWeapon->SetActorEnableCollision(true);
-        CurrentWeapon->SetActorHiddenInGame(false);
-        CurrentWeapon->SetOwner(nullptr); // Ensure it's no longer "held"
+        DropRotation.Pitch += 90.0f;
 
-        // Remove it from inventory
-        InventoryComponent->RemoveWeapon(CurrentEquippedWeaponSlot - 1);
-        CurrentWeapon = nullptr;
-        CurrentEquippedWeaponSlot = -1; 
-    } else
-    {
-        UE_LOG(Player, Warning, LOG_TEXT("Could not find location to drop weapon"));
+        // Handle melee weapon (sword)
+        if (CurrentEquippedWeaponSlot == 5 && EquippedMeleeWeapon)
+        {
+            UE_LOG(Player, Log, TEXT("[Slot 5][%s][DROPPED]"), *EquippedMeleeWeapon->GetName());
+
+            EquippedMeleeWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+            EquippedMeleeWeapon->SetActorHiddenInGame(false);
+            EquippedMeleeWeapon->SetActorEnableCollision(true);
+
+            if (EquippedMeleeWeapon->MeshComponent)
+            {
+                // Move with teleport at correct melee location
+                EquippedMeleeWeapon->MeshComponent->SetWorldLocation(MeleeDropLocation, false, nullptr, ETeleportType::TeleportPhysics);
+                EquippedMeleeWeapon->MeshComponent->SetWorldRotation(DropRotation, false, nullptr, ETeleportType::TeleportPhysics);
+
+                EquippedMeleeWeapon->MeshComponent->SetSimulatePhysics(true);
+
+                // FIX COLLISION: make sure it blocks the world so it lands
+                EquippedMeleeWeapon->MeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+                EquippedMeleeWeapon->MeshComponent->SetCollisionResponseToAllChannels(ECR_Block);
+                EquippedMeleeWeapon->MeshComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+
+                // (Optional) Add slight impulse
+                //EquippedMeleeWeapon->MeshComponent->AddImpulse(FVector(0, 0, 300), NAME_None, true);
+              //EquippedMeleeWeapon->MeshComponent->AddAngularImpulseInDegrees(FVector(0, 0, 500), NAME_None, true);
+            }
+
+            EquippedMeleeWeapon->SetOwner(nullptr);
+
+            if (InventoryComponent)
+            {
+                InventoryComponent->RemoveMeleeWeapon();
+            }
+            EquippedMeleeWeapon = nullptr;
+            CurrentEquippedWeaponSlot = -1;
+        }
+        // Handle regular guns
+        else if (CurrentWeapon)
+        {
+            UE_LOG(Player, Log, TEXT("[Slot %d][%s][DROPPED]"), CurrentEquippedWeaponSlot, *CurrentWeapon->GetName());
+
+            CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+            CurrentWeapon->SetActorLocation(GunDropLocation);
+            CurrentWeapon->SetActorRotation(DropRotation);
+            CurrentWeapon->SetActorEnableCollision(true);
+            CurrentWeapon->SetActorHiddenInGame(false);
+            CurrentWeapon->SetOwner(nullptr);
+
+            if (InventoryComponent)
+            {
+                InventoryComponent->RemoveWeapon(CurrentEquippedWeaponSlot - 1);
+            }
+            CurrentWeapon = nullptr;
+            CurrentEquippedWeaponSlot = -1;
+        }
     }
-
-    
-
-
-
+    else
+    {
+        UE_LOG(Player, Warning, TEXT("Could not find location to drop weapon."));
+    }
 }
-
-
 
 
 // Interact Function
