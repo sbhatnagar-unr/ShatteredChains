@@ -62,62 +62,52 @@ void AMeleeWeapon::HandleEndOverlap(UPrimitiveComponent* OverlappedComponent, AA
 
 void AMeleeWeapon::Punch()
 {
-    if (!OwnerPawn || bIsPunching) return; // Prevent spam if already punching
+    if (!OwnerPawn || bIsPunching) return;
 
     UAnimInstance* AnimInstance = Cast<ACharacter>(OwnerPawn)->GetMesh()->GetAnimInstance();
     if (!AnimInstance) return;
 
-    // If sword slash animations are assigned, use sword logic
-    if (SwordSlashMontage1 && SwordSlashMontage2)
+    bIsPunching = true;
+
+    UAnimMontage* SelectedMontage = nullptr;
+
+    if (bIsSword)
     {
-        UAnimMontage* SelectedMontage = (FMath::RandBool()) ? SwordSlashMontage1 : SwordSlashMontage2;
-        if (SelectedMontage)
+        // Sword logic
+        SelectedMontage = (FMath::RandBool()) ? SwordSlashMontage1 : SwordSlashMontage2;
+
+        if (SwordSwingSound)
         {
-            bIsPunching = true;
-
-            float Duration = AnimInstance->Montage_Play(SelectedMontage);
-
-            // Reset punching state
-            FTimerHandle PunchResetTimer;
-            GetWorldTimerManager().SetTimer(PunchResetTimer, [this]()
-                {
-                    bIsPunching = false;
-                }, Duration, false);
-
-            // Delay sword damage
-            FTimerHandle DamageTimer;
-            GetWorldTimerManager().SetTimer(DamageTimer, this, &AMeleeWeapon::ApplyDamage, DamageDelay, false);
-
-            // Play sword swing sound
-            if (SwordSwingSound && OwnerPawn)
-            {
-                UGameplayStatics::PlaySoundAtLocation(GetWorld(), SwordSwingSound, OwnerPawn->GetActorLocation());
-            }
+            UGameplayStatics::PlaySoundAtLocation(GetWorld(), SwordSwingSound, OwnerPawn->GetActorLocation());
         }
     }
     else
     {
-        // Otherwise fallback to Fist Punching
-        UAnimMontage* SelectedMontage = (FMath::RandBool()) ? PunchMontage1 : PunchMontage2;
-        if (SelectedMontage)
+        // Fist logic
+        SelectedMontage = (FMath::RandBool()) ? PunchMontage1 : PunchMontage2;
+
+        if (PunchSound)
         {
-            bIsPunching = true;
-
-            float Duration = AnimInstance->Montage_Play(SelectedMontage);
-
-            // Reset punching state
-            FTimerHandle PunchResetTimer;
-            GetWorldTimerManager().SetTimer(PunchResetTimer, [this]()
-                {
-                    bIsPunching = false;
-                }, Duration, false);
-
-            // Delay punch damage
-            FTimerHandle DamageTimer;
-            GetWorldTimerManager().SetTimer(DamageTimer, this, &AMeleeWeapon::ApplyDamage, DamageDelay, false);
+            UGameplayStatics::PlaySoundAtLocation(GetWorld(), PunchSound, OwnerPawn->GetActorLocation());
         }
     }
+
+    if (SelectedMontage)
+    {
+        float Duration = AnimInstance->Montage_Play(SelectedMontage);
+
+        FTimerHandle PunchResetTimer;
+        GetWorldTimerManager().SetTimer(PunchResetTimer, [this]()
+            {
+                bIsPunching = false;
+            }, Duration, false);
+
+        FTimerHandle DamageTimer;
+        GetWorldTimerManager().SetTimer(DamageTimer, this, &AMeleeWeapon::ApplyDamage, DamageDelay, false);
+    }
 }
+
+
 
 
 void AMeleeWeapon::ApplyDamage()

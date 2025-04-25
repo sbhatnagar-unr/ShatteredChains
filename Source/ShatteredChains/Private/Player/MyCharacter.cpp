@@ -370,43 +370,35 @@ void AMyCharacter::FireWeapon()
         return;
     }
 
+    // Sword Fire
+    if (CurrentEquippedWeaponSlot == 5 && EquippedMeleeWeapon)
+    {
+        EquippedMeleeWeapon->Punch();
+        return;
+    }
+
+    // Gun Fire
     if (CurrentWeapon)
     {
-        // This condition stops it from spamming the out of ammo sound on full-auto weapons, which plays when the gun is fired without ammo
-        // Here we will just fire once, then set has_fired_weapon to true, so all guns, regardless of full-auto or not, operate as if they were semi-auto ONLY WHEN
-        // there is no ammo.
-        // there is no ammo.
-        // These if statements can probably be combined, since they run the same body, but the expression needed to make it work as intended
-        // Would not be as readable
         if (CurrentWeapon->get_current_magazine_ammo_count() == 0)
         {
-            // This can not be added to the above if-statement with an &&
-            // If we did that, after we dry fire once, the following else if block would still run on full-auto weapons
-            // leading to the weapon empty sound being spammed.
-            // This way, code execution does not reach the else if below
             if (!has_fired_weapon)
             {
-                CurrentWeapon->fire(); // Calls the fire function in Weapon.cpp
+                CurrentWeapon->fire();
                 UE_LOG(Player, Log, LOG_TEXT("Fired weapon with no ammo: %s"), *CurrentWeapon->GetName());
                 has_fired_weapon = true;
             }
         }
         else if (!has_fired_weapon || CurrentWeapon->is_full_auto())
         {
-            CurrentWeapon->fire(); // Calls the fire function in Weapon.cpp
+            CurrentWeapon->fire();
             UE_LOG(Player, Log, LOG_TEXT("Fired weapon: %s"), *CurrentWeapon->GetName());
             has_fired_weapon = true;
         }
     }
-    else if (EquippedMeleeWeapon && !EquippedMeleeWeapon->bIsPunching)
+    // Bare fists fallback (only if no weapon/sword equipped)
+    else if (FistWeapon)
     {
-        // Slash with melee weapon (sword)
-        EquippedMeleeWeapon->Punch();
-        UE_LOG(LogTemp, Log, TEXT("Melee swing with equipped melee weapon."));
-    }
-    else if (FistWeapon && !FistWeapon->bIsPunching)
-    {
-        // Fallback to fists
         FistWeapon->Punch();
         UE_LOG(LogTemp, Log, TEXT("Punch executed using fists."));
     }
@@ -415,6 +407,7 @@ void AMyCharacter::FireWeapon()
         UE_LOG(Player, Warning, TEXT("No weapon equipped to fire."));
     }
 }
+
 
 
 void AMyCharacter::EndFireWeapon()
@@ -645,7 +638,16 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
                 EquippedMeleeWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("MeleeSocket"));
                 EquippedMeleeWeapon->SetActorHiddenInGame(false);
                 EquippedMeleeWeapon->SetActorEnableCollision(false);
+                EquippedMeleeWeapon->SetOwner(this);
+                EquippedMeleeWeapon->SetOwnerPawn(this);
                 CurrentEquippedWeaponSlot = 5;
+
+                // Play sword draw sound
+                if (EquippedMeleeWeapon->SwordDrawSound)
+                {
+                    UGameplayStatics::PlaySound2D(GetWorld(), EquippedMeleeWeapon->SwordDrawSound);
+                }
+
                 UE_LOG(LogTemp, Log, TEXT("[Slot 5][MeleeWeapon][EQUIPPED]"));
                 return;
             }
@@ -700,6 +702,14 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
 
     if (FoundWeapon)
     {
+        // Hide melee sword if equipped
+        if (EquippedMeleeWeapon)
+        {
+            EquippedMeleeWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+            EquippedMeleeWeapon->SetActorHiddenInGame(true);
+            EquippedMeleeWeapon->SetActorEnableCollision(false);
+            EquippedMeleeWeapon = nullptr;
+        }
         // First, detach and hide the currently equipped weapon
         if (CurrentWeapon)
         {
@@ -726,22 +736,22 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
 }
 
 
+
 // quick melee
 void AMyCharacter::QuickMelee()
 {
-    if (bIsHoldingMedKit) return;
-
-    if (EquippedMeleeWeapon && !EquippedMeleeWeapon->bIsPunching)
+    if (CurrentEquippedWeaponSlot == 5 && EquippedMeleeWeapon)
     {
+        // Sword equipped → swing sword
         EquippedMeleeWeapon->Punch();
-        UE_LOG(LogTemp, Log, TEXT("Quick melee executed."));
     }
-    else if (FistWeapon && !FistWeapon->bIsPunching)
+    else if (FistWeapon)
     {
+        // Gun equipped or no weapon → punch
         FistWeapon->Punch();
-        UE_LOG(LogTemp, Log, TEXT("Quick melee fallback with fists."));
     }
 }
+
 
 
 

@@ -70,6 +70,13 @@ public:
     UPROPERTY(EditAnywhere, Category = "Combat")
     USoundBase* SwordSwingSound;
 
+    UPROPERTY(EditAnywhere, Category = "Combat")
+    USoundBase* SwordDrawSound;
+
+    void SetOwnerPawn(APawn* NewOwnerPawn) { OwnerPawn = NewOwnerPawn; }
+    
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+    bool bIsSword = false;
 
 protected:
     APawn* OwnerPawn;
