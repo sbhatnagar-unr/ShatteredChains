@@ -548,6 +548,11 @@ void AMyCharacter::UseEquippedMedkit()
     CurrentWeapon = nullptr;
 
     UE_LOG(LogTemp, Log, TEXT("Used MedKit: healed and removed movement debuffs."));
+
+    if (FistWeapon)
+    {
+        EquipWeapon(FistWeapon);
+    }
 }
 
 
