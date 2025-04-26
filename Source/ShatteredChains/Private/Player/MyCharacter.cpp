@@ -66,12 +66,13 @@ AMyCharacter::AMyCharacter()
 
 }
 
+
 // Called when the game starts or when spawned
 void AMyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-    GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+    ApplyMovementSpeed();
 
     if (FistWeaponClass)
     {
@@ -358,7 +359,7 @@ void AMyCharacter::FireWeapon()
                 UGameplayStatics::PlaySound2D(GetWorld(), medkit_heal_sound);
             }
 
-            GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+            ApplyMovementSpeed();
             ResetMovementDebuffs();
             bIsHoldingMedKit = false;
 
@@ -1087,7 +1088,7 @@ void AMyCharacter::Jump()
         UCapsuleComponent* Capsule = GetCapsuleComponent();
         Capsule->SetCapsuleHalfHeight(88.0f); // Reset to default
         GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
-        GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+        ApplyMovementSpeed();
 
         UnCrouch(); // Also clear any crouch flags
     }
@@ -1206,7 +1207,7 @@ void AMyCharacter::StartSprint()
     if (CurrentStamina > 0.0f && !bIsSprinting) // checks stamina
     {
         bIsSprinting = true;
-        GetCharacterMovement()->MaxWalkSpeed = SprintSpeed; // increase speed
+        ApplyMovementSpeed(); // increase speed
         UE_LOG(Player, Log, TEXT("Sprint started: CurrentStamina = %f"), CurrentStamina);
     }
 }
@@ -1216,7 +1217,7 @@ void AMyCharacter::StartSprint()
 void AMyCharacter::StopSprint()
 {
     bIsSprinting = false;
-    GetCharacterMovement()->MaxWalkSpeed = WalkSpeed; // restore normal speed
+    ApplyMovementSpeed(); // restore normal speed
     UE_LOG(Player, Log, TEXT("Sprint stopped"));
 }
 
@@ -1260,7 +1261,7 @@ void AMyCharacter::ToggleCrouch()
         Capsule->SetCapsuleHalfHeight(88.0f); // Default height
         UnCrouch();
         bIsCrouched = false;
-        GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+        ApplyMovementSpeed();
 
         UE_LOG(Player, Log, TEXT("UnCrouch: Height restored to %f"), Capsule->GetUnscaledCapsuleHalfHeight());
     }
@@ -1296,7 +1297,7 @@ void AMyCharacter::ToggleProne()
 
         // Restore normal collision and movement speed
         GetCapsuleComponent()->SetCapsuleHalfHeight(88.0f); // Default height
-        GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+        ApplyMovementSpeed();
 
         UE_LOG(Player, Log, TEXT("ToggleProne: Exited prone mode"));
 
@@ -1336,7 +1337,7 @@ void AMyCharacter::StartSlide()
 
         // Reduce capsule height for sliding
         GetCapsuleComponent()->SetCapsuleHalfHeight(22.0f); 
-        GetCharacterMovement()->MaxWalkSpeed = SlideSpeed;
+        GetCharacterMovement()->MaxWalkSpeed = SlideSpeed * MovementDebuffMultiplier;
 
         // Calculate the slide direction
         FVector SlideDirection = GetLastMovementInputVector();
@@ -1399,7 +1400,7 @@ void AMyCharacter::StopSlide()
     {
         // Restore capsule height and speed
         GetCapsuleComponent()->SetCapsuleHalfHeight(88.0f); // Default height
-        GetCharacterMovement()->MaxWalkSpeed = WalkSpeed; // Restore walk speed
+        ApplyMovementSpeed(); // Restore walk speed
 
         bIsSliding = false; // Reset sliding state
 
@@ -1680,6 +1681,7 @@ void AMyCharacter::ResetMovementDebuffs()
 {
     leg_shot_speed_multiplier = 1.0f;
     foot_shot_speed_multiplier = 1.0f;
+    bHasAppliedSpeedDebuff = false;
     UE_LOG(LogTemp, Log, TEXT("Movement debuffs reset."));
 }
 
@@ -1917,7 +1919,7 @@ void AMyCharacter::hit_bone(const AActor* hit_by, const FName bone_name, float w
         return;
     }
 
-    if (!stats_modifiers.Contains(bone_name))
+    if (!stats_modifiers.Contains(bone_name)) 
     {
         UE_LOG(BoneCollision, Error, LOG_TEXT("Enemy '%s' does not have modifier for bone '%s'.  Its possible its capsule component is blocking the shot, set trace channel Shootable to Ignore on the capsule component."), *actor_name, *(bone_name.ToString()));
         return;
@@ -1932,7 +1934,17 @@ void AMyCharacter::hit_bone(const AActor* hit_by, const FName bone_name, float w
     UCharacterMovementComponent* movement_component = GetCharacterMovement();
     const float old_movement_speed = movement_component->MaxWalkSpeed;
     
-    movement_component->MaxWalkSpeed *= modifier->get_speed_multiplier();
+    const FString BoneNameStr = bone_name.ToString();
+
+    if (!bHasAppliedSpeedDebuff &&
+        (BoneNameStr.Contains("Leg") || BoneNameStr.Contains("Foot") || BoneNameStr.Contains("UpLeg")))
+    {
+        MovementDebuffMultiplier = modifier->get_speed_multiplier(); // Save the slow multiplier
+        ApplyMovementSpeed();
+        bHasAppliedSpeedDebuff = true;
+
+        UE_LOG(Player, Log, TEXT("Speed debuff applied once due to bone %s. New debuff multiplier = %f"), *BoneNameStr, MovementDebuffMultiplier);
+    }
 
     UE_LOG(BoneCollision, Log, LOG_TEXT("Changing player '%s' speed: %f -> %f"), *actor_name, old_movement_speed, movement_component->MaxWalkSpeed);
 
@@ -1963,6 +1975,34 @@ void AMyCharacter::hit_bone(const AActor* hit_by, const FName bone_name, float w
         }
     }
     
+}
+
+void AMyCharacter::ApplyMovementSpeed()
+{
+    UCharacterMovementComponent* Movement = GetCharacterMovement();
+
+    if (!Movement) return;
+
+    if (bIsSprinting)
+    {
+        Movement->MaxWalkSpeed = SprintSpeed * MovementDebuffMultiplier;
+    }
+    else if (bIsCrouched)
+    {
+        Movement->MaxWalkSpeed = CrouchSpeed * MovementDebuffMultiplier;
+    }
+    else if (bIsSliding)
+    {
+        Movement->MaxWalkSpeed = SlideSpeed * MovementDebuffMultiplier;
+    }
+    else if (bIsProne)
+    {
+        Movement->MaxWalkSpeed = (CrouchSpeed / 2) * MovementDebuffMultiplier;
+    }
+    else
+    {
+        Movement->MaxWalkSpeed = WalkSpeed * MovementDebuffMultiplier;
+    }
 }
 
 

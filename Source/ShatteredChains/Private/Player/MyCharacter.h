@@ -66,7 +66,11 @@ public:
     //movement reset for medkit
     void ResetMovementDebuffs();
 
+    bool bHasAppliedSpeedDebuff = false;
 
+    float MovementDebuffMultiplier = 1.0f;
+
+    void ApplyMovementSpeed();
 
 protected:
 
