@@ -37,20 +37,19 @@ void AMedKit::BeginPlay()
 
 void AMedKit::Use(AMyCharacter* Character)
 {
-    if (!Character) return;
-
-    if (UHealthComponent* HealthComp = Character->get_health_component())
+    if (Character)
     {
-        HealthComp->set_health(HealthComp->get_max_health());
-    }
+        UHealthComponent* HealthComp = Character->get_health_component();
+        if (HealthComp)
+        {
+            HealthComp->set_health(HealthComp->get_max_health());
+        }
 
-    if (UCharacterMovementComponent* MoveComp = Character->GetCharacterMovement())
-    {
-        MoveComp->MaxWalkSpeed = NormalWalkSpeed;
-    }
+        Character->ResetMovementDebuffs();  // Reset internal debuff flags
+        Character->ApplyMovementSpeed();    // REAPPLY movement speed correctly
 
-    Character->ResetMovementDebuffs();
-    Destroy();
+        Destroy();
+    }
 }
 
 void AMedKit::HandleBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,

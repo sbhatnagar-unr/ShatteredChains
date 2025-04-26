@@ -540,8 +540,8 @@ void AMyCharacter::UseEquippedMedkit()
         }
     }
 
-    GetCharacterMovement()->MaxWalkSpeed = 400.f;
     ResetMovementDebuffs();
+    ApplyMovementSpeed();
 
     InventoryComponent->RemoveItem("MedKit", 1);
     CurrentEquippedWeaponSlot = -1;
@@ -1682,6 +1682,7 @@ void AMyCharacter::ResetMovementDebuffs()
     leg_shot_speed_multiplier = 1.0f;
     foot_shot_speed_multiplier = 1.0f;
     bHasAppliedSpeedDebuff = false;
+    MovementDebuffMultiplier = 1.0f;
     UE_LOG(LogTemp, Log, TEXT("Movement debuffs reset."));
 }
 
