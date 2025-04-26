@@ -420,30 +420,47 @@ void AMyCharacter::EndFireWeapon()
 void AMyCharacter::StartZoom()
 {
     bIsZooming = true;
+    TargetFOV = ZoomedFOV;  // Lower FOV to "zoom in"
 
     if (CurrentWeapon)
     {
-        TargetFOV = CurrentWeapon->GetZoomFOV();
-
-        if (scope_in_sound)
+        USkeletalMeshComponent* WeaponMesh = CurrentWeapon->GetWeaponMesh();
+        if (WeaponMesh)
         {
-            UGameplayStatics::PlaySound2D(GetWorld(), scope_in_sound);
+            WeaponMesh->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+
+            // Attach weapon to CameraComponent directly
+            WeaponMesh->AttachToComponent(Camera, FAttachmentTransformRules::KeepRelativeTransform);
+
+            // Move and rotate the weapon relative to camera
+            WeaponMesh->SetRelativeLocation(ZoomedWeaponOffset);
+            WeaponMesh->SetRelativeRotation(ZoomedWeaponRotation);
         }
     }
-    else
-    {
-        // No weapon equipped, default to full FOV
-        TargetFOV = DefaultFOV;
-    }
 }
+
+
 
 
 //scope out
 void AMyCharacter::StopZoom()
 {
     bIsZooming = false;
-    TargetFOV = DefaultFOV;
+    TargetFOV = DefaultFOV;  // Reset FOV
+
+    if (CurrentWeapon)
+    {
+        USkeletalMeshComponent* WeaponMesh = CurrentWeapon->GetWeaponMesh();
+        if (WeaponMesh)
+        {
+            WeaponMesh->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+
+            // Reattach weapon back to player WeaponSocket
+            WeaponMesh->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("WeaponSocket"));
+        }
+    }
 }
+
 
 void AMyCharacter::ToggleMedKit(const FInputActionValue& Value)
 {
@@ -548,11 +565,6 @@ void AMyCharacter::UseEquippedMedkit()
     CurrentWeapon = nullptr;
 
     UE_LOG(LogTemp, Log, TEXT("Used MedKit: healed and removed movement debuffs."));
-
-    if (FistWeapon)
-    {
-        EquipWeapon(FistWeapon);
-    }
 }
 
 

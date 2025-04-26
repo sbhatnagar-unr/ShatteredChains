@@ -204,6 +204,16 @@ protected:
     UFUNCTION()
     void UseEquippedMedkit();
 
+    // Offset when aiming (relative to camera)
+    UPROPERTY(EditAnywhere, Category = "Zoom")
+    FVector ZoomedWeaponOffset = FVector(50.f, 20.f, -24.f);
+
+    // Rotation to rotate the weapon when zooming
+    UPROPERTY(EditAnywhere, Category = "Zoom")
+    FRotator ZoomedWeaponRotation = FRotator(0.0f, -95.0f, -2.0f); // yaw, pitch, roll
+
+    UPROPERTY(EditAnywhere, Category = "Zoom")
+    float ZoomedFOV = 60.0f;
 
     UPROPERTY()
     AWeapon* CurrentWeapon = nullptr;

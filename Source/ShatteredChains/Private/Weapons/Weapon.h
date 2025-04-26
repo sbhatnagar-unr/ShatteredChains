@@ -53,6 +53,7 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Scope")
     float ZoomMouseSensitivity = 0.5f; // default sensitivity modifier for scoped mode
 
+    FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return weapon_skeletal_mesh_component; }
 
 protected:
     // Called when the game starts or when spawned
