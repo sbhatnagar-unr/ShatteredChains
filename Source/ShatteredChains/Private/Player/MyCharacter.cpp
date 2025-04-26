@@ -634,24 +634,31 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
         StopZoom();
     }
 
-    // Handle melee weapon separately FIRST
+    // Always detach and hide currently equipped weapon or melee weapon
+    if (CurrentWeapon)
+    {
+        CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+        CurrentWeapon->SetActorHiddenInGame(true);
+        CurrentWeapon->SetActorEnableCollision(false);
+        CurrentWeapon = nullptr;
+    }
+
+    if (EquippedMeleeWeapon)
+    {
+        EquippedMeleeWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+        EquippedMeleeWeapon->SetActorHiddenInGame(true);
+        EquippedMeleeWeapon->SetActorEnableCollision(false);
+        EquippedMeleeWeapon = nullptr;
+    }
+
+    // Handle melee weapon (slot 5)
     if (Slot == 5)
     {
-        if (EquippedMeleeWeapon && CurrentEquippedWeaponSlot == 5)
-        {
-            // Already equipped, so unequip
-            EquippedMeleeWeapon->SetActorHiddenInGame(true);
-            EquippedMeleeWeapon->SetActorEnableCollision(false);
-            EquippedMeleeWeapon = nullptr;
-            CurrentEquippedWeaponSlot = -1;
-            UE_LOG(LogTemp, Log, TEXT("[Slot 5][MeleeWeapon][UNEQUIPPED]"));
-            return;
-        }
-
         FName SwordID = InventoryComponent->GetMeleeWeaponID();
         if (SwordID.IsNone())
         {
             UE_LOG(LogTemp, Warning, TEXT("No melee weapon to equip."));
+            CurrentEquippedWeaponSlot = -1;
             return;
         }
 
@@ -663,11 +670,16 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
                 EquippedMeleeWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("MeleeSocket"));
                 EquippedMeleeWeapon->SetActorHiddenInGame(false);
                 EquippedMeleeWeapon->SetActorEnableCollision(false);
+
+                if (EquippedMeleeWeapon->MeshComponent)
+                {
+                    EquippedMeleeWeapon->MeshComponent->SetSimulatePhysics(false);
+                }
+
                 EquippedMeleeWeapon->SetOwner(this);
                 EquippedMeleeWeapon->SetOwnerPawn(this);
                 CurrentEquippedWeaponSlot = 5;
 
-                // Play sword draw sound
                 if (EquippedMeleeWeapon->SwordDrawSound)
                 {
                     UGameplayStatics::PlaySound2D(GetWorld(), EquippedMeleeWeapon->SwordDrawSound);
@@ -680,38 +692,14 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
         return;
     }
 
-    // Handle regular gun slots 1-3 below
+    // Handle regular guns (slots 1-3)
     const int32 SlotIndex = Slot - 1;
     const TArray<FName>& WeaponSlots = InventoryComponent->GetWeaponSlots();
 
     if (SlotIndex >= WeaponSlots.Num() || WeaponSlots[SlotIndex].IsNone())
     {
-        // Empty slot behavior
-        if (CurrentWeapon)
-        {
-            CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-            CurrentWeapon->SetActorHiddenInGame(true);
-            CurrentWeapon->SetActorEnableCollision(false);
-            CurrentWeapon = nullptr;
-        }
         CurrentEquippedWeaponSlot = -1;
         UE_LOG(Player, Log, TEXT("[Slot %d][Empty][UNEQUIPPED]"), Slot);
-        return;
-    }
-
-    if (CurrentEquippedWeaponSlot == Slot)
-    {
-        if (CurrentWeapon)
-        {
-            CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-            CurrentWeapon->SetActorHiddenInGame(true);
-            CurrentWeapon->SetActorEnableCollision(false);
-            UE_LOG(Player, Log, TEXT("Unequipped weapon: %s"), *CurrentWeapon->GetName());
-        }
-
-        CurrentWeapon = nullptr;
-        CurrentEquippedWeaponSlot = -1;
-        UE_LOG(Player, Log, TEXT("[Slot %d][%s][UNEQUIPPED]"), Slot, *WeaponSlots[SlotIndex].ToString());
         return;
     }
 
@@ -727,30 +715,13 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
 
     if (FoundWeapon)
     {
-        // Hide melee sword if equipped
-        if (EquippedMeleeWeapon)
-        {
-            EquippedMeleeWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-            EquippedMeleeWeapon->SetActorHiddenInGame(true);
-            EquippedMeleeWeapon->SetActorEnableCollision(false);
-            EquippedMeleeWeapon = nullptr;
-        }
-        // First, detach and hide the currently equipped weapon
-        if (CurrentWeapon)
-        {
-            CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-            CurrentWeapon->SetActorHiddenInGame(true);
-            CurrentWeapon->SetActorEnableCollision(false);
-            UE_LOG(Player, Log, TEXT("Swapping out weapon: %s"), *CurrentWeapon->GetName());
-        }
-
-        // Now equip the new one
         CurrentWeapon = FoundWeapon;
         CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("WeaponSocket"));
         CurrentWeapon->SetActorEnableCollision(false);
         CurrentWeapon->SetActorHiddenInGame(false);
 
         CurrentEquippedWeaponSlot = Slot;
+
         UE_LOG(Player, Log, TEXT("[Slot %d][%s][EQUIPPED]"), Slot, *FoundWeapon->GetName());
 
         if (weapon_equip_sound)
@@ -759,6 +730,7 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
         }
     }
 }
+
 
 
 
