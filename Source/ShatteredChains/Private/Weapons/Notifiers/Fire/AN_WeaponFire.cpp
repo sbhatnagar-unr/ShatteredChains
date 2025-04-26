@@ -103,7 +103,7 @@ void UAN_WeaponFire::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase*
         // Draw a debug line
         DrawDebugLine(world, trace_start, trace_result.ImpactPoint, FColor::Red, false, 0.07f, 0U, 0.3f);
         // Draw box around the spot we hit
-        DrawDebugBox(world, trace_result.ImpactPoint, FVector(1, 1, 1), FColor::Blue, false, 3.f, 0U, 5.f);
+        //DrawDebugBox(world, trace_result.ImpactPoint, FVector(1, 1, 1), FColor::Blue, false, 3.f, 0U, 5.f);
 
         // Check if the actor was a character with health
         TObjectPtr<AActor> a = trace_result.GetActor();
