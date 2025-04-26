@@ -81,3 +81,4 @@ public:
 protected:
     APawn* OwnerPawn;
 };
+
