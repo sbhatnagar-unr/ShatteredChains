@@ -1020,6 +1020,7 @@ void AMyCharacter::Move(const FInputActionValue& Value)
 
     AddMovementInput(ForwardDirection, MovementInput.Y);
     AddMovementInput(RightDirection, MovementInput.X);
+
 }
 
 
