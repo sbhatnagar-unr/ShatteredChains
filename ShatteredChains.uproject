@@ -52,6 +52,10 @@
 		{
 			"Name": "TestFramework",
 			"Enabled": true
+		},
+		{
+			"Name": "WaveformEditor",
+			"Enabled": true
 		}
 	],
 	"TargetPlatforms": [

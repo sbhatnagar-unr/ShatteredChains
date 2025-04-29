@@ -203,17 +203,6 @@ void AMyCharacter::BeginPlay()
     sound_map["Head"] = head_shot_sounds;
     sound_map["RightArm"] = arm_shot_sounds;
     sound_map["RightHand"] = hand_shot_sounds;
-
-    if (APlayerController* PC = Cast<APlayerController>(GetController()))
-    {
-        if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
-        {
-            Subsystem->ClearAllMappings();
-            Subsystem->AddMappingContext(InputMapping, 0);
-            UE_LOG(LogTemp, Warning, TEXT("MappingContext applied again on BeginPlay"));
-        }
-    }
-
 }
 
 // Player Input bindings
@@ -748,42 +737,46 @@ void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
 // quick melee
 void AMyCharacter::QuickMelee()
 {
-    if (!FistWeapon) return;
-
     if (CurrentEquippedWeaponSlot == 5 && EquippedMeleeWeapon)
     {
+        // Sword equipped → swing sword
         EquippedMeleeWeapon->Punch();
     }
-    else if (!FistWeapon->bIsPunching)
+    else if (FistWeapon)
     {
-        UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-        if (AnimInstance && FistWeapon->PunchMontage1)
+        // Punch left only when quick melee
+        if (!FistWeapon->bIsPunching)
         {
-            float Duration = AnimInstance->Montage_Play(FistWeapon->PunchMontage1);
-
-            FistWeapon->bIsPunching = true;
-
-            // Reset after animation
-            FTimerHandle PunchResetTimer;
-            GetWorldTimerManager().SetTimer(PunchResetTimer, [this]()
-                {
-                    if (FistWeapon)
-                    {
-                        FistWeapon->bIsPunching = false;
-                    }
-                }, Duration, false);
-
-            // Delay punch damage
-            FTimerHandle DamageTimer;
-            GetWorldTimerManager().SetTimer(DamageTimer, FistWeapon, &AMeleeWeapon::ApplyDamage, FistWeapon->DamageDelay, false);
-
-            if (FistWeapon->PunchSound)
+            UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+            if (AnimInstance && FistWeapon->PunchMontage1)
             {
-                UGameplayStatics::PlaySoundAtLocation(GetWorld(), FistWeapon->PunchSound, GetActorLocation());
+                float Duration = AnimInstance->Montage_Play(FistWeapon->PunchMontage1);
+
+                FistWeapon->bIsPunching = true;
+
+                // Reset after animation
+                FTimerHandle PunchResetTimer;
+                GetWorldTimerManager().SetTimer(PunchResetTimer, [this]()
+                    {
+                        if (FistWeapon)
+                        {
+                            FistWeapon->bIsPunching = false;
+                        }
+                    }, Duration, false);
+
+                // Delay punch damage
+                FTimerHandle DamageTimer;
+                GetWorldTimerManager().SetTimer(DamageTimer, FistWeapon, &AMeleeWeapon::ApplyDamage, FistWeapon->DamageDelay, false);
+
+                if (FistWeapon->PunchSound)
+                {
+                    UGameplayStatics::PlaySoundAtLocation(GetWorld(), FistWeapon->PunchSound, GetActorLocation());
+                }
             }
         }
     }
 }
+
 
 
 
@@ -998,30 +991,46 @@ void AMyCharacter::EquipWeapon(AWeapon* weapon)
 // WASD Movement Function
 void AMyCharacter::Move(const FInputActionValue& Value)
 {
-    if (!Controller)
-    {
-        UE_LOG(LogTemp, Error, TEXT("Move() called without Controller valid"));
-        return;
-    }
-
-
     FVector2D MovementInput = Value.Get<FVector2D>();
 
-    if (MovementInput.IsNearlyZero())
+    if (Controller && MovementInput.SizeSquared() > 0.0f)
     {
-        return;
+        FRotator ControlRotation = Controller->GetControlRotation();
+        ControlRotation.Pitch = 0.0f; // Ignore pitch for movement direction
+
+        FVector ForwardDirection = FRotationMatrix(ControlRotation).GetScaledAxis(EAxis::X);
+        FVector RightDirection = FRotationMatrix(ControlRotation).GetScaledAxis(EAxis::Y);
+
+        // Apply movement
+        AddMovementInput(ForwardDirection, MovementInput.Y);
+        AddMovementInput(RightDirection, MovementInput.X);
+
+        // Play crouch walk animation if moving while crouched
+        if (bIsCrouched)
+        {
+            if (CrouchWalkMontage && !GetMesh()->GetAnimInstance()->Montage_IsPlaying(CrouchWalkMontage))
+            {
+                PlayAnimMontage(CrouchWalkMontage);
+            }
+        }
+        else if (bIsSprinting)
+        {
+            // Ensure sprinting animations play correctly
+            if (SprintAnimMontage && !GetMesh()->GetAnimInstance()->Montage_IsPlaying(SprintAnimMontage))
+            {
+                PlayAnimMontage(SprintAnimMontage);
+            }
+        }
     }
-
-    FRotator ControlRotation = Controller->GetControlRotation();
-    ControlRotation.Pitch = 0.0f;
-
-    FVector ForwardDirection = FRotationMatrix(ControlRotation).GetScaledAxis(EAxis::X);
-    FVector RightDirection = FRotationMatrix(ControlRotation).GetScaledAxis(EAxis::Y);
-
-    AddMovementInput(ForwardDirection, MovementInput.Y);
-    AddMovementInput(RightDirection, MovementInput.X);
+    else
+    {
+        // If crouched and not moving, play crouch idle animation
+        if (bIsCrouched && CrouchIdleMontage && !GetMesh()->GetAnimInstance()->Montage_IsPlaying(CrouchIdleMontage))
+        {
+            PlayAnimMontage(CrouchIdleMontage);
+        }
+    }
 }
-
 
 
 
@@ -1058,36 +1067,34 @@ void AMyCharacter::Jump()
         return;
     }
 
+    // Force uncrouch or unprone BEFORE jumping
     if (bIsCrouched || bIsProne)
     {
+        // Forcefully reset states first
+        bIsCrouched = false;
+        bIsProne = false;
+
         UCapsuleComponent* Capsule = GetCapsuleComponent();
-        UCharacterMovementComponent* MovementComp = GetCharacterMovement();
-
-        if (Capsule)
-        {
-            Capsule->SetCapsuleHalfHeight(88.0f);
-        }
-        if (MovementComp)
-        {
-            MovementComp->SetMovementMode(EMovementMode::MOVE_Walking);
-        }
-
+        Capsule->SetCapsuleHalfHeight(88.0f); // Reset to default
+        GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
         ApplyMovementSpeed();
-        UnCrouch(); // UnCrouch is safe — Unreal guards internally
+
+        UnCrouch(); // Also clear any crouch flags
     }
 
-    if (GetCharacterMovement() && !GetCharacterMovement()->IsFalling() && CanJump())
+    // Make sure we're not mid-animation that blocks movement
+    if (!GetCharacterMovement()->IsFalling() && CanJump())
     {
         ACharacter::Jump();
         bHasJumpedOnce = true;
-        /*
+
         if (JumpAnimMontage)
             PlayAnimMontage(JumpAnimMontage);
-            */
-        UE_LOG(Player, Log, TEXT("Jump successful"));
 
+        UE_LOG(Player, Log, TEXT("Jump successful"));
     }
 }
+
 
 
 
@@ -1136,13 +1143,12 @@ void AMyCharacter::StartJump()
         JumpCount++;
 
         ACharacter::Jump(); // Perform Unreal's jump logic
-        /*
+
         if (JumpAnimMontage)
         {
             PlayAnimMontage(JumpAnimMontage);
             UE_LOG(Player, Log, TEXT("StartJump triggered: Jump animation playing"));
         }
-        */
     }
 }
 
@@ -1152,13 +1158,13 @@ void AMyCharacter::StartJump()
 void AMyCharacter::StopJump()
 {
     bPressedJump = false;
-    /*
+
     // Stop jump animation (if necessary, adjust based on behavior)
     if (JumpAnimMontage)
     {
         StopAnimMontage(JumpAnimMontage);
     }
-    */
+
     UE_LOG(Player, Log, TEXT("StopJump triggered"));
 }
 
@@ -1229,42 +1235,42 @@ void AMyCharacter::UpdateStamina(float DeltaTime)
 void AMyCharacter::ToggleCrouch()
 {
     UCapsuleComponent* Capsule = GetCapsuleComponent();
-    UCharacterMovementComponent* MovementComponent = Cast<UCharacterMovementComponent>(GetCharacterMovement());
 
-    if (!Capsule || !MovementComponent)
-    {
-        UE_LOG(LogTemp, Error, TEXT("ToggleCrouch(): CapsuleComponent or MovementComponent is NULL!"));
-        return;
-    }
+    UCharacterMovementComponent* MovementComponent = Cast<UCharacterMovementComponent>(GetCharacterMovement());
 
     if (bIsCrouched)
     {
-        /*
+        // Play stand-up animation before transitioning to standing state
         if (StandUpMontage)
         {
             PlayAnimMontage(StandUpMontage);
         }
-        */
-        Capsule->SetCapsuleHalfHeight(88.0f);
+
+        // Restore original height and speed when uncrouching
+        Capsule->SetCapsuleHalfHeight(88.0f); // Default height
         UnCrouch();
         bIsCrouched = false;
         ApplyMovementSpeed();
+
+        UE_LOG(Player, Log, TEXT("UnCrouch: Height restored to %f"), Capsule->GetUnscaledCapsuleHalfHeight());
     }
     else
     {
-        /*
+        // Play crouch enter animation
         if (CrouchEnterMontage)
         {
             PlayAnimMontage(CrouchEnterMontage);
         }
-        */
-        Capsule->SetCapsuleHalfHeight(44.0f);
+
+        // Reduce height and speed when crouching
+        Capsule->SetCapsuleHalfHeight(44.0f); // Half of the default height
         Crouch();
         bIsCrouched = true;
         GetCharacterMovement()->MaxWalkSpeed = CrouchSpeed;
+
+        UE_LOG(Player, Log, TEXT("Crouch: Height reduced to %f"), Capsule->GetUnscaledCapsuleHalfHeight());
     }
 }
-
 
 
 
@@ -1272,88 +1278,80 @@ void AMyCharacter::ToggleCrouch()
 // Toggle Prone Function
 void AMyCharacter::ToggleProne()
 {
-    UCapsuleComponent* Capsule = GetCapsuleComponent();
-    UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
-
-    if (!Capsule || !MovementComponent)
-    {
-        UE_LOG(LogTemp, Error, TEXT("ToggleProne(): CapsuleComponent or MovementComponent is NULL!"));
-        return;
-    }
-
     if (bIsProne)
     {
         // Exit prone
-        MovementComponent->SetMovementMode(EMovementMode::MOVE_Walking);
+        GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
         bIsProne = false;
 
-        Capsule->SetCapsuleHalfHeight(88.0f); // Reset height
+        // Restore normal collision and movement speed
+        GetCapsuleComponent()->SetCapsuleHalfHeight(88.0f); // Default height
         ApplyMovementSpeed();
 
         UE_LOG(Player, Log, TEXT("ToggleProne: Exited prone mode"));
-        /*
+
+        // Play prone exit animation
         if (ProneAnimMontage)
         {
             PlayAnimMontage(ProneAnimMontage, 1.0f);
         }
-        */
     }
     else
     {
         // Enter prone
-        MovementComponent->SetMovementMode(EMovementMode::MOVE_NavWalking);
+        GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_NavWalking); // Use NavWalking for crawling-like behavior
         bIsProne = true;
 
-        Capsule->SetCapsuleHalfHeight(20.0f); // Smaller but **NOT 0** (zero height breaks physics)
-
-        MovementComponent->MaxWalkSpeed = CrouchSpeed / 2;
+        // Adjust collision and movement speed
+        GetCapsuleComponent()->SetCapsuleHalfHeight(0.0f); // Reduced height for prone
+        GetCharacterMovement()->MaxWalkSpeed = CrouchSpeed / 2; // Half crouch speed for prone
 
         UE_LOG(Player, Log, TEXT("ToggleProne: Entered prone mode"));
-        /*
+        // Play prone enter animation
         if (ProneAnimMontage)
         {
             PlayAnimMontage(ProneAnimMontage, 1.0f);
         }
-        */
     }
 }
-
 
 // Sliding Function
 void AMyCharacter::StartSlide()
 {
-    if (bIsSprinting && !bIsSliding && GetCharacterMovement())
+    // Ensure sliding only triggers while sprinting and not already sliding
+    if (bIsSprinting && !bIsSliding)
     {
         bIsSliding = true;
-        bCanSlideJump = true;
+        bCanSlideJump = true; // Allow slide jump
 
-        if (UCapsuleComponent* Capsule = GetCapsuleComponent())
-        {
-            Capsule->SetCapsuleHalfHeight(22.0f);
-        }
-
+        // Reduce capsule height for sliding
+        GetCapsuleComponent()->SetCapsuleHalfHeight(22.0f); 
         GetCharacterMovement()->MaxWalkSpeed = SlideSpeed * MovementDebuffMultiplier;
 
+        // Calculate the slide direction
         FVector SlideDirection = GetLastMovementInputVector();
         if (SlideDirection.IsZero())
         {
+            // Default to forward direction if no movement input
             SlideDirection = GetActorForwardVector();
         }
-        SlideDirection.Normalize();
+        SlideDirection.Normalize(); // Ensure the direction vector is normalized
 
+        // Launch the character in the slide direction
         LaunchCharacter(SlideDirection * SlideSpeed, true, true);
-        /*
+
+        // Play slide animation
         if (SlideMontage)
         {
             PlayAnimMontage(SlideMontage);
         }
-        */
+
+        // Set a timer to stop sliding after SlideDuration
         GetWorld()->GetTimerManager().SetTimer(SlideStopTimer, this, &AMyCharacter::StopSlide, SlideDuration, false);
 
         UE_LOG(Player, Log, TEXT("Slide started in direction: %s"), *SlideDirection.ToString());
     }
 }
-
 
 
 
@@ -1418,13 +1416,12 @@ void AMyCharacter::StartRoll()
 
         // Launch the character in the roll direction
         LaunchCharacter(RollDirection * 900.0f + FVector(0, 0, 300.0f), true, true); // Adjust speed and height
-        /*
+
         // Play roll animation
         if (RollAnimMontage)
         {
             PlayAnimMontage(RollAnimMontage, 1.0f);
         }
-        */
 
         bIsDodging = true;
 
@@ -1537,12 +1534,12 @@ void AMyCharacter::Mantle()
             FVector LaunchVelocity = (MantleTarget - GetActorLocation()) * 2.0f;
 
             LaunchCharacter(LaunchVelocity, true, true);
-            /*
+
             if (MantleAnimMontage)
             {
                 PlayAnimMontage(MantleAnimMontage);
             }
-            */
+
             UE_LOG(Player, Log, TEXT("Mantle successful: %s"), *MantleTarget.ToString());
             return;
         }
@@ -1606,13 +1603,12 @@ void AMyCharacter::StartLedgeGrab()
     {
         // Disable movement temporarily
         GetCharacterMovement()->DisableMovement();
-        /*
+
         // play a ledge grab animation
         if (LedgeGrabAnimMontage)
         {
             PlayAnimMontage(LedgeGrabAnimMontage);
         }
-        */
     }
 }
 
@@ -1623,10 +1619,10 @@ void AMyCharacter::PullUpFromLedge()
     SetActorLocation(LatchedLedgeLocation);
     GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
     bIsLatchedToLedge = false;
-    /*
+
     if (PullUpAnimMontage)
         PlayAnimMontage(PullUpAnimMontage);
-        */
+
     UE_LOG(Player, Log, TEXT("Climbed to ledge: %s"), *LatchedLedgeLocation.ToString());
 }
 
@@ -1685,18 +1681,18 @@ void AMyCharacter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    if (Camera) // <- important null check!
+    // Smooth zoom interpolation
+    float EffectiveZoomSpeed = ZoomInterpSpeed;
+    if (CurrentWeapon)
     {
-        float EffectiveZoomSpeed = ZoomInterpSpeed;
-        if (CurrentWeapon)
-        {
-            EffectiveZoomSpeed = CurrentWeapon->ZoomInterpSpeed;
-        }
-        Camera->SetFieldOfView(FMath::FInterpTo(Camera->FieldOfView, TargetFOV, DeltaTime, EffectiveZoomSpeed));
+        EffectiveZoomSpeed = CurrentWeapon->ZoomInterpSpeed;
     }
+    Camera->SetFieldOfView(FMath::FInterpTo(Camera->FieldOfView, TargetFOV, DeltaTime, EffectiveZoomSpeed));
 
-    if (bIsLatchedToLedge || !GetCharacterMovement() || !GetCharacterMovement()->IsFalling()) return;
+    // Skip if already latched or not falling
+    if (bIsLatchedToLedge || !GetCharacterMovement()->IsFalling()) return;
 
+    // Auto-latch wall detection
     FVector Start = GetActorLocation() + FVector(0, 0, 50.0f);
     FVector Forward = GetActorForwardVector();
     FVector WallEnd = Start + Forward * 100.0f;
@@ -1707,6 +1703,7 @@ void AMyCharacter::Tick(float DeltaTime)
 
     if (GetWorld()->LineTraceSingleByChannel(WallHit, Start, WallEnd, ECC_Visibility, Params))
     {
+        // Ledge check (above the wall hit)
         FVector LedgeStart = WallHit.ImpactPoint + FVector(0, 0, 100.0f);
         FVector LedgeEnd = LedgeStart - FVector(0, 0, 150.0f);
 
@@ -1716,28 +1713,24 @@ void AMyCharacter::Tick(float DeltaTime)
             FVector Normal = LedgeHit.ImpactNormal;
             float SlopeAngle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(Normal, FVector::UpVector)));
 
-            if (SlopeAngle < 45.0f)
+            if (SlopeAngle < 45.0f) // Only latch on flat-enough surfaces
             {
                 bIsLatchedToLedge = true;
                 LatchedLedgeLocation = LedgeHit.ImpactPoint + FVector(0, 0, 90.0f);
 
-                if (GetCharacterMovement())
-                {
-                    GetCharacterMovement()->StopMovementImmediately();
-                    GetCharacterMovement()->DisableMovement();
-                }
-                /*
+                GetCharacterMovement()->StopMovementImmediately();
+                GetCharacterMovement()->DisableMovement();
+
                 if (LedgeGrabAnimMontage)
                 {
                     PlayAnimMontage(LedgeGrabAnimMontage);
                 }
-                */
+
                 UE_LOG(Player, Log, TEXT("Latched to ledge at %s"), *LatchedLedgeLocation.ToString());
             }
         }
     }
 }
-
 
 
 

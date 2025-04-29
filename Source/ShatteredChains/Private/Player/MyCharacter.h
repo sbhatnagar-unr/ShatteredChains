@@ -362,7 +362,7 @@ protected:
 
 
     /*--------------------- Animation Properties ---------------------*/
-    /*
+
     // Animation montage for rolling action 
     UPROPERTY(EditDefaultsOnly, Category = "Animation")
     UAnimMontage* RollAnimMontage;
@@ -392,7 +392,7 @@ protected:
 
     UPROPERTY(BlueprintReadOnly, Category = "Animation")
     bool bIsInAir;
-    */
+
     /*--------------------- Weapon Handling ---------------------*/
 
     UPROPERTY(EditAnywhere, Category = "EnhancedInput")
@@ -478,7 +478,7 @@ protected:
 
     UFUNCTION(BlueprintCallable, Category = "Inventory")
     UInventoryComponent* GetInventoryComponent() const;
-    /*
+
     // Animation montages for each movement type
     UPROPERTY(EditDefaultsOnly, Category = "Animation")
     UAnimMontage* WalkAnimMontage;
@@ -509,15 +509,13 @@ protected:
 
     UPROPERTY(EditAnywhere, Category = "Animation")
     UAnimMontage* SlideJumpAnimMontage;
-    
-   //       currently leave commented until fixaround.
+
+    /*          currently leave commented until fixaround.
     UPROPERTY(EditDefaultsOnly, Category = "Animation")
     UAnimMontage* RollAnimMontage;
-   
+    */
     UPROPERTY(EditDefaultsOnly, Category = "Animation")
     UAnimMontage* JumpAnimMontage;
-    */
-
 
     UPROPERTY(VisibleAnywhere)
     UHealthComponent* HealthComponent;
