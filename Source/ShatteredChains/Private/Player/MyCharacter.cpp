@@ -40,6 +40,7 @@ AMyCharacter::AMyCharacter()
     camera_timeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("Camera Timeline"));
     
     HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("Health Component"));
+    InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory Component"));
 
     actor_name = "Player";
 
