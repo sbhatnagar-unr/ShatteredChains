@@ -58,10 +58,21 @@ class SHATTEREDCHAINS_API UInventoryComponent : public UActorComponent
 public:
     UInventoryComponent();
 
+    FName MeleeWeaponID;
+
+    UFUNCTION(BlueprintCallable, Category = "Inventory")
+    FName GetMeleeWeaponID() const;
+
+    UFUNCTION(BlueprintCallable, Category = "Inventory")
+    void RemoveMeleeWeapon();
+
 protected:
     virtual void BeginPlay() override;
 
 private:
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
+    UInventoryComponent* InventoryComponent;
+
     UPROPERTY(EditAnywhere, Category = "Inventory", meta = (Tooltip = "Maximum number of items allowed in inventory"))
     int32 MaxInventorySize = 10;
 
@@ -76,6 +87,8 @@ private:
 
     TMap<FName, FInventoryItem> Items;  // The player's inventory
     TArray<FName> EquippedWeapons; // Equipped weapons
+    TArray<FName> WeaponSlots;
+
 
 public:
     UFUNCTION(BlueprintCallable, Category = "Inventory")
@@ -95,4 +108,17 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "Inventory")
     FName GetEquippedWeapon() const;
+    
+    UFUNCTION(BlueprintCallable, Category = "Inventory")
+    const TArray<FName>& GetWeaponSlots() const;
+    
+    UFUNCTION(BlueprintCallable, Category = "Inventory")
+    void ToggleInventory();
+
+    UFUNCTION(BlueprintCallable)
+    void RemoveWeapon(int32 SlotIndex);
+
+    bool AddWeapon(FName WeaponID);
+    void LogInventory() const;
+
 };

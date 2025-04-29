@@ -56,7 +56,7 @@ EBTNodeResult::Type UShootPlayer::ExecuteTask(UBehaviorTreeComponent& OwnerComp,
     }
 
     // Enemy's weapon
-    const AWeapon* weapon = enemy_actor->get_weapon();
+    AWeapon* weapon = enemy_actor->get_weapon();
     if (weapon == nullptr)
     {
         UE_LOG(Enemy, Error, LOG_TEXT("Enemy AI (%s) doesn't have a weapon"), *enemy_name);
@@ -105,7 +105,10 @@ EBTNodeResult::Type UShootPlayer::ExecuteTask(UBehaviorTreeComponent& OwnerComp,
         // Only shoot if we can see the player
         if (ai_controller->LineOfSightTo(target_actor))
         {
-            weapon->fire();
+            if (enemy_actor->is_ready_to_shoot())
+            {
+                if (weapon->fire()) enemy_actor->increment_current_burst();
+            }
         }
     }
     else

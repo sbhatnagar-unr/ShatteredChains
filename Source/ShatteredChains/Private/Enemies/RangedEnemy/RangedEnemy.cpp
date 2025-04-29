@@ -16,6 +16,12 @@ ARangedEnemy::ARangedEnemy() : AEnemy()
     anchor_tolerance = 0;
     max_pitch_offset = 0;
     max_yaw_offset = 0;
+
+    burst_count = 4;
+    shoot_pause = 1;
+    
+    current_burst = 0;
+    ready_to_shoot = true;
 }
 
 // Called when the game starts or when spawned
@@ -23,6 +29,9 @@ void ARangedEnemy::BeginPlay()
 {
     Super::BeginPlay();
 
+    // If we spawn as dead we don't need to do any of the other things
+    if (health_component->get_health() == 0) on_death(nullptr, false);
+    
     // Get the world
     UWorld* world = GetWorld();
     if (world == nullptr)
@@ -121,68 +130,128 @@ void ARangedEnemy::BeginPlay()
 
 
     // Here we set all the bone collision modifier values
-    stats_modifiers["head"]->set_damage_multiplier(head_shot_damage_multiplier);
-    stats_modifiers["head"]->set_speed_multiplier(head_shot_speed_multiplier);
-    stats_modifiers["head"]->set_accuracy_multiplier(head_shot_accuracy_multiplier);
+    stats_modifiers["Neck"]->set_damage_multiplier(head_shot_damage_multiplier);
+    stats_modifiers["Neck"]->set_speed_multiplier(head_shot_speed_multiplier);
+    stats_modifiers["Neck"]->set_accuracy_multiplier(head_shot_accuracy_multiplier);
 
-    stats_modifiers["pelvis"]->set_damage_multiplier(torso_shot_damage_multiplier);
-    stats_modifiers["pelvis"]->set_speed_multiplier(torso_shot_speed_multiplier);
-    stats_modifiers["pelvis"]->set_accuracy_multiplier(torso_shot_accuracy_multiplier);
+    stats_modifiers["Hips"]->set_damage_multiplier(torso_shot_damage_multiplier);
+    stats_modifiers["Hips"]->set_speed_multiplier(torso_shot_speed_multiplier);
+    stats_modifiers["Hips"]->set_accuracy_multiplier(torso_shot_accuracy_multiplier);
 
-    stats_modifiers["spine_01"]->set_damage_multiplier(torso_shot_damage_multiplier);
-    stats_modifiers["spine_01"]->set_speed_multiplier(torso_shot_speed_multiplier);
-    stats_modifiers["spine_01"]->set_accuracy_multiplier(torso_shot_accuracy_multiplier);
+    stats_modifiers["Spine"]->set_damage_multiplier(torso_shot_damage_multiplier);
+    stats_modifiers["Spine"]->set_speed_multiplier(torso_shot_speed_multiplier);
+    stats_modifiers["Spine"]->set_accuracy_multiplier(torso_shot_accuracy_multiplier);
 
-    stats_modifiers["spine_03"]->set_damage_multiplier(torso_shot_damage_multiplier);
-    stats_modifiers["spine_03"]->set_speed_multiplier(torso_shot_speed_multiplier);
-    stats_modifiers["spine_03"]->set_accuracy_multiplier(torso_shot_accuracy_multiplier);
-    
-    stats_modifiers["upperarm_l"]->set_damage_multiplier(arm_shot_damage_multiplier);
-    stats_modifiers["upperarm_l"]->set_speed_multiplier(arm_shot_speed_multiplier);
-    stats_modifiers["upperarm_l"]->set_accuracy_multiplier(arm_shot_accuracy_multiplier);
-    
-    stats_modifiers["hand_l"]->set_damage_multiplier(hand_shot_damage_multiplier);
-    stats_modifiers["hand_l"]->set_speed_multiplier(hand_shot_speed_multiplier);
-    stats_modifiers["hand_l"]->set_accuracy_multiplier(hand_shot_accuracy_multiplier);
-    
-    stats_modifiers["upperarm_r"]->set_damage_multiplier(arm_shot_damage_multiplier);
-    stats_modifiers["upperarm_r"]->set_speed_multiplier(arm_shot_speed_multiplier);
-    stats_modifiers["upperarm_r"]->set_accuracy_multiplier(arm_shot_accuracy_multiplier);
-    
-    stats_modifiers["hand_r"]->set_damage_multiplier(hand_shot_damage_multiplier);
-    stats_modifiers["hand_r"]->set_speed_multiplier(hand_shot_speed_multiplier);
-    stats_modifiers["hand_r"]->set_accuracy_multiplier(hand_shot_accuracy_multiplier);
-    
-    stats_modifiers["thigh_l"]->set_damage_multiplier(leg_shot_damage_multiplier);
-    stats_modifiers["thigh_l"]->set_speed_multiplier(leg_shot_speed_multiplier);
-    stats_modifiers["thigh_l"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
-    
-    stats_modifiers["calf_l"]->set_damage_multiplier(leg_shot_damage_multiplier);
-    stats_modifiers["calf_l"]->set_speed_multiplier(leg_shot_speed_multiplier);
-    stats_modifiers["calf_l"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
-    
-    stats_modifiers["thigh_r"]->set_damage_multiplier(leg_shot_damage_multiplier);
-    stats_modifiers["thigh_r"]->set_speed_multiplier(leg_shot_speed_multiplier);
-    stats_modifiers["thigh_r"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
-    
-    stats_modifiers["calf_r"]->set_damage_multiplier(leg_shot_damage_multiplier);
-    stats_modifiers["calf_r"]->set_speed_multiplier(leg_shot_speed_multiplier);
-    stats_modifiers["calf_r"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
-    
-    sound_map["head"] = head_shot_sounds;
-    sound_map["pelvis"] = torso_shot_sounds;
-    sound_map["spine_01"] = torso_shot_sounds;
-    sound_map["spine_03"] = torso_shot_sounds;
-    sound_map["upperarm_l"] = arm_shot_sounds;
-    sound_map["hand_l"] = hand_shot_sounds;
-    sound_map["upperarm_r"] = arm_shot_sounds;
-    sound_map["hand_r"] = hand_shot_sounds;
-    sound_map["thigh_l"] = leg_shot_sounds;
-    sound_map["calf_l"] = leg_shot_sounds;
-    sound_map["thigh_r"] = leg_shot_sounds;
-    sound_map["calf_r"] = leg_shot_sounds;
+    stats_modifiers["Spine2"]->set_damage_multiplier(torso_shot_damage_multiplier);
+    stats_modifiers["Spine2"]->set_speed_multiplier(torso_shot_speed_multiplier);
+    stats_modifiers["Spine2"]->set_accuracy_multiplier(torso_shot_accuracy_multiplier);
 
+    stats_modifiers["LeftLeg"]->set_damage_multiplier(leg_shot_damage_multiplier);
+    stats_modifiers["LeftLeg"]->set_speed_multiplier(leg_shot_speed_multiplier);
+    stats_modifiers["LeftLeg"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
+
+    stats_modifiers["RightLeg"]->set_damage_multiplier(leg_shot_damage_multiplier);
+    stats_modifiers["RightLeg"]->set_speed_multiplier(leg_shot_speed_multiplier);
+    stats_modifiers["RightLeg"]->set_accuracy_multiplier(leg_shot_accuracy_multiplier);
     
+    stats_modifiers["LeftShoulder"]->set_damage_multiplier(arm_shot_damage_multiplier);
+    stats_modifiers["LeftShoulder"]->set_speed_multiplier(arm_shot_speed_multiplier);
+    stats_modifiers["LeftShoulder"]->set_accuracy_multiplier(arm_shot_accuracy_multiplier);
+    
+    stats_modifiers["LeftHand"]->set_damage_multiplier(hand_shot_damage_multiplier);
+    stats_modifiers["LeftHand"]->set_speed_multiplier(hand_shot_speed_multiplier);
+    stats_modifiers["LeftHand"]->set_accuracy_multiplier(hand_shot_accuracy_multiplier);
+    
+    stats_modifiers["RightArm"]->set_damage_multiplier(arm_shot_damage_multiplier);
+    stats_modifiers["RightArm"]->set_speed_multiplier(arm_shot_speed_multiplier);
+    stats_modifiers["RightArm"]->set_accuracy_multiplier(arm_shot_accuracy_multiplier);
+    
+    stats_modifiers["RightHand"]->set_damage_multiplier(hand_shot_damage_multiplier);
+    stats_modifiers["RightHand"]->set_speed_multiplier(hand_shot_speed_multiplier);
+    stats_modifiers["RightHand"]->set_accuracy_multiplier(hand_shot_accuracy_multiplier);
+    
+    sound_map["Neck"] = head_shot_sounds;
+    sound_map["Hips"] = torso_shot_sounds;
+    sound_map["Spine"] = torso_shot_sounds;
+    sound_map["Spine2"] = torso_shot_sounds;
+    sound_map["LeftLeg"] = leg_shot_sounds;
+    sound_map["RightLeg"] = leg_shot_sounds;
+    sound_map["LeftShoulder"] = arm_shot_sounds;
+    sound_map["LeftHand"] = hand_shot_sounds;
+    sound_map["RightArm"] = arm_shot_sounds;
+    sound_map["RightHand"] = hand_shot_sounds;
+}
+
+
+void ARangedEnemy::on_death(const AActor* killed_by, const bool play_death_sound)
+{
+    if (weapon)
+    {
+        // Destroy the weapon
+        weapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+        weapon->Destroy();
+        UE_LOG(Enemy, Log, LOG_TEXT("Removing weapon from ranged enemy '%s'"), *actor_name);
+
+        // Spawn one on the ground that the player can pick up
+        const FVector enemy_transform = GetActorLocation();
+        const FVector point_below = enemy_transform - FVector(0, 0, 1000);
+
+        FHitResult hit_result;
+        FCollisionQueryParams collision_query_params;
+        collision_query_params.AddIgnoredActor(this);
+
+        const UWorld* world = GetWorld();
+        if (world->LineTraceSingleByChannel(hit_result, enemy_transform, point_below, ECC_Visibility, collision_query_params))
+        {
+            const FVector location = hit_result.Location + FVector(0, 0, 2);
+            FRotator rotation = GetActorRotation();
+            rotation.Pitch += 90;
+            
+            FActorSpawnParameters spawn_parameters;
+            weapon = GetWorld()->SpawnActor<AWeapon>(weapon_class, location, rotation, spawn_parameters);
+            UE_LOG(Enemy, Log, LOG_TEXT("Spawned weapon on ground upon death of enemy '%s'"), *actor_name);
+        } else
+        {
+            UE_LOG(Enemy, Warning, LOG_TEXT("Unable to find ground to spawn weapon upon death for ranged enemy '%s'"), *actor_name);
+        }
+        
+
+    }
+    
+    AEnemy::on_death(killed_by, play_death_sound);
+}
+
+
+
+void ARangedEnemy::increment_current_burst()
+{
+    ++current_burst;
+    UE_LOG(Enemy, Log, LOG_TEXT("Ranged enemy '%s' incremented burst count to %d, max %d"), *actor_name, current_burst, burst_count);
+
+    if (current_burst >= burst_count)
+    {
+        ready_to_shoot = false;
+
+        UE_LOG(Enemy, Log, LOG_TEXT("Ranged enemy '%s' reached burst count of %d (max=%d), starting reset time (%f seconds)"), *actor_name, current_burst, burst_count, shoot_pause);
+        FTimerHandle timer_handle;
+        GetWorld()->GetTimerManager().SetTimer(
+            timer_handle,
+            FTimerDelegate::CreateLambda([this]()
+            {
+                this->ready_to_shoot = true;
+                this->current_burst = 0;
+                UE_LOG(Enemy, Log, LOG_TEXT("Ranged Enemy '%s' shoot timer has been reset (%f seconds)"), *actor_name, shoot_pause);
+            }),
+            shoot_pause,
+            false
+        );
+    }
+}
+
+
+bool ARangedEnemy::is_ready_to_shoot() const
+{
+    return ready_to_shoot;
 }
 
 

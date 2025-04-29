@@ -41,13 +41,14 @@ public:
     // Called every frame
     virtual void Tick(float DeltaTime) override;
 
-    virtual void on_death(const AActor* killed_by) override final;
+    virtual void on_death(const AActor* killed_by, const bool play_death_sound=true) override final;
 
     virtual UHealthComponent* get_health_component() const override final;
     virtual TObjectPtr<UInventoryComponent> get_inventory_component() const override final;
 
     void EquipWeapon(AWeapon* Weapon);
-    void PickUpWeapon(AWeapon* Weapon);
+    bool PickUpWeapon(AWeapon* Weapon);
+
 
     // This should return a location to start a hitscan from
     virtual FVector get_hitscan_start_location() const override final;
@@ -61,8 +62,19 @@ public:
     virtual void hit_bone(const AActor* hit_by, const FName bone_name, float weapon_damage) override final;
     virtual const TMap<FName, TObjectPtr<UStatsModifier>>* get_bone_collider_stats_modifiers() const override final;
 
+    
+    //movement reset for medkit
+    void ResetMovementDebuffs();
+
+    bool bHasAppliedSpeedDebuff = false;
+
+    float MovementDebuffMultiplier = 1.0f;
+
+    void ApplyMovementSpeed();
 
 protected:
+
+    bool bIsMedkitEquipped = false;
 
     // Input mapping for enhanced input
     UPROPERTY(EditAnywhere, Category = "EnhancedInput")
@@ -98,15 +110,30 @@ protected:
 
     UPROPERTY(EditAnywhere, Category = "EnhancedInput")
     UInputAction* FireAction;
-
+    
     UPROPERTY(EditAnywhere, Category = "EnhancedInput")
     UInputAction* ReloadAction;
+    
+    int32 CurrentEquippedWeaponSlot = -1;
 
+    //medkit handling
+    UPROPERTY()
+    class AMedKit* NearbyMedKit = nullptr;
+
+    UPROPERTY()
+    AMedKit* EquippedMedKit = nullptr;
 
 
     void Move(const FInputActionValue& InputValue);
     void Look(const FInputActionValue& InputValue);
     void Jump();
+
+    bool bHasJumpedOnce = false;
+
+    bool bIsLatchedToLedge = false; // are we hanging on a ledge
+    FVector LatchedLedgeLocation;   // target ledge top to pull up to
+
+    void CancelLedgeLatch();
 
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
@@ -174,13 +201,44 @@ protected:
     UFUNCTION()
     void Interact();
 
+    UFUNCTION()
+    void UseEquippedMedkit();
+
+    // Offset when aiming (relative to camera)
+    UPROPERTY(EditAnywhere, Category = "Zoom")
+    FVector ZoomedWeaponOffset = FVector(50.f, 20.f, -24.f);
+
+    // Rotation to rotate the weapon when zooming
+    UPROPERTY(EditAnywhere, Category = "Zoom")
+    FRotator ZoomedWeaponRotation = FRotator(0.0f, -95.0f, -2.0f); // yaw, pitch, roll
+
+    UPROPERTY(EditAnywhere, Category = "Zoom")
+    float ZoomedFOV = 60.0f;
 
     UPROPERTY()
     AWeapon* CurrentWeapon = nullptr;
 
     void FireWeapon();
+    void EndFireWeapon();
 
     void ReloadWeapon();
+
+    UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+    TSubclassOf<class AMeleeWeapon> FistWeaponClass;
+
+    UPROPERTY()
+    AMeleeWeapon* FistWeapon;
+
+    UPROPERTY()
+    AMeleeWeapon* EquippedMeleeWeapon = nullptr;
+
+    void QuickMelee();
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EnhancedInput")
+    UInputAction* IA_WeaponSlot5;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EnhancedInput")
+    UInputAction* IA_QuickMelee;
 
     /*--------------------- State Variables ---------------------*/
 
@@ -192,6 +250,37 @@ protected:
 
     // Determines if the character is eligible to roll
     bool bCanRoll = true;
+
+    // Tracks whether the player has a medkit equipped (slot 4)
+    UPROPERTY()
+    bool bIsHoldingMedKit = false;
+
+    // Zoom
+    UPROPERTY(EditAnywhere)
+    float DefaultFOV = 90.0f;
+
+    float TargetFOV;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
+    float ZoomInterpSpeed = 15.0f;
+
+    bool bIsZooming = false;
+
+    UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+    UInputAction* ScopeAction;
+
+    UFUNCTION()
+    void StartZoom();
+
+    UFUNCTION()
+    void StopZoom();
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Scope")
+    float ZoomMouseSensitivity = 0.5f; // reduced mouse speed while scoped
+
+
+    // dodging
+    bool bIsDodging = false;
 
 
     /*--------------------- Input Actions ---------------------*/
@@ -209,11 +298,11 @@ protected:
 
     // Slide speed
     UPROPERTY(EditAnywhere, Category = "Slide")
-    float SlideSpeed = 1500.0f;
+    float SlideSpeed = 1000.0f;
 
     // Slide duration
     UPROPERTY(EditAnywhere, Category = "Slide")
-    float SlideDuration = 0.75f;
+    float SlideDuration = 1.0f;
 
     // Timer to stop sliding
     FTimerHandle SlideStopTimer;
@@ -223,21 +312,25 @@ protected:
 
     // Slide jump force
     UPROPERTY(EditAnywhere, Category = "Slide Jump")
-    FVector SlideJumpForce = FVector(0.0f, 0.0f, 400.0f);
+    FVector SlideJumpForce = FVector(0.0f, 0.0f, 500.0f);
 
     /*--------------------- Movement Speeds ---------------------*/
 
     // Base movement speed when walking
     UPROPERTY(EditAnywhere, Category = "Movement")
-    float WalkSpeed = 600.0f;
+    float WalkSpeed = 450.0f;
 
     // Sprinting speed 
     UPROPERTY(EditAnywhere, Category = "Movement")
-    float SprintSpeed = 1200.0f;
+    float SprintSpeed = 750.0f;
 
     // Speed while crouched
     UPROPERTY(EditAnywhere, Category = "Movement")
-    float CrouchSpeed = 300.0f;
+    float CrouchSpeed = 200.0f;
+
+    // mouse speed
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
+    float MouseSensitivity = 1.0f;
 
 
     /*--------------------- Jump Mechanics ---------------------*/
@@ -269,7 +362,7 @@ protected:
 
 
     /*--------------------- Animation Properties ---------------------*/
-
+    /*
     // Animation montage for rolling action 
     UPROPERTY(EditDefaultsOnly, Category = "Animation")
     UAnimMontage* RollAnimMontage;
@@ -277,6 +370,56 @@ protected:
     // Animation montage for sliding action
     UPROPERTY(EditDefaultsOnly, Category = "Animation")
     UAnimMontage* SlideMontage;
+
+    // Crouch Animations
+    UPROPERTY(EditDefaultsOnly, Category = "Animation")
+    UAnimMontage* CrouchEnterMontage; // Animation for entering crouch
+
+    UPROPERTY(EditDefaultsOnly, Category = "Animation")
+    UAnimMontage* CrouchIdleMontage;  // Animation for crouch idle
+
+    UPROPERTY(EditDefaultsOnly, Category = "Animation")
+    UAnimMontage* CrouchWalkMontage;  // Animation for crouch walking
+
+    UPROPERTY(EditDefaultsOnly, Category = "Animation")
+    UAnimMontage* StandUpMontage;     // Animation for standing up
+
+    UPROPERTY(BlueprintReadOnly, Category = "Animation")
+    float Speed;
+
+    UPROPERTY(BlueprintReadOnly, Category = "Animation")
+    bool bIsCrouching;
+
+    UPROPERTY(BlueprintReadOnly, Category = "Animation")
+    bool bIsInAir;
+    */
+    /*--------------------- Weapon Handling ---------------------*/
+
+    UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+    UInputAction* IA_WeaponSlot1;
+
+    UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+    UInputAction* IA_WeaponSlot2;
+
+    UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+    UInputAction* IA_WeaponSlot3;
+
+    UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+    UInputAction* IA_DropWeapon;
+
+    /*--------------------- Sound Effects ---------------------*/
+
+    UPROPERTY(EditDefaultsOnly, Category = "Sound Effects")
+    USoundBase* item_pickup_sound;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Sound Effects")
+    USoundBase* medkit_heal_sound;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Sound Effects")
+    USoundBase* scope_in_sound;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Sound Effects")
+    USoundBase* weapon_equip_sound;
 
 
     /*--------------------- Timer Handles ---------------------*/
@@ -333,6 +476,9 @@ protected:
     UFUNCTION()
     void LogInventory(const FInputActionValue& Value);
 
+    UFUNCTION(BlueprintCallable, Category = "Inventory")
+    UInventoryComponent* GetInventoryComponent() const;
+    /*
     // Animation montages for each movement type
     UPROPERTY(EditDefaultsOnly, Category = "Animation")
     UAnimMontage* WalkAnimMontage;
@@ -363,13 +509,15 @@ protected:
 
     UPROPERTY(EditAnywhere, Category = "Animation")
     UAnimMontage* SlideJumpAnimMontage;
-
-    /*          currently leave commented until fixaround.
+    
+   //       currently leave commented until fixaround.
     UPROPERTY(EditDefaultsOnly, Category = "Animation")
     UAnimMontage* RollAnimMontage;
-    */
+   
     UPROPERTY(EditDefaultsOnly, Category = "Animation")
     UAnimMontage* JumpAnimMontage;
+    */
+
 
     UPROPERTY(VisibleAnywhere)
     UHealthComponent* HealthComponent;
@@ -388,6 +536,13 @@ protected:
     // Sound effects
     UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
     TObjectPtr<USoundBase> jump_sound;
+
+    //declare medkit input
+    UFUNCTION()
+    void ToggleMedKit(const FInputActionValue& Value);
+
+    UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+    UInputAction* IA_UseHealthKit; // Bound to "4"
     
     // Bone Collision
     // Stats modifiers map
@@ -492,4 +647,11 @@ private:
     UCurveFloat* camera_curve;
     
     
+    void HandleWeaponSlotInput(int32 Slot);
+    void DropWeapon();
+
+
+    bool has_fired_weapon = false;
+
+
 };

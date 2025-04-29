@@ -170,7 +170,7 @@ void UHealthComponent::deal_damage(const AActor* dealt_by, const float damage)
         if (on_death_delegate.IsBound())
         {
             UE_LOG(Health, VeryVerbose, LOG_TEXT("Broadcasting death delegate for %s"), *owner_name);
-            on_death_delegate.Broadcast(dealt_by);
+            on_death_delegate.Broadcast(dealt_by, true);
         }
         else
         {

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "InventoryComponent.h"
@@ -8,6 +8,7 @@
 UInventoryComponent::UInventoryComponent()
 {
     PrimaryComponentTick.bCanEverTick = false;
+    WeaponSlots.SetNum(3); // Initialize inventory with 3 slots
 }
 
 // Called when the game starts
@@ -15,6 +16,95 @@ void UInventoryComponent::BeginPlay()
 {
     Super::BeginPlay();
 }
+
+bool UInventoryComponent::AddWeapon(FName WeaponID)
+{
+    if (WeaponID.ToString().Contains("Sword")) // Simple melee check
+    {
+        if (!MeleeWeaponID.IsNone())
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Already holding a melee weapon"));
+            return false;
+        }
+
+        MeleeWeaponID = WeaponID;
+        UE_LOG(LogTemp, Log, TEXT("Added melee weapon: %s"), *WeaponID.ToString());
+        return true;
+    }
+    // Check if there's an empty slot before adding a weapon
+    for (int32 i = 0; i < WeaponSlots.Num(); ++i)
+    {
+        if (WeaponSlots[i].IsNone()) // Find first empty slot
+        {
+            WeaponSlots[i] = WeaponID;
+            UE_LOG(LogTemp, Log, TEXT("Added %s to Weapon Slot %d"), *WeaponID.ToString(), i + 1);
+            return true;
+        }
+    }
+    // If all slots are occupied, prevent adding another weapon
+    UE_LOG(LogTemp, Warning, TEXT("Weapon slots full!"));
+    return false;
+}
+
+const TArray<FName>& UInventoryComponent::GetWeaponSlots() const
+{
+    return WeaponSlots;
+}
+
+void UInventoryComponent::LogInventory() const
+{
+    UE_LOG(LogTemp, Log, TEXT("Inventory:"));
+    for (int32 i = 0; i < WeaponSlots.Num(); ++i)
+    {
+        FString WeaponName = WeaponSlots[i].IsNone() ? TEXT("Empty") : WeaponSlots[i].ToString();
+        UE_LOG(LogTemp, Log, TEXT("Weapon Slot %d: %s"), i + 1, *WeaponName);
+    }
+}
+
+void UInventoryComponent::ToggleInventory()
+{
+    UE_LOG(LogTemp, Warning, TEXT("ToggleInventory function triggered!"));
+    UE_LOG(LogTemp, Log, TEXT("========Inventory Opened========="));
+
+    // Log weapon slots
+    for (int32 i = 0; i < WeaponSlots.Num(); ++i)
+    {
+        FString WeaponName = WeaponSlots[i].IsNone() ? TEXT("Empty") : WeaponSlots[i].ToString();
+        UE_LOG(LogTemp, Log, TEXT("Weapon Slot %d: %s"), i + 1, *WeaponName);
+    }
+
+    // ✅ Always log Medkit slot
+    bool bHasMedkit = HasItem("MedKit", 1);
+    FString MedkitStatus = bHasMedkit ? TEXT("Full") : TEXT("Empty");
+    UE_LOG(LogTemp, Log, TEXT("Medkit Slot: %s"), *MedkitStatus);
+
+    // Optional: log other inventory items
+    for (const auto& Item : Items)
+    {
+        FString ItemName = Item.Key.ToString();
+        const FInventoryItem& Data = Item.Value;
+
+        // Skip MedKit since it's already printed above
+        if (Item.Key == "MedKit")
+            continue;
+
+        UE_LOG(LogTemp, Log, TEXT("Item: %s, Quantity: %d, Type: %s"),
+            *ItemName,
+            Data.Quantity,
+            *UEnum::GetValueAsString(Data.ItemType));
+    }
+}
+
+FName UInventoryComponent::GetMeleeWeaponID() const
+{
+    return MeleeWeaponID;
+}
+
+void UInventoryComponent::RemoveMeleeWeapon()
+{
+    MeleeWeaponID = NAME_None;
+}
+
 
 // Add an item to the inventory
 bool UInventoryComponent::AddItem(const FName &ItemID, const EItemType ItemType, const int32 Quantity, const int32 MaxQuantity)
@@ -120,3 +210,13 @@ FName UInventoryComponent::GetEquippedWeapon() const
 {
     return EquippedWeapons.Num() > 0 ? EquippedWeapons[0] : FName("");
 }
+
+void UInventoryComponent::RemoveWeapon(int32 SlotIndex)
+{
+    if (SlotIndex >= 0 && SlotIndex < WeaponSlots.Num())
+    {
+        UE_LOG(LogTemp, Log, TEXT("Removing weapon from slot %d (%s)"), SlotIndex + 1, *WeaponSlots[SlotIndex].ToString());
+        WeaponSlots[SlotIndex] = NAME_None;
+    }
+}
+

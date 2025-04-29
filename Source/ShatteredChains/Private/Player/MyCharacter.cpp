@@ -12,13 +12,18 @@
 #include "Camera/CameraComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "ShatteredChains/CustomTraceChannels.h"
+#include "MedKit.h"
+#include "Weapons/MeleeWeapon.h"
+#include "EngineUtils.h"
+
+
 
 // Sets default values
 AMyCharacter::AMyCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
+    InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 
 	// Initialize movement states and stamina
 	bIsCrouched = false;
@@ -61,10 +66,31 @@ AMyCharacter::AMyCharacter()
 
 }
 
+
 // Called when the game starts or when spawned
 void AMyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+    ApplyMovementSpeed();
+
+    if (FistWeaponClass)
+    {
+        FActorSpawnParameters Params;
+        Params.Owner = this;
+        AMeleeWeapon* Fist = GetWorld()->SpawnActor<AMeleeWeapon>(FistWeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, Params);
+        if (Fist)
+        {
+            Fist->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("WeaponSocket"));
+            Fist->SetActorHiddenInGame(true); 
+            Fist->SetActorEnableCollision(false);
+            CurrentWeapon = nullptr;
+            FistWeapon = Fist;
+        }
+    }
+
+    DefaultFOV = Camera->FieldOfView;
+    TargetFOV = DefaultFOV;
 
     const TObjectPtr<UPhysicsAsset> physics_asset = GetMesh()->GetPhysicsAsset();
     add_stats_modifiers(physics_asset, &stats_modifiers);
@@ -177,26 +203,47 @@ void AMyCharacter::BeginPlay()
     sound_map["Head"] = head_shot_sounds;
     sound_map["RightArm"] = arm_shot_sounds;
     sound_map["RightHand"] = hand_shot_sounds;
+
+    if (APlayerController* PC = Cast<APlayerController>(GetController()))
+    {
+        if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
+        {
+            Subsystem->ClearAllMappings();
+            Subsystem->AddMappingContext(InputMapping, 0);
+            UE_LOG(LogTemp, Warning, TEXT("MappingContext applied again on BeginPlay"));
+        }
+    }
+
 }
 
 // Player Input bindings
 void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
+    UE_LOG(LogTemp, Warning, TEXT("SetupPlayerInputComponent called!"));
 
     // Add input mapping Context
     if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
     {
+
+
         // Get Local Player Subsystem
-        if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-            // Add input context
+        UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer());
+
+        if (Subsystem)
+        {
+            Subsystem->ClearAllMappings();
             Subsystem->AddMappingContext(InputMapping, 0);
+            UE_LOG(LogTemp, Warning, TEXT("Enhanced Input Mapping Applied!"));
+        }
     }
 
     if (UEnhancedInputComponent* Input = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
     {
         // Fire Weapon
-        Input->BindAction(FireAction, ETriggerEvent::Started, this, &AMyCharacter::FireWeapon);
+        Input->BindAction(FireAction, ETriggerEvent::Ongoing, this, &AMyCharacter::FireWeapon);
+        Input->BindAction(FireAction, ETriggerEvent::Completed, this, &AMyCharacter::EndFireWeapon);
+
         //Reload Weapon
         Input->BindAction(ReloadAction, ETriggerEvent::Started, this, &AMyCharacter::ReloadWeapon);
 
@@ -205,6 +252,7 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
         // Wasd 
         Input->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMyCharacter::Move);
+        Input->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMyCharacter::CancelLedgeLatch);
 
         // Look 
         Input->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMyCharacter::Look);
@@ -233,12 +281,44 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
         // Bind roll action "alt"
         Input->BindAction(RollAction, ETriggerEvent::Started, this, &AMyCharacter::StartRoll);
 
-        //bind toggle inventory ui "i"
+        // bind toggle inventory ui "i"
         Input->BindAction(IA_ToggleInventory, ETriggerEvent::Triggered, this, &AMyCharacter::ToggleInventory);
+        UE_LOG(LogTemp, Warning, TEXT("ToggleInventory binding successful!"));
 
-        //bind log invetory "o"
+        // bind log invetory "o"
         Input->BindAction(IA_LogInventory, ETriggerEvent::Triggered, this, &AMyCharacter::LogInventory);
 
+        // weapon slots
+        Input->BindAction(IA_WeaponSlot1, ETriggerEvent::Triggered, this, &AMyCharacter::HandleWeaponSlotInput, 1);
+
+        Input->BindAction(IA_WeaponSlot2, ETriggerEvent::Triggered, this, &AMyCharacter::HandleWeaponSlotInput, 2);
+
+        Input->BindAction(IA_WeaponSlot3, ETriggerEvent::Triggered, this, &AMyCharacter::HandleWeaponSlotInput, 3);
+
+        Input->BindAction(IA_DropWeapon, ETriggerEvent::Triggered, this, &AMyCharacter::DropWeapon);
+
+        // drop weapon
+        Input->BindAction(IA_DropWeapon, ETriggerEvent::Triggered, this, &AMyCharacter::DropWeapon);
+
+        // use healthkit/take out
+        Input->BindAction(IA_UseHealthKit, ETriggerEvent::Started, this, &AMyCharacter::ToggleMedKit);
+
+        // scope in
+        Input->BindAction(ScopeAction, ETriggerEvent::Started, this, &AMyCharacter::StartZoom);
+
+        // scope out
+        Input->BindAction(ScopeAction, ETriggerEvent::Completed, this, &AMyCharacter::StopZoom);
+
+        // equip melee slot
+        Input->BindAction(IA_WeaponSlot5, ETriggerEvent::Triggered, this, &AMyCharacter::HandleWeaponSlotInput, 5);
+
+        // quick melee action
+        Input->BindAction(IA_QuickMelee, ETriggerEvent::Started, this, &AMyCharacter::QuickMelee);
+
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("EnhancedInputComponent NOT found!"));
     }
 
     // Bind axis mappings for movement
@@ -270,18 +350,235 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 }
 
+
+UInventoryComponent* AMyCharacter::GetInventoryComponent() const
+{
+    return InventoryComponent;
+}
+
 void AMyCharacter::FireWeapon()
 {
+    if (bIsHoldingMedKit)
+    {
+        if (InventoryComponent && InventoryComponent->HasItem("MedKit", 1))
+        {
+            InventoryComponent->RemoveItem("MedKit", 1);
+            HealthComponent->set_health(HealthComponent->get_max_health());
+
+            if (medkit_heal_sound)
+            {
+                UGameplayStatics::PlaySound2D(GetWorld(), medkit_heal_sound);
+            }
+
+            ApplyMovementSpeed();
+            ResetMovementDebuffs();
+            bIsHoldingMedKit = false;
+
+            UE_LOG(LogTemp, Log, TEXT("Used MedKit and restored health."));
+            return;
+        }
+
+        UE_LOG(LogTemp, Warning, TEXT("Tried to use MedKit but none left."));
+        return;
+    }
+
+    // Sword Fire
+    if (CurrentEquippedWeaponSlot == 5 && EquippedMeleeWeapon)
+    {
+        EquippedMeleeWeapon->Punch();
+        return;
+    }
+
+    // Gun Fire
     if (CurrentWeapon)
     {
-        CurrentWeapon->fire(); // Calls the fire function in Weapon.cpp
-        UE_LOG(Player, Log, TEXT("Fired weapon: %s"), *CurrentWeapon->GetName());
+        if (CurrentWeapon->get_current_magazine_ammo_count() == 0)
+        {
+            if (!has_fired_weapon)
+            {
+                CurrentWeapon->fire();
+                UE_LOG(Player, Log, LOG_TEXT("Fired weapon with no ammo: %s"), *CurrentWeapon->GetName());
+                has_fired_weapon = true;
+            }
+        }
+        else if (!has_fired_weapon || CurrentWeapon->is_full_auto())
+        {
+            CurrentWeapon->fire();
+            UE_LOG(Player, Log, LOG_TEXT("Fired weapon: %s"), *CurrentWeapon->GetName());
+            has_fired_weapon = true;
+        }
+    }
+    // Bare fists fallback (only if no weapon/sword equipped)
+    else if (FistWeapon)
+    {
+        FistWeapon->Punch();
+        UE_LOG(LogTemp, Log, TEXT("Punch executed using fists."));
     }
     else
     {
         UE_LOG(Player, Warning, TEXT("No weapon equipped to fire."));
     }
 }
+
+
+
+void AMyCharacter::EndFireWeapon()
+{
+    has_fired_weapon = false;
+}
+
+// scope in
+void AMyCharacter::StartZoom()
+{
+    bIsZooming = true;
+    TargetFOV = ZoomedFOV;  // Lower FOV to "zoom in"
+
+    if (CurrentWeapon)
+    {
+        USkeletalMeshComponent* WeaponMesh = CurrentWeapon->GetWeaponMesh();
+        if (WeaponMesh)
+        {
+            WeaponMesh->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+
+            // Attach weapon to CameraComponent directly
+            WeaponMesh->AttachToComponent(Camera, FAttachmentTransformRules::KeepRelativeTransform);
+
+            // Move and rotate the weapon relative to camera
+            WeaponMesh->SetRelativeLocation(ZoomedWeaponOffset);
+            WeaponMesh->SetRelativeRotation(ZoomedWeaponRotation);
+        }
+    }
+}
+
+
+
+
+//scope out
+void AMyCharacter::StopZoom()
+{
+    bIsZooming = false;
+    TargetFOV = DefaultFOV;  // Reset FOV
+
+    if (CurrentWeapon)
+    {
+        USkeletalMeshComponent* WeaponMesh = CurrentWeapon->GetWeaponMesh();
+        if (WeaponMesh)
+        {
+            WeaponMesh->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+
+            // Reattach weapon back to player WeaponSocket
+            WeaponMesh->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("WeaponSocket"));
+        }
+    }
+}
+
+
+void AMyCharacter::ToggleMedKit(const FInputActionValue& Value)
+{
+    if (!InventoryComponent) return;
+
+    if (bIsZooming)
+    {
+        StopZoom();
+    }
+
+    // Unequip current weapon if holding one
+    if (CurrentWeapon)
+    {
+        CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+        CurrentWeapon->SetActorHiddenInGame(true);
+        CurrentWeapon->SetActorEnableCollision(false);
+        CurrentWeapon = nullptr;
+        CurrentEquippedWeaponSlot = -1;
+    }
+
+    // Unequip melee sword
+    if (EquippedMeleeWeapon)
+    {
+        EquippedMeleeWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+        EquippedMeleeWeapon->SetActorHiddenInGame(true);
+        EquippedMeleeWeapon->SetActorEnableCollision(false);
+        EquippedMeleeWeapon = nullptr;
+    }
+
+    // Toggle medkit state
+    if (bIsHoldingMedKit)
+    {
+        bIsHoldingMedKit = false;
+        if (EquippedMedKit)
+        {
+            EquippedMedKit->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+            EquippedMedKit->SetActorHiddenInGame(true);
+            EquippedMedKit->SetActorEnableCollision(false);
+        }
+        UE_LOG(Player, Log, TEXT("MedKit unequipped."));
+        return;
+    }
+
+    if (InventoryComponent->HasItem("MedKit", 1))
+    {
+        bIsHoldingMedKit = true;
+
+        if (!EquippedMedKit)
+        {
+            FActorSpawnParameters SpawnParams;
+            SpawnParams.Owner = this;
+            EquippedMedKit = GetWorld()->SpawnActor<AMedKit>(AMedKit::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+        }
+
+        if (EquippedMedKit)
+        {
+            EquippedMedKit->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("WeaponSocket"));
+            EquippedMedKit->SetActorHiddenInGame(false);
+            EquippedMedKit->SetActorEnableCollision(false);
+        }
+
+        if (item_pickup_sound)
+        {
+            UGameplayStatics::PlaySound2D(GetWorld(), item_pickup_sound);
+        }
+
+        UE_LOG(Player, Log, TEXT("MedKit equipped."));
+    }
+    else
+    {
+        UE_LOG(Player, Warning, TEXT("No MedKit in inventory."));
+    }
+}
+
+
+void AMyCharacter::UseEquippedMedkit()
+{
+    UE_LOG(LogTemp, Log, TEXT("Attempting to use medkit"));
+
+    if (!InventoryComponent->HasItem("MedKit", 1))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("No MedKit in inventory."));
+        return;
+    }
+
+    UHealthComponent* HealthComp = get_health_component();
+    if (HealthComp)
+    {
+        HealthComp->set_health(HealthComp->get_max_health());
+
+        if (medkit_heal_sound)
+        {
+            UGameplayStatics::PlaySound2D(GetWorld(), medkit_heal_sound);
+        }
+    }
+
+    ResetMovementDebuffs();
+    ApplyMovementSpeed();
+
+    InventoryComponent->RemoveItem("MedKit", 1);
+    CurrentEquippedWeaponSlot = -1;
+    CurrentWeapon = nullptr;
+
+    UE_LOG(LogTemp, Log, TEXT("Used MedKit: healed and removed movement debuffs."));
+}
+
+
 
 
 void AMyCharacter::ReloadWeapon()
@@ -297,9 +594,283 @@ void AMyCharacter::ReloadWeapon()
     }
 }
 
-void AMyCharacter::PickUpWeapon(AWeapon* weapon)
+bool AMyCharacter::PickUpWeapon(AWeapon* PickedUpWeapon)
 {
-    EquipWeapon(weapon);
+    if (PickedUpWeapon && InventoryComponent)
+    {
+        FName WeaponID = FName(*PickedUpWeapon->GetName());
+
+        // Check if we have space for the weapon before picking it up
+        if (InventoryComponent->AddWeapon(WeaponID))
+        {
+            UE_LOG(LogTemp, Log, TEXT("Picked up weapon: %s"), *WeaponID.ToString());
+
+            if (item_pickup_sound)
+            {
+                UGameplayStatics::PlaySound2D(GetWorld(), item_pickup_sound);
+            }
+
+            const TArray<FName>& WeaponSlots = InventoryComponent->GetWeaponSlots();
+            int32 AssignedSlot = -1;
+            for (int32 i = 0; i < WeaponSlots.Num(); ++i)
+            {
+                if (WeaponSlots[i] == WeaponID)
+                {
+                    AssignedSlot = i + 1;
+                    break;
+                }
+            }
+
+            PickedUpWeapon->SetActorEnableCollision(false);
+            return true; 
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Weapon slots full! Cannot pick up %s"), *WeaponID.ToString());
+        }
+    }
+
+    return false; 
+}
+
+
+// handle weapon equipping slot 1-3
+void AMyCharacter::HandleWeaponSlotInput(int32 Slot)
+{
+    if (!InventoryComponent) return;
+
+    // Cancel zoom if active
+    if (bIsZooming)
+    {
+        StopZoom();
+    }
+
+    // Always detach and hide currently equipped weapon or melee weapon
+    if (CurrentWeapon)
+    {
+        CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+        CurrentWeapon->SetActorHiddenInGame(true);
+        CurrentWeapon->SetActorEnableCollision(false);
+        CurrentWeapon = nullptr;
+    }
+
+    if (EquippedMeleeWeapon)
+    {
+        EquippedMeleeWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+        EquippedMeleeWeapon->SetActorHiddenInGame(true);
+        EquippedMeleeWeapon->SetActorEnableCollision(false);
+        EquippedMeleeWeapon = nullptr;
+    }
+
+    // Handle melee weapon (slot 5)
+    if (Slot == 5)
+    {
+        FName SwordID = InventoryComponent->GetMeleeWeaponID();
+        if (SwordID.IsNone())
+        {
+            UE_LOG(LogTemp, Warning, TEXT("No melee weapon to equip."));
+            CurrentEquippedWeaponSlot = -1;
+            return;
+        }
+
+        for (TActorIterator<AMeleeWeapon> It(GetWorld()); It; ++It)
+        {
+            if (It->GetName() == SwordID.ToString())
+            {
+                EquippedMeleeWeapon = *It;
+                EquippedMeleeWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("MeleeSocket"));
+                EquippedMeleeWeapon->SetActorHiddenInGame(false);
+                EquippedMeleeWeapon->SetActorEnableCollision(false);
+
+                if (EquippedMeleeWeapon->MeshComponent)
+                {
+                    EquippedMeleeWeapon->MeshComponent->SetSimulatePhysics(false);
+                }
+
+                EquippedMeleeWeapon->SetOwner(this);
+                EquippedMeleeWeapon->SetOwnerPawn(this);
+                CurrentEquippedWeaponSlot = 5;
+
+                if (EquippedMeleeWeapon->SwordDrawSound)
+                {
+                    UGameplayStatics::PlaySound2D(GetWorld(), EquippedMeleeWeapon->SwordDrawSound);
+                }
+
+                UE_LOG(LogTemp, Log, TEXT("[Slot 5][MeleeWeapon][EQUIPPED]"));
+                return;
+            }
+        }
+        return;
+    }
+
+    // Handle regular guns (slots 1-3)
+    const int32 SlotIndex = Slot - 1;
+    const TArray<FName>& WeaponSlots = InventoryComponent->GetWeaponSlots();
+
+    if (SlotIndex >= WeaponSlots.Num() || WeaponSlots[SlotIndex].IsNone())
+    {
+        CurrentEquippedWeaponSlot = -1;
+        UE_LOG(Player, Log, TEXT("[Slot %d][Empty][UNEQUIPPED]"), Slot);
+        return;
+    }
+
+    AWeapon* FoundWeapon = nullptr;
+    for (TActorIterator<AWeapon> It(GetWorld()); It; ++It)
+    {
+        if (It->GetName() == WeaponSlots[SlotIndex].ToString())
+        {
+            FoundWeapon = *It;
+            break;
+        }
+    }
+
+    if (FoundWeapon)
+    {
+        CurrentWeapon = FoundWeapon;
+        CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("WeaponSocket"));
+        CurrentWeapon->SetActorEnableCollision(false);
+        CurrentWeapon->SetActorHiddenInGame(false);
+
+        CurrentEquippedWeaponSlot = Slot;
+
+        UE_LOG(Player, Log, TEXT("[Slot %d][%s][EQUIPPED]"), Slot, *FoundWeapon->GetName());
+
+        if (weapon_equip_sound)
+        {
+            UGameplayStatics::PlaySound2D(GetWorld(), weapon_equip_sound);
+        }
+    }
+}
+
+
+
+
+// quick melee
+void AMyCharacter::QuickMelee()
+{
+    if (!FistWeapon) return;
+
+    if (CurrentEquippedWeaponSlot == 5 && EquippedMeleeWeapon)
+    {
+        EquippedMeleeWeapon->Punch();
+    }
+    else if (!FistWeapon->bIsPunching)
+    {
+        UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+        if (AnimInstance && FistWeapon->PunchMontage1)
+        {
+            float Duration = AnimInstance->Montage_Play(FistWeapon->PunchMontage1);
+
+            FistWeapon->bIsPunching = true;
+
+            // Reset after animation
+            FTimerHandle PunchResetTimer;
+            GetWorldTimerManager().SetTimer(PunchResetTimer, [this]()
+                {
+                    if (FistWeapon)
+                    {
+                        FistWeapon->bIsPunching = false;
+                    }
+                }, Duration, false);
+
+            // Delay punch damage
+            FTimerHandle DamageTimer;
+            GetWorldTimerManager().SetTimer(DamageTimer, FistWeapon, &AMeleeWeapon::ApplyDamage, FistWeapon->DamageDelay, false);
+
+            if (FistWeapon->PunchSound)
+            {
+                UGameplayStatics::PlaySoundAtLocation(GetWorld(), FistWeapon->PunchSound, GetActorLocation());
+            }
+        }
+    }
+}
+
+
+
+
+//drop weapon
+void AMyCharacter::DropWeapon()
+{
+    if (CurrentEquippedWeaponSlot == -1)
+    {
+        UE_LOG(Player, Warning, TEXT("No weapon equipped to drop."));
+        return;
+    }
+
+    const UWorld* World = GetWorld();
+    if (!World) return;
+
+    FHitResult HitResult;
+    FCollisionQueryParams QueryParams;
+    QueryParams.AddIgnoredActor(this);
+
+    if (World->LineTraceSingleByChannel(HitResult, GetActorLocation(), GetActorLocation() - FVector(0, 0, 1000), ECC_Visibility, QueryParams))
+    {
+        const FVector GunDropLocation = HitResult.Location + GetActorForwardVector() * 200.0f + FVector(0, 0, 2.0f); // Guns
+        const FVector MeleeDropLocation = HitResult.Location + GetActorForwardVector() * 150.0f + FVector(0, 0, 100.0f); // Melee
+        FRotator DropRotation = GetActorRotation();
+        DropRotation.Pitch += 90.0f;
+
+        // Handle melee weapon (sword)
+        if (CurrentEquippedWeaponSlot == 5 && EquippedMeleeWeapon)
+        {
+            UE_LOG(Player, Log, TEXT("[Slot 5][%s][DROPPED]"), *EquippedMeleeWeapon->GetName());
+
+            EquippedMeleeWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+            EquippedMeleeWeapon->SetActorHiddenInGame(false);
+            EquippedMeleeWeapon->SetActorEnableCollision(true);
+
+            if (EquippedMeleeWeapon->MeshComponent)
+            {
+                // Move with teleport at correct melee location
+                EquippedMeleeWeapon->MeshComponent->SetWorldLocation(MeleeDropLocation, false, nullptr, ETeleportType::TeleportPhysics);
+                EquippedMeleeWeapon->MeshComponent->SetWorldRotation(DropRotation, false, nullptr, ETeleportType::TeleportPhysics);
+
+                EquippedMeleeWeapon->MeshComponent->SetSimulatePhysics(true);
+
+                // FIX COLLISION: make sure it blocks the world so it lands
+                EquippedMeleeWeapon->MeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+                EquippedMeleeWeapon->MeshComponent->SetCollisionResponseToAllChannels(ECR_Block);
+                EquippedMeleeWeapon->MeshComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+
+                // (Optional) Add slight impulse
+                //EquippedMeleeWeapon->MeshComponent->AddImpulse(FVector(0, 0, 300), NAME_None, true);
+              //EquippedMeleeWeapon->MeshComponent->AddAngularImpulseInDegrees(FVector(0, 0, 500), NAME_None, true);
+            }
+
+            EquippedMeleeWeapon->SetOwner(nullptr);
+
+            if (InventoryComponent)
+            {
+                InventoryComponent->RemoveMeleeWeapon();
+            }
+            EquippedMeleeWeapon = nullptr;
+            CurrentEquippedWeaponSlot = -1;
+        }
+        // Handle regular guns
+        else if (CurrentWeapon)
+        {
+            UE_LOG(Player, Log, TEXT("[Slot %d][%s][DROPPED]"), CurrentEquippedWeaponSlot, *CurrentWeapon->GetName());
+
+            CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+            CurrentWeapon->SetActorLocation(GunDropLocation);
+            CurrentWeapon->SetActorRotation(DropRotation);
+            CurrentWeapon->SetActorEnableCollision(true);
+            CurrentWeapon->SetActorHiddenInGame(false);
+            CurrentWeapon->SetOwner(nullptr);
+
+            if (InventoryComponent)
+            {
+                InventoryComponent->RemoveWeapon(CurrentEquippedWeaponSlot - 1);
+            }
+            CurrentWeapon = nullptr;
+            CurrentEquippedWeaponSlot = -1;
+        }
+    }
+    else
+    {
+        UE_LOG(Player, Warning, TEXT("Could not find location to drop weapon."));
+    }
 }
 
 
@@ -313,23 +884,65 @@ void AMyCharacter::Interact()
     FCollisionQueryParams Params;
     Params.AddIgnoredActor(this);
 
-    // Perform the line trace
     if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
     {
         AActor* HitActor = HitResult.GetActor();
-        if (HitActor)
+        if (!HitActor) return;
+
+        UE_LOG(Player, Log, TEXT("Line Trace Hit Actor: %s"), *HitActor->GetName());
+
+        // Sword Pickup 
+        if (AMeleeWeapon* HitMelee = Cast<AMeleeWeapon>(HitActor))
         {
-            UE_LOG(Player, Log, TEXT("Line Trace Hit Actor: %s"), *HitActor->GetName());
+            FName SwordID = FName(*HitMelee->GetName());
 
-            // Check if the hit actor is a weapon
-            if (AWeapon* weapon = Cast<AWeapon>(HitActor))
+            if (!InventoryComponent->GetMeleeWeaponID().IsNone())
             {
-                UE_LOG(Player, Log, TEXT("Weapon Detected: %s"), *weapon->GetName());
-
-                EquipWeapon(weapon); // Attempt to equip the weapon
-                weapon->SetActorHiddenInGame(true); // Hide the weapon
-                weapon->SetActorEnableCollision(false);
+                UE_LOG(LogTemp, Warning, TEXT("Already carrying melee weapon."));
+                return;
             }
+
+            if (InventoryComponent->AddWeapon(SwordID))
+            {
+                UE_LOG(LogTemp, Log, TEXT("Picked up sword: %s"), *SwordID.ToString());
+                HitMelee->SetActorHiddenInGame(true);
+                HitMelee->SetActorEnableCollision(false);
+                if (item_pickup_sound)
+                {
+                    UGameplayStatics::PlaySound2D(GetWorld(), item_pickup_sound);
+                }
+            }
+            return;
+        }
+
+        // Medkit Pickup 
+        if (AMedKit* MedKit = Cast<AMedKit>(HitActor))
+        {
+            if (!InventoryComponent->HasItem("MedKit", 1) && InventoryComponent->AddItem("MedKit", EItemType::HealthKit, 1, 1))
+            {
+                UE_LOG(Player, Log, TEXT("Picked up MedKit via Interact"));
+                MedKit->Destroy();
+                if (item_pickup_sound)
+                {
+                    UGameplayStatics::PlaySound2D(GetWorld(), item_pickup_sound);
+                }
+            }
+            else
+            {
+                UE_LOG(Player, Warning, TEXT("Could not pick up MedKit: Inventory full"));
+            }
+            return;
+        }
+
+        // Gun Pickup 
+        if (AWeapon* HitWeapon = Cast<AWeapon>(HitActor))
+        {
+            UE_LOG(Player, Log, TEXT("Weapon Detected: %s"), *HitWeapon->GetName());
+
+            EquipWeapon(HitWeapon);
+            HitWeapon->SetActorHiddenInGame(true);
+            HitWeapon->SetActorEnableCollision(false);
+            return;
         }
     }
     else
@@ -340,30 +953,43 @@ void AMyCharacter::Interact()
 
 
 
-
-
 // equip weapon
 void AMyCharacter::EquipWeapon(AWeapon* weapon)
 {
-    if (!weapon)
-    {
-        return;
-    }
+    if (!weapon) return;
 
     if (CurrentWeapon)
     {
-        UE_LOG(Player, Log, TEXT("Current Weapon: %s will be replaced with %s"), *CurrentWeapon->GetName(), *weapon->GetName());
-        CurrentWeapon->Destroy(); // Destroy the old weapon if needed
-    }
-    else
-    {
-        UE_LOG(Player, Log, TEXT("Equipping first weapon: %s"), *weapon->GetName());
+        CurrentWeapon->Destroy(); // Optional: or Detach
     }
 
-    // Equip new weapon
     CurrentWeapon = weapon;
+
+    // Make sure ownership and visibility are correct
+    CurrentWeapon->SetOwner(this); // ← CRITICAL so it's "yours"
+    CurrentWeapon->SetActorHiddenInGame(false); // ← Force visible before attach
+
     CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("WeaponSocket"));
     CurrentWeapon->SetActorEnableCollision(false);
+
+    // Play equip sound
+    if (weapon_equip_sound)
+    {
+        UGameplayStatics::PlaySound2D(GetWorld(), weapon_equip_sound);
+    }
+
+    // Find and assign equipped slot
+    const TArray<FName>& WeaponSlots = InventoryComponent->GetWeaponSlots();
+    for (int32 i = 0; i < WeaponSlots.Num(); ++i)
+    {
+        if (WeaponSlots[i] == FName(*weapon->GetName()))
+        {
+            CurrentEquippedWeaponSlot = i + 1;
+            break;
+        }
+    }
+
+    UE_LOG(Player, Log, TEXT("Weapon equipped: %s"), *weapon->GetName());
 }
 
 
@@ -372,54 +998,111 @@ void AMyCharacter::EquipWeapon(AWeapon* weapon)
 // WASD Movement Function
 void AMyCharacter::Move(const FInputActionValue& Value)
 {
+    if (!Controller)
+    {
+        UE_LOG(LogTemp, Error, TEXT("Move() called without Controller valid"));
+        return;
+    }
+
+
     FVector2D MovementInput = Value.Get<FVector2D>();
-    if (Controller && MovementInput.SizeSquared() > 0.0f)
+
+    if (MovementInput.IsNearlyZero())
     {
-        // Convert 2D input to a 3D direction vector
-        FVector ForwardDirection = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::X);
-        FVector RightDirection = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::Y);
-
-        FVector CurrentInputDirection = ForwardDirection * MovementInput.Y + RightDirection * MovementInput.X;
-
-        // Normalize the direction
-        CurrentInputDirection.Normalize();
-
-        // Log only if the direction changes significantly
-        if (!CurrentInputDirection.Equals(LastInputDirection, 0.01f)) 
-        {
-            UE_LOG(Player, VeryVerbose, TEXT("Moving in direction: %s"), *CurrentInputDirection.ToString());
-            LastInputDirection = CurrentInputDirection;
-        }
-
-        // Apply the movement
-        AddMovementInput(ForwardDirection, MovementInput.Y);
-        AddMovementInput(RightDirection, MovementInput.X);
+        return;
     }
-    else
-    {
-        // Reset the last direction if no movement input is provided
-        LastInputDirection = FVector::ZeroVector;
-    }
+
+    FRotator ControlRotation = Controller->GetControlRotation();
+    ControlRotation.Pitch = 0.0f;
+
+    FVector ForwardDirection = FRotationMatrix(ControlRotation).GetScaledAxis(EAxis::X);
+    FVector RightDirection = FRotationMatrix(ControlRotation).GetScaledAxis(EAxis::Y);
+
+    AddMovementInput(ForwardDirection, MovementInput.Y);
+    AddMovementInput(RightDirection, MovementInput.X);
+
 }
+
+
+
 
 
 void AMyCharacter::Look(const FInputActionValue& InputValue)
 {
     FVector2D InputVector = InputValue.Get<FVector2D>();
+    if (!IsValid(Controller)) return;
 
-    if (IsValid(Controller))
+    float EffectiveSensitivity = MouseSensitivity;
+
+    if (bIsZooming && CurrentWeapon)
     {
-        AddControllerYawInput(InputVector.X);
-        AddControllerPitchInput(InputVector.Y);
+        EffectiveSensitivity *= CurrentWeapon->ZoomMouseSensitivity;
     }
+
+    AddControllerYawInput(InputVector.X * EffectiveSensitivity);
+    AddControllerPitchInput(InputVector.Y * EffectiveSensitivity);
 }
+
 
 // Jump Function
 void AMyCharacter::Jump()
 {
-    ACharacter::Jump();
-    UE_LOG(Player, VeryVerbose, TEXT("Jump triggered"));
+    if (bIsSliding)
+    {
+        SlideJump();
+        return;
+    }
+
+    if (bIsLatchedToLedge)
+    {
+        PullUpFromLedge();
+        return;
+    }
+
+    if (bIsCrouched || bIsProne)
+    {
+        UCapsuleComponent* Capsule = GetCapsuleComponent();
+        UCharacterMovementComponent* MovementComp = GetCharacterMovement();
+
+        if (Capsule)
+        {
+            Capsule->SetCapsuleHalfHeight(88.0f);
+        }
+        if (MovementComp)
+        {
+            MovementComp->SetMovementMode(EMovementMode::MOVE_Walking);
+        }
+
+        ApplyMovementSpeed();
+        UnCrouch(); // UnCrouch is safe — Unreal guards internally
+    }
+
+    if (GetCharacterMovement() && !GetCharacterMovement()->IsFalling() && CanJump())
+    {
+        ACharacter::Jump();
+        bHasJumpedOnce = true;
+        /*
+        if (JumpAnimMontage)
+            PlayAnimMontage(JumpAnimMontage);
+            */
+        UE_LOG(Player, Log, TEXT("Jump successful"));
+
+    }
 }
+
+
+
+void AMyCharacter::CancelLedgeLatch()
+{
+    if (bIsLatchedToLedge)
+    {
+        bIsLatchedToLedge = false;
+        GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Falling); // Resume falling
+        UE_LOG(Player, Log, TEXT("Latch canceled: dropped from ledge"));
+    }
+}
+
+
 
 // Forward and Backwards functions
 void AMyCharacter::MoveForward(float Value)
@@ -452,18 +1135,31 @@ void AMyCharacter::StartJump()
     {
         bPressedJump = true;
         JumpCount++;
-        UE_LOG(Player, Log, TEXT("StartJump triggered: JumpCount = %d"), JumpCount);
-    }
-    else
-    {
-        UE_LOG(Player, Warning, TEXT("StartJump failed: MaxJumpCount reached"));
+
+        ACharacter::Jump(); // Perform Unreal's jump logic
+        /*
+        if (JumpAnimMontage)
+        {
+            PlayAnimMontage(JumpAnimMontage);
+            UE_LOG(Player, Log, TEXT("StartJump triggered: Jump animation playing"));
+        }
+        */
     }
 }
+
+
 
 // Stop Jump Function
 void AMyCharacter::StopJump()
 {
     bPressedJump = false;
+    /*
+    // Stop jump animation (if necessary, adjust based on behavior)
+    if (JumpAnimMontage)
+    {
+        StopAnimMontage(JumpAnimMontage);
+    }
+    */
     UE_LOG(Player, Log, TEXT("StopJump triggered"));
 }
 
@@ -471,9 +1167,23 @@ void AMyCharacter::StopJump()
 void AMyCharacter::Landed(const FHitResult& Hit)
 {
     Super::Landed(Hit);
-    JumpCount = 0; // Reset jump count on landing
-    UE_LOG(Player, Log, TEXT("Landed: JumpCount reset to %d"), JumpCount);
+    bHasJumpedOnce = false;
+    JumpCount = 0;
+    bIsLatchedToLedge = false;
+
+    // Safety: Reset capsule height if still crouched
+    if (bIsCrouched)
+    {
+        GetCapsuleComponent()->SetCapsuleHalfHeight(88.0f);
+    }
+    if (bIsProne)
+    {
+        GetCapsuleComponent()->SetCapsuleHalfHeight(88.0f);
+        GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+        bIsProne = false;
+    }
 }
+
 
 // Start Sprint Function with Stamina Management
 void AMyCharacter::StartSprint()
@@ -481,7 +1191,7 @@ void AMyCharacter::StartSprint()
     if (CurrentStamina > 0.0f && !bIsSprinting) // checks stamina
     {
         bIsSprinting = true;
-        GetCharacterMovement()->MaxWalkSpeed = SprintSpeed; // increase speed
+        ApplyMovementSpeed(); // increase speed
         UE_LOG(Player, Log, TEXT("Sprint started: CurrentStamina = %f"), CurrentStamina);
     }
 }
@@ -491,7 +1201,7 @@ void AMyCharacter::StartSprint()
 void AMyCharacter::StopSprint()
 {
     bIsSprinting = false;
-    GetCharacterMovement()->MaxWalkSpeed = WalkSpeed; // restore normal speed
+    ApplyMovementSpeed(); // restore normal speed
     UE_LOG(Player, Log, TEXT("Sprint stopped"));
 }
 
@@ -519,109 +1229,132 @@ void AMyCharacter::UpdateStamina(float DeltaTime)
 // Crouch Toggle Function
 void AMyCharacter::ToggleCrouch()
 {
-    // Get the capsule component for modifying its height
     UCapsuleComponent* Capsule = GetCapsuleComponent();
+    UCharacterMovementComponent* MovementComponent = Cast<UCharacterMovementComponent>(GetCharacterMovement());
+
+    if (!Capsule || !MovementComponent)
+    {
+        UE_LOG(LogTemp, Error, TEXT("ToggleCrouch(): CapsuleComponent or MovementComponent is NULL!"));
+        return;
+    }
 
     if (bIsCrouched)
     {
-        // Restore original height and speed when uncrouching
-        Capsule->SetCapsuleHalfHeight(88.0f); // Default height
+        /*
+        if (StandUpMontage)
+        {
+            PlayAnimMontage(StandUpMontage);
+        }
+        */
+        Capsule->SetCapsuleHalfHeight(88.0f);
         UnCrouch();
         bIsCrouched = false;
-        GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
-
-        UE_LOG(Player, Log, TEXT("UnCrouch: Height restored to %f"), Capsule->GetUnscaledCapsuleHalfHeight());
+        ApplyMovementSpeed();
     }
     else
     {
-        // Halve the height and reduce movement speed when crouching
-        Capsule->SetCapsuleHalfHeight(44.0f); // Half of the default height
+        /*
+        if (CrouchEnterMontage)
+        {
+            PlayAnimMontage(CrouchEnterMontage);
+        }
+        */
+        Capsule->SetCapsuleHalfHeight(44.0f);
         Crouch();
         bIsCrouched = true;
         GetCharacterMovement()->MaxWalkSpeed = CrouchSpeed;
-
-        UE_LOG(Player, Log, TEXT("Crouch: Height reduced to %f"), Capsule->GetUnscaledCapsuleHalfHeight());
     }
 }
+
+
+
 
 
 // Toggle Prone Function
 void AMyCharacter::ToggleProne()
 {
+    UCapsuleComponent* Capsule = GetCapsuleComponent();
+    UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
+
+    if (!Capsule || !MovementComponent)
+    {
+        UE_LOG(LogTemp, Error, TEXT("ToggleProne(): CapsuleComponent or MovementComponent is NULL!"));
+        return;
+    }
+
     if (bIsProne)
     {
         // Exit prone
-        GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+        MovementComponent->SetMovementMode(EMovementMode::MOVE_Walking);
         bIsProne = false;
 
-        // Restore normal collision and movement speed
-        GetCapsuleComponent()->SetCapsuleHalfHeight(88.0f); // Default height
-        GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+        Capsule->SetCapsuleHalfHeight(88.0f); // Reset height
+        ApplyMovementSpeed();
 
         UE_LOG(Player, Log, TEXT("ToggleProne: Exited prone mode"));
-
-        // Play prone exit animation
+        /*
         if (ProneAnimMontage)
         {
             PlayAnimMontage(ProneAnimMontage, 1.0f);
         }
+        */
     }
     else
     {
         // Enter prone
-        GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_NavWalking); // Use NavWalking for crawling-like behavior
+        MovementComponent->SetMovementMode(EMovementMode::MOVE_NavWalking);
         bIsProne = true;
 
-        // Adjust collision and movement speed
-        GetCapsuleComponent()->SetCapsuleHalfHeight(22.0f); // Reduced height for prone
-        GetCharacterMovement()->MaxWalkSpeed = CrouchSpeed / 2; // Half crouch speed for prone
+        Capsule->SetCapsuleHalfHeight(20.0f); // Smaller but **NOT 0** (zero height breaks physics)
+
+        MovementComponent->MaxWalkSpeed = CrouchSpeed / 2;
 
         UE_LOG(Player, Log, TEXT("ToggleProne: Entered prone mode"));
-        // Play prone enter animation
+        /*
         if (ProneAnimMontage)
         {
             PlayAnimMontage(ProneAnimMontage, 1.0f);
         }
+        */
     }
 }
+
 
 // Sliding Function
 void AMyCharacter::StartSlide()
 {
-    // Ensure sliding only triggers while sprinting and not already sliding
-    if (bIsSprinting && !bIsSliding)
+    if (bIsSprinting && !bIsSliding && GetCharacterMovement())
     {
         bIsSliding = true;
-        bCanSlideJump = true; // Allow slide jump
+        bCanSlideJump = true;
 
-        // Reduce capsule height for sliding
-        GetCapsuleComponent()->SetCapsuleHalfHeight(22.0f); 
-        GetCharacterMovement()->MaxWalkSpeed = SlideSpeed;
+        if (UCapsuleComponent* Capsule = GetCapsuleComponent())
+        {
+            Capsule->SetCapsuleHalfHeight(22.0f);
+        }
 
-        // Calculate the slide direction
+        GetCharacterMovement()->MaxWalkSpeed = SlideSpeed * MovementDebuffMultiplier;
+
         FVector SlideDirection = GetLastMovementInputVector();
         if (SlideDirection.IsZero())
         {
-            // Default to forward direction if no movement input
             SlideDirection = GetActorForwardVector();
         }
-        SlideDirection.Normalize(); // Ensure the direction vector is normalized
+        SlideDirection.Normalize();
 
-        // Launch the character in the slide direction
         LaunchCharacter(SlideDirection * SlideSpeed, true, true);
-
-        // Play slide animation
+        /*
         if (SlideMontage)
         {
             PlayAnimMontage(SlideMontage);
         }
-
-        // Set a timer to stop sliding after SlideDuration
+        */
         GetWorld()->GetTimerManager().SetTimer(SlideStopTimer, this, &AMyCharacter::StopSlide, SlideDuration, false);
 
         UE_LOG(Player, Log, TEXT("Slide started in direction: %s"), *SlideDirection.ToString());
     }
 }
+
 
 
 
@@ -659,7 +1392,7 @@ void AMyCharacter::StopSlide()
     {
         // Restore capsule height and speed
         GetCapsuleComponent()->SetCapsuleHalfHeight(88.0f); // Default height
-        GetCharacterMovement()->MaxWalkSpeed = WalkSpeed; // Restore walk speed
+        ApplyMovementSpeed(); // Restore walk speed
 
         bIsSliding = false; // Reset sliding state
 
@@ -668,7 +1401,7 @@ void AMyCharacter::StopSlide()
 }
 
 
-// Rolling Function
+// Rolling Function or dodge
 void AMyCharacter::StartRoll()
 {
     if (bCanRoll) // Ensure rolling is allowed
@@ -685,16 +1418,21 @@ void AMyCharacter::StartRoll()
         RollDirection.Normalize(); // Ensure the direction vector is normalized
 
         // Launch the character in the roll direction
-        LaunchCharacter(RollDirection * 600.0f + FVector(0, 0, 200.0f), true, true); // Adjust speed and height
-
+        LaunchCharacter(RollDirection * 900.0f + FVector(0, 0, 300.0f), true, true); // Adjust speed and height
+        /*
         // Play roll animation
         if (RollAnimMontage)
         {
             PlayAnimMontage(RollAnimMontage, 1.0f);
         }
+        */
+
+        bIsDodging = true;
+
+        GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision); // disable hit
 
         // Set a cooldown timer for rolling
-        const float RollCooldown = 1.0f; // Adjust cooldown time
+        const float RollCooldown = 2.0f; // Adjust cooldown time
         GetWorld()->GetTimerManager().SetTimer(RollCooldownTimer, this, &AMyCharacter::EnableRolling, RollCooldown, false);
 
         UE_LOG(Player, Log, TEXT("Started Roll in direction: %s"), *RollDirection.ToString());
@@ -712,7 +1450,7 @@ void AMyCharacter::StopRoll()
     UE_LOG(Player, Log, TEXT("StopRoll triggered"));
 
     // Allow rolling again after cooldown
-    GetWorld()->GetTimerManager().SetTimer(RollCooldownTimer, this, &AMyCharacter::EnableRolling, 1.0f, false);
+    //GetWorld()->GetTimerManager().SetTimer(RollCooldownTimer, this, &AMyCharacter::EnableRolling, 1.0f, false);
 }
 
 // Spam Prevention on rolling, needs testing.
@@ -720,26 +1458,42 @@ void AMyCharacter::EnableRolling()
 {
     bCanRoll = true;
     UE_LOG(Player, Log, TEXT("Rolling re-enabled"));
+
+    bIsDodging = false;
+    GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics); // restore hit
+
 }
 
 // Toggle Inventory UI (placeholder, can be linked to an actual UI)
 void AMyCharacter::ToggleInventory(const FInputActionValue& Value)
 {
-    if (!Value.Get<bool>()) return; // Ensure input is valid
+    UE_LOG(LogTemp, Warning, TEXT("ToggleInventory function triggered!"));
+    if (!Value.Get<bool>()) return;
 
     bIsInventoryOpen = !bIsInventoryOpen;
+    UE_LOG(LogTemp, Log, TEXT("========Inventory %s========="), bIsInventoryOpen ? TEXT("Opened") : TEXT("Closed"));
 
-    if (bIsInventoryOpen)
+    if (bIsInventoryOpen && InventoryComponent)
     {
-        UE_LOG(LogTemp, Log, TEXT("Inventory Opened"));
-        // TODO: Show Inventory UI
-    }
-    else
-    {
-        UE_LOG(LogTemp, Log, TEXT("Inventory Closed"));
-        // TODO: Hide Inventory UI
+        // Log weapon slots
+        const TArray<FName>& WeaponSlots = InventoryComponent->GetWeaponSlots();
+        for (int32 i = 0; i < 3; ++i)
+        {
+            FString WeaponName = (i < WeaponSlots.Num() && !WeaponSlots[i].IsNone()) ? WeaponSlots[i].ToString() : TEXT("Empty");
+            UE_LOG(LogTemp, Log, TEXT("Weapon Slot %d: %s"), i + 1, *WeaponName);
+        }
+
+        // Always show Medkit slot
+        bool bHasMedkit = InventoryComponent->HasItem("MedKit", 1);
+        FString MedkitStatus = bHasMedkit ? TEXT("Full") : TEXT("Empty");
+        FString EquippedStatus = (bIsHoldingMedKit && bHasMedkit) ? TEXT(" (Equipped)") : TEXT("");
+        UE_LOG(LogTemp, Log, TEXT("Medkit Slot: %s%s"), *MedkitStatus, *EquippedStatus);
     }
 }
+
+
+
+
 
 // Logs current inventory items when "O" is pressed
 void AMyCharacter::LogInventory(const FInputActionValue& Value)
@@ -764,39 +1518,40 @@ void AMyCharacter::LogInventory(const FInputActionValue& Value)
 
 void AMyCharacter::Mantle()
 {
-    // Define the start point (player's eye level) and end point (forward and up)
-    FVector Start = GetActorLocation() + FVector(0, 0, 50.0f); // Slightly above character's feet
-    FVector ForwardVector = GetActorForwardVector(); 
-    FVector End = Start + (ForwardVector * 100.0f) + FVector(0, 0, 100.0f); // Forward and upwards
+    FVector Start = GetActorLocation() + FVector(0, 0, 50.0f);
+    FVector Forward = GetActorForwardVector();
+    FVector WallCheckEnd = Start + Forward * 100.0f;
 
-    FHitResult Hit;
+    FHitResult WallHit;
     FCollisionQueryParams Params;
     Params.AddIgnoredActor(this);
 
-    // Perform a line trace to detect a ledge
-    if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
+    if (GetWorld()->LineTraceSingleByChannel(WallHit, Start, WallCheckEnd, ECC_Visibility, Params))
     {
-        // Check if a ledge is detected
-        if (Hit.bBlockingHit)
-        {
-            // Launch the character upwards and slightly forward to simulate mantling
-            FVector MantleTarget = Hit.ImpactPoint + FVector(0, 0, 50.0f); // Adjust to move onto the ledge
-            FVector LaunchVelocity = (MantleTarget - GetActorLocation()) * 2.0f; // Scale for speed
-            LaunchCharacter(LaunchVelocity, true, true);
+        FVector LedgeStart = WallHit.ImpactPoint + FVector(0, 0, 100.0f);
+        FVector LedgeEnd = LedgeStart - FVector(0, 0, 150.0f);
 
-            // Play mantling animation
+        FHitResult LedgeHit;
+        if (GetWorld()->LineTraceSingleByChannel(LedgeHit, LedgeStart, LedgeEnd, ECC_Visibility, Params))
+        {
+            FVector MantleTarget = LedgeHit.ImpactPoint + FVector(0, 0, 50.0f);
+            FVector LaunchVelocity = (MantleTarget - GetActorLocation()) * 2.0f;
+
+            LaunchCharacter(LaunchVelocity, true, true);
+            /*
             if (MantleAnimMontage)
             {
                 PlayAnimMontage(MantleAnimMontage);
             }
-            UE_LOG(Player, Log, TEXT("Mantle triggered: Target = %s"), *MantleTarget.ToString());
+            */
+            UE_LOG(Player, Log, TEXT("Mantle successful: %s"), *MantleTarget.ToString());
+            return;
         }
     }
-    else
-    {
-        UE_LOG(Player, Warning, TEXT("Mantle failed: No ledge detected"));
-    }
+
+    UE_LOG(Player, Warning, TEXT("Mantle failed: No ledge found"));
 }
+
 
 
 
@@ -804,16 +1559,29 @@ void AMyCharacter::Mantle()
 bool AMyCharacter::CanMantle() const
 {
     FVector Start = GetActorLocation() + FVector(0, 0, 50.0f);
-    FVector ForwardVector = GetActorForwardVector();
-    FVector End = Start + (ForwardVector * 100.0f) + FVector(0, 0, 100.0f);
+    FVector Forward = GetActorForwardVector();
+    FVector WallCheckEnd = Start + Forward * 100.0f;
 
-    FHitResult Hit;
+    FHitResult WallHit;
     FCollisionQueryParams Params;
     Params.AddIgnoredActor(this);
 
-    // Perform a line trace to check for a ledge
-    return GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params) && Hit.bBlockingHit;
+    // Check for wall
+    if (GetWorld()->LineTraceSingleByChannel(WallHit, Start, WallCheckEnd, ECC_Visibility, Params))
+    {
+        FVector LedgeStart = WallHit.ImpactPoint + FVector(0, 0, 100.0f); // Check above wall
+        FVector LedgeEnd = LedgeStart - FVector(0, 0, 150.0f);            // Trace down to ledge
+
+        FHitResult LedgeHit;
+        if (GetWorld()->LineTraceSingleByChannel(LedgeHit, LedgeStart, LedgeEnd, ECC_Visibility, Params))
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
+
 
 
 // Function checks if the character is close enough to a wall, a prerequisite for initiating mantling.
@@ -839,12 +1607,13 @@ void AMyCharacter::StartLedgeGrab()
     {
         // Disable movement temporarily
         GetCharacterMovement()->DisableMovement();
-
+        /*
         // play a ledge grab animation
         if (LedgeGrabAnimMontage)
         {
             PlayAnimMontage(LedgeGrabAnimMontage);
         }
+        */
     }
 }
 
@@ -852,20 +1621,16 @@ void AMyCharacter::StartLedgeGrab()
 // Function completes the ledge grab and moves the character onto the ledge.
 void AMyCharacter::PullUpFromLedge()
 {
-    FVector TargetLocation = GetActorLocation() + FVector(0, 0, 100.0f); // Adjust height
-    SetActorLocation(TargetLocation);
-
-    // Re-enable movement
+    SetActorLocation(LatchedLedgeLocation);
     GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
-
-    UE_LOG(Player, Log, TEXT("PullUpFromLedge triggered: New Location = %s"), *TargetLocation.ToString());
-
-    // play a pull-up animation
+    bIsLatchedToLedge = false;
+    /*
     if (PullUpAnimMontage)
-    {
         PlayAnimMontage(PullUpAnimMontage);
-    }
+        */
+    UE_LOG(Player, Log, TEXT("Climbed to ledge: %s"), *LatchedLedgeLocation.ToString());
 }
+
 
 
 // Function identifies whether there�s a ledge above the character that can be climbed.
@@ -905,13 +1670,76 @@ void AMyCharacter::WallJump()
     }
 }
 
+// reset movement debuffs
+void AMyCharacter::ResetMovementDebuffs()
+{
+    leg_shot_speed_multiplier = 1.0f;
+    foot_shot_speed_multiplier = 1.0f;
+    bHasAppliedSpeedDebuff = false;
+    MovementDebuffMultiplier = 1.0f;
+    UE_LOG(LogTemp, Log, TEXT("Movement debuffs reset."));
+}
+
 
 // Called every frame
 void AMyCharacter::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
+    Super::Tick(DeltaTime);
 
+    if (Camera) // <- important null check!
+    {
+        float EffectiveZoomSpeed = ZoomInterpSpeed;
+        if (CurrentWeapon)
+        {
+            EffectiveZoomSpeed = CurrentWeapon->ZoomInterpSpeed;
+        }
+        Camera->SetFieldOfView(FMath::FInterpTo(Camera->FieldOfView, TargetFOV, DeltaTime, EffectiveZoomSpeed));
+    }
+
+    if (bIsLatchedToLedge || !GetCharacterMovement() || !GetCharacterMovement()->IsFalling()) return;
+
+    FVector Start = GetActorLocation() + FVector(0, 0, 50.0f);
+    FVector Forward = GetActorForwardVector();
+    FVector WallEnd = Start + Forward * 100.0f;
+
+    FHitResult WallHit;
+    FCollisionQueryParams Params;
+    Params.AddIgnoredActor(this);
+
+    if (GetWorld()->LineTraceSingleByChannel(WallHit, Start, WallEnd, ECC_Visibility, Params))
+    {
+        FVector LedgeStart = WallHit.ImpactPoint + FVector(0, 0, 100.0f);
+        FVector LedgeEnd = LedgeStart - FVector(0, 0, 150.0f);
+
+        FHitResult LedgeHit;
+        if (GetWorld()->LineTraceSingleByChannel(LedgeHit, LedgeStart, LedgeEnd, ECC_Visibility, Params))
+        {
+            FVector Normal = LedgeHit.ImpactNormal;
+            float SlopeAngle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(Normal, FVector::UpVector)));
+
+            if (SlopeAngle < 45.0f)
+            {
+                bIsLatchedToLedge = true;
+                LatchedLedgeLocation = LedgeHit.ImpactPoint + FVector(0, 0, 90.0f);
+
+                if (GetCharacterMovement())
+                {
+                    GetCharacterMovement()->StopMovementImmediately();
+                    GetCharacterMovement()->DisableMovement();
+                }
+                /*
+                if (LedgeGrabAnimMontage)
+                {
+                    PlayAnimMontage(LedgeGrabAnimMontage);
+                }
+                */
+                UE_LOG(Player, Log, TEXT("Latched to ledge at %s"), *LatchedLedgeLocation.ToString());
+            }
+        }
+    }
 }
+
+
 
 
 void AMyCharacter::restart_current_level() const
@@ -941,7 +1769,7 @@ void AMyCharacter::UpdateCameraPosition(const float value)
 
 
 
-void AMyCharacter::on_death(const AActor* killed_by)
+void AMyCharacter::on_death(const AActor* killed_by, const bool play_death_sound)
 {
     // Play random death sound
     const TArray<TObjectPtr<USoundBase>> *sounds = sound_map.Find("dead");
@@ -951,11 +1779,14 @@ void AMyCharacter::on_death(const AActor* killed_by)
         UE_LOG(Enemy, Error, LOG_TEXT("No death sounds for '%s'"), *actor_name);
     } else
     {
-        const int num_sounds = sounds->Num();
-        const int sound_to_play = FMath::RandHelper(num_sounds);
-        USoundBase* sound = (*sounds)[sound_to_play];
-        UGameplayStatics::PlaySound2D(GetWorld(), sound, 1, 1, 0, nullptr, this, false);
-        UE_LOG(Enemy, Log, LOG_TEXT("Playing death sound '%s' for enemy '%s'"), *(sound->GetPathName()), *actor_name);
+        if (play_death_sound)
+        {
+            const int num_sounds = sounds->Num();
+            const int sound_to_play = FMath::RandHelper(num_sounds);
+            USoundBase* sound = (*sounds)[sound_to_play];
+            UGameplayStatics::PlaySound2D(GetWorld(), sound, 1, 1, 0, nullptr, this, false);
+            UE_LOG(Enemy, Log, LOG_TEXT("Playing death sound '%s' for enemy '%s'"), *(sound->GetPathName()), *actor_name);
+        }
     }
 
     UE_LOG(Player, Log, LOG_TEXT("Player dead"));
@@ -1079,7 +1910,14 @@ const TMap<FName, TObjectPtr<UStatsModifier>>* AMyCharacter::get_bone_collider_s
 
 void AMyCharacter::hit_bone(const AActor* hit_by, const FName bone_name, float weapon_damage)
 {
-    if (!stats_modifiers.Contains(bone_name))
+    // If the player is currently dodging, ignore the hit entirely
+    if (bIsDodging)
+    {
+        UE_LOG(Player, Log, TEXT("Dodged attack! Ignored hit to bone: %s"), *bone_name.ToString());
+        return;
+    }
+
+    if (!stats_modifiers.Contains(bone_name)) 
     {
         UE_LOG(BoneCollision, Error, LOG_TEXT("Enemy '%s' does not have modifier for bone '%s'.  Its possible its capsule component is blocking the shot, set trace channel Shootable to Ignore on the capsule component."), *actor_name, *(bone_name.ToString()));
         return;
@@ -1094,7 +1932,17 @@ void AMyCharacter::hit_bone(const AActor* hit_by, const FName bone_name, float w
     UCharacterMovementComponent* movement_component = GetCharacterMovement();
     const float old_movement_speed = movement_component->MaxWalkSpeed;
     
-    movement_component->MaxWalkSpeed *= modifier->get_speed_multiplier();
+    const FString BoneNameStr = bone_name.ToString();
+
+    if (!bHasAppliedSpeedDebuff &&
+        (BoneNameStr.Contains("Leg") || BoneNameStr.Contains("Foot") || BoneNameStr.Contains("UpLeg")))
+    {
+        MovementDebuffMultiplier = modifier->get_speed_multiplier(); // Save the slow multiplier
+        ApplyMovementSpeed();
+        bHasAppliedSpeedDebuff = true;
+
+        UE_LOG(Player, Log, TEXT("Speed debuff applied once due to bone %s. New debuff multiplier = %f"), *BoneNameStr, MovementDebuffMultiplier);
+    }
 
     UE_LOG(BoneCollision, Log, LOG_TEXT("Changing player '%s' speed: %f -> %f"), *actor_name, old_movement_speed, movement_component->MaxWalkSpeed);
 
@@ -1125,6 +1973,34 @@ void AMyCharacter::hit_bone(const AActor* hit_by, const FName bone_name, float w
         }
     }
     
+}
+
+void AMyCharacter::ApplyMovementSpeed()
+{
+    UCharacterMovementComponent* Movement = GetCharacterMovement();
+
+    if (!Movement) return;
+
+    if (bIsSprinting)
+    {
+        Movement->MaxWalkSpeed = SprintSpeed * MovementDebuffMultiplier;
+    }
+    else if (bIsCrouched)
+    {
+        Movement->MaxWalkSpeed = CrouchSpeed * MovementDebuffMultiplier;
+    }
+    else if (bIsSliding)
+    {
+        Movement->MaxWalkSpeed = SlideSpeed * MovementDebuffMultiplier;
+    }
+    else if (bIsProne)
+    {
+        Movement->MaxWalkSpeed = (CrouchSpeed / 2) * MovementDebuffMultiplier;
+    }
+    else
+    {
+        Movement->MaxWalkSpeed = WalkSpeed * MovementDebuffMultiplier;
+    }
 }
 
 

@@ -108,7 +108,13 @@ void AEnemy::BeginPlay()
 
     // Add dead sound
     sound_map.Add("dead");
-    sound_map["dead"] = death_sounds;    
+    sound_map["dead"] = death_sounds;
+
+    // If we spawn as dead
+    if (health_component->get_health() == 0)
+    {
+        kill();
+    }
 }
 
 
@@ -124,34 +130,8 @@ UHealthComponent* AEnemy::get_health_component() const
 }
 
 
-void AEnemy::on_death(const AActor* killed_by)
+void AEnemy::kill() const
 {
-    // Play random death sound
-    const TArray<TObjectPtr<USoundBase>> *sounds = sound_map.Find("dead");
-    // Don't have to worry about nullptr in second condition because of short circuit evaluation
-    if (sounds == nullptr || sounds->Num() == 0)
-    {
-        UE_LOG(Enemy, Error, LOG_TEXT("No death sounds for '%s'"), *actor_name);
-    } else
-    {
-        const int num_sounds = sounds->Num();
-        const int sound_to_play = FMath::RandHelper(num_sounds);
-        USoundBase* sound = (*sounds)[sound_to_play];
-        UGameplayStatics::PlaySound2D(GetWorld(), sound, 1, 1, 0, nullptr, this, false);
-        UE_LOG(Enemy, Log, LOG_TEXT("Playing death sound '%s' for enemy '%s'"), *(sound->GetPathName()), *actor_name);
-    }
-    
-    const INamedActor* const killed_by_na = Cast<INamedActor>(killed_by);
-
-    if (killed_by_na != nullptr)
-    {
-        UE_LOG(Enemy, Log, LOG_TEXT("%s was just killed by %s"), *actor_name, *(killed_by_na->get_actor_name()));
-    }
-    else
-    {
-        UE_LOG(Enemy, Error, LOG_TEXT("%s was killed by UNNAMED"), *actor_name);
-    }
-
     USkeletalMeshComponent* mesh = GetMesh();
 
     if (mesh == nullptr)
@@ -203,6 +183,42 @@ void AEnemy::on_death(const AActor* killed_by)
     mesh->SetCollisionProfileName(FName(TEXT("Ragdoll")));
     mesh->SetSimulatePhysics(true);
     UE_LOG(Enemy, Log, LOG_TEXT("Enemy %s made ragdoll"), *actor_name);
+}
+
+
+
+void AEnemy::on_death(const AActor* killed_by, const bool play_death_sound)
+{
+    // Play random death sound
+    const TArray<TObjectPtr<USoundBase>> *sounds = sound_map.Find("dead");
+    // Don't have to worry about nullptr in second condition because of short circuit evaluation
+    if (sounds == nullptr || sounds->Num() == 0)
+    {
+        UE_LOG(Enemy, Error, LOG_TEXT("No death sounds for '%s'"), *actor_name);
+    } else
+    {
+        if (play_death_sound)
+        {
+            const int num_sounds = sounds->Num();
+            const int sound_to_play = FMath::RandHelper(num_sounds);
+            USoundBase* sound = (*sounds)[sound_to_play];
+            UGameplayStatics::PlaySound2D(GetWorld(), sound, 1, 1, 0, nullptr, this, false);
+            UE_LOG(Enemy, Log, LOG_TEXT("Playing death sound '%s' for enemy '%s'"), *(sound->GetPathName()), *actor_name);
+        }
+    }
+    
+    const INamedActor* const killed_by_na = Cast<INamedActor>(killed_by);
+
+    if (killed_by_na != nullptr)
+    {
+        UE_LOG(Enemy, Log, LOG_TEXT("%s was just killed by %s"), *actor_name, *(killed_by_na->get_actor_name()));
+    }
+    else
+    {
+        UE_LOG(Enemy, Warning, LOG_TEXT("%s was killed by UNNAMED"), *actor_name);
+    }
+
+    kill();
 }
 
 
