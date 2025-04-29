@@ -38,6 +38,8 @@ AWeapon::AWeapon()
     InteractionSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
     InteractionSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
     InteractionSphere->SetGenerateOverlapEvents(true);
+
+    can_reload = false;
 }
 
 // Called when the game starts or when spawned
@@ -134,7 +136,7 @@ void AWeapon::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* O
 
 
 
-bool AWeapon::fire() const
+bool AWeapon::fire()
 {
     /*
     Returns true if weapon was fired
@@ -190,13 +192,15 @@ bool AWeapon::fire() const
     UE_LOG(Weapon, Verbose, LOG_TEXT("Playing weapon fire animation montage"));
     
     const float duration = anim_instance->Montage_Play(fire_animation_montage, 1.0f, EMontagePlayReturnType::MontageLength, 0.0f, true);
-
+    
     // If duration == 0.f that means an error
     if (duration == 0.f)
     {
         UE_LOG(Weapon, Error, LOG_TEXT("Could not play weapon fire animation montage"));
         return false;
     }
+
+    can_reload = true;
 
     // Play fire sound
     // Function internally handles nullptr audio case
@@ -205,13 +209,18 @@ bool AWeapon::fire() const
 }
 
 
-void AWeapon::reload() const
+void AWeapon::reload()
 {
     /*
     Plays reload animation montage.
     The actual reloading is done through a notifier.
     This is to ensure the reloading happens at the right part of the animation sequence (ex: when the new mag is inserted into the gun)
     */
+    if (!can_reload)
+    {
+        UE_LOG(Weapon, Log, LOG_TEXT("Weapon is not currently reloadable"));
+        return;
+    }
     // Dont reload if ammo is full
     if (current_magazine_ammo_count >= magazine_size)
     {
@@ -257,12 +266,14 @@ void AWeapon::reload() const
 
     UE_LOG(Weapon, Verbose, LOG_TEXT("Playing weapon reload animation montage"));
     const float duration = anim_instance->Montage_Play(reload_animation_montage, 1.0f, EMontagePlayReturnType::MontageLength, 0.0f, true);
-
+    
     // If duration == 0.f that means an error
     if (duration == 0.f)
     {
         UE_LOG(Weapon, Error, LOG_TEXT("Could not play weapon reload animation montage"));
+        return;
     }
+    can_reload = false;
 
     // Play reload sound
     // Function internally handles nullptr audio case

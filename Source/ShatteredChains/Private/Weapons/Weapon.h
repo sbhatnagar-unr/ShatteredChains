@@ -17,8 +17,8 @@ public:
     // Sets default values for this actor's properties
     AWeapon();
 
-    bool fire() const;
-    void reload() const;
+    bool fire();
+    void reload();
 
     void decrement_mag_ammo_count();
     
@@ -121,4 +121,6 @@ private:
 
     UPROPERTY(EditDefaultsOnly, Category="Sound Effects")
     TObjectPtr<USoundBase> out_of_ammo_sound;
+
+    bool can_reload;
 };
